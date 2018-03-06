@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package gayrpc.core;
+
+message RpcMeta {
+    enum Type {
+        REQUEST = 0;
+        RESPONSE = 1;
+    };
+
+    enum DataEncodingType {
+        BINARY = 0;
+        JSON = 1;
+    };
+
+    message Request {
+        // 请求的服务函数
+        uint64  method = 1;
+        // 请求方是否期待服务方返回response
+        bool    expect_response = 2;
+        // 请求方的序号ID
+        uint64  sequence_id = 3;
+    };
+
+    message Response {
+        // 请求方的序号ID
+        uint64  sequence_id = 1;
+        // 执行是否成功
+        bool    failed = 2;
+        // (当failed为true)错误码
+        int32   error_code = 3;
+        // (当failed为true)错误原因
+        string  reason = 4;
+    };
+    
+    // Rpc类型(请求、回应)
+    Type    type = 1;
+    // RpcData的编码方式
+    DataEncodingType encoding = 2;
+    // 请求元信息
+    Request request_info = 3;
+    // 回应元信息
+    Response response_info = 4;
+}
