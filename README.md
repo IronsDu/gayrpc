@@ -70,7 +70,7 @@ p99:45 ms ,45382276 ns
 其中`meta`为 `RpcMata`的binary.`data`为某业务上的Protobuf Request或Response类型对象的binary或JSON.
 
 `RpcMata`的proto定义如下:
-```
+```protobuf
 syntax = "proto3";
 
 message RpcMeta {
@@ -117,7 +117,7 @@ message RpcMeta {
 
 ## 服务描述文件范例
 以下面的服务定义为例:
-```
+```protobuf
 syntax = "proto3";
 
 package dodo.test;
@@ -148,7 +148,7 @@ service EchoServer {
 
 ## 发送请求的实现原理
 以`client->echo(echoRequest, responseCallback)`为例
-参考代码:[EchoService.h](https://gitee.com/irons/gayrpc/blob/master/examples/echo/pb/EchoService.h#L62)
+参考代码:[GayRpcClient.h](https://github.com/IronsDu/gayrpc/blob/master/include/GayRpcClient.h#L34)
 
 1. 客户端分配 sequence_id,以它为key将 responseCallback保存起来.
 2. 将echoRequest序列化为binary作为第二层协议中的`data`
@@ -158,7 +158,7 @@ service EchoServer {
 
 ## 发送Response的实现原理
 以`replyObj->reply(echoResponse)`为例
-参考代码:[EchoService.h](https://gitee.com/irons/gayrpc/blob/master/examples/echo/pb/EchoService.h#L237)
+参考代码:[GayRpcReply.h](https://github.com/IronsDu/gayrpc/blob/master/include/GayRpcReply.h#L31)
 
 1. 首先replyObj里(拷贝)储存了来自于请求中的RpcMata对象.
 2. 将echoResponse序列化为binary作为第二层协议中的`data`
@@ -168,11 +168,12 @@ service EchoServer {
 
 ## 编解码参考
 * 对于发送请求或Response都可以走出站拦截器,用于统一的发送消息,最终的序列化参考代码：
-    [OpPacket.h](https://gitee.com/irons/gayrpc/blob/master/include/OpPacket.h#L138)
-* 对于接收请求或Response则都可以走入站拦截器,统一的解析消息,参考代码:
-    [OpPacket.h](https://gitee.com/irons/gayrpc/blob/master/include/OpPacket.h#L97)
+    [UtilsDataHandler.h](https://github.com/IronsDu/gayrpc/blob/master/utils/UtilsDataHandler.h#L41)
+* 对于接收请求或Response在编解码之后都可以交给入站拦截器,解码参考代码:
+    [OpPacket.h](https://github.com/IronsDu/gayrpc/blob/master/utils/OpPacket.h#L96)
 
 ## 注意点
 * 通信协议的第一层并不是重点,RPC核心在实现上尽量不要依赖它(目前的第一层协议只是某一种范例)
 * 同样,RPC核心并不依赖通信采用的传输协议,可以是TCP也可以是UDP或者WebSocket
 * RPC服务方的reply顺序与客户端的调用顺序无关,也就是可能后发起的请求先得到返回.
+* 目前RPC系统没有提供超时控制
