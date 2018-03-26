@@ -8,12 +8,12 @@
 #include <brynet/net/WrapTCPService.h>
 #include <brynet/net/Connector.h>
 #include <brynet/utils/packet.h>
+#include <brynet/utils/WaitGroup.h>
 
 #include "OpPacket.h"
 #include "GayRpcInterceptor.h"
 #include "UtilsDataHandler.h"
 #include "UtilsInterceptor.h"
-#include "WaitGroup.h"
 
 #include "./pb/benchmark_service.gayrpc.h"
 
@@ -33,13 +33,14 @@ public:
         int maxNum,
         LATENCY_PTR latency,
         std::string payload)
+        :
+        maxRequestNum(maxNum),
+        mClient(client),
+        mWg(wg),
+        mPayload(payload)
     {
-        mClient = client;
-        mWg = wg;
-        maxRequestNum = maxNum;
         mCurrentNum = 0;
         mLatency = latency;
-        mPayload = payload;
     }
 
     void sendRequest()
@@ -76,13 +77,14 @@ private:
     }
 
 private:
-    WaitGroup::PTR                              mWg;
-    benchmark_service::EchoServerClient::PTR    mClient;
-    int                                         mCurrentNum;
-    int                                         maxRequestNum;
-    LATENCY_PTR                                 mLatency;
-    std::chrono::steady_clock::time_point       mRequestTime;
-    std::string                                 mPayload;
+    const WaitGroup::PTR                            mWg;
+    const benchmark_service::EchoServerClient::PTR  mClient;
+    const int                                       maxRequestNum;
+    const std::string                               mPayload;
+
+    int                                             mCurrentNum;
+    LATENCY_PTR                                     mLatency;
+    std::chrono::steady_clock::time_point           mRequestTime;
 };
 
 std::atomic<int64_t> connectionCounter(0);
@@ -113,6 +115,90 @@ static void onConnection(const TCPSession::PTR& session,
     auto client = benchmark_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
     auto b = std::make_shared<BenchmarkClient>(client, wg, maxRequestNum, latency, payload);
     b->sendRequest();
+}
+
+static void outputLatency(int realyTotalRequestNum,
+    const std::vector<LATENCY_PTR>& latencyArray,
+    std::chrono::steady_clock::time_point startTime)
+{
+    auto nowTime = std::chrono::steady_clock::now();
+
+    std::chrono::nanoseconds totalLatenty = std::chrono::nanoseconds::zero();
+    LATENTY_TYPE tmp1;
+
+    for (auto& v : latencyArray)
+    {
+        for (auto& latency : *v)
+        {
+            totalLatenty += latency;
+            tmp1.push_back(latency);
+        }
+    }
+    std::sort(tmp1.begin(), tmp1.end());
+
+    auto costTime = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - startTime);
+
+    std::cout << "connection num:"
+        << connectionCounter
+        << std::endl;
+
+    std::cout << "took "
+        << costTime.count()
+        << "ms, for "
+        << realyTotalRequestNum
+        << " requests"
+        << std::endl;
+
+    std::cout << "throughput  (TPS):"
+        << (realyTotalRequestNum / (std::chrono::duration_cast<std::chrono::seconds>(costTime)).count())
+        << std::endl;
+
+    std::cout << "mean:"
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(totalLatenty).count() / realyTotalRequestNum)
+        << " ms ,"
+        << (totalLatenty.count() / realyTotalRequestNum)
+        << " ns"
+        << std::endl;
+
+    if (tmp1.empty())
+    {
+        std::cout << "latenty is empty" << std::endl;
+        return;
+    }
+
+    std::cout << "median:"
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size() / 2]).count())
+        << " ms ,"
+        << (tmp1[tmp1.size() / 2].count())
+        << " ns"
+        << std::endl;
+
+    std::cout << "max:"
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size() - 1]).count())
+        << " ms ,"
+        << (tmp1[tmp1.size() - 1].count())
+        << " ns"
+        << std::endl;
+
+    std::cout << "min:"
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[0]).count())
+        << " ms ,"
+        << (tmp1[0].count())
+        << " ns"
+        << std::endl;
+
+    auto p99Index = tmp1.size() * 99 / 100;
+    std::chrono::nanoseconds p99Total = std::chrono::nanoseconds::zero();
+    for (size_t i = 0; i < p99Index; i++)
+    {
+        p99Total += tmp1[i];
+    }
+    std::cout << "p99:"
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(p99Total).count() / p99Index)
+        << " ms ,"
+        << (p99Total.count() / p99Index)
+        << " ns"
+        << std::endl;
 }
 
 int main(int argc, char **argv)
@@ -171,85 +257,9 @@ int main(int argc, char **argv)
         }
     }
     
-    wg->wait();
+    wg->wait(std::chrono::seconds(100));
 
-    auto nowTime = std::chrono::steady_clock::now();
+    outputLatency(realyTotalRequestNum, latencyArray, startTime);
 
-    std::chrono::nanoseconds totalLatenty = std::chrono::nanoseconds::zero();
-    LATENTY_TYPE tmp1;
-
-    for (auto& v : latencyArray)
-    {
-        for (auto& latency: *v)
-        {
-            totalLatenty += latency;
-            tmp1.push_back(latency);
-        }
-    }
-    std::sort(tmp1.begin(), tmp1.end());
-
-    auto costTime = std::chrono::duration_cast<std::chrono::milliseconds>(nowTime - startTime);
-
-    std::cout << "connection num:"
-        << connectionCounter
-        << std::endl;
-
-    std::cout << "took " 
-        << costTime.count() 
-        << "ms, for " 
-        << realyTotalRequestNum 
-        << " requests" 
-        << std::endl;
-
-    std::cout << "throughput  (TPS):"
-        << (realyTotalRequestNum/(std::chrono::duration_cast<std::chrono::seconds>(costTime)).count())
-        << std::endl;
-
-    std::cout << "mean:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(totalLatenty).count() / realyTotalRequestNum)
-        << " ms ,"
-        << (totalLatenty.count() / realyTotalRequestNum)
-        << " ns" 
-        << std::endl;
-
-    if (tmp1.empty())
-    {
-        std::cout << "latenty is empty" << std::endl;
-        return 0;
-    }
-
-    std::cout << "median:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size()/2]).count())
-        << " ms ,"
-        << (tmp1[tmp1.size() / 2].count())
-        << " ns"
-        << std::endl;
-
-    std::cout << "max:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size()-1]).count())
-        << " ms ,"
-        << (tmp1[tmp1.size() - 1].count())
-        << " ns"
-        << std::endl;
-
-    std::cout << "min:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[0]).count())
-        << " ms ,"
-        << (tmp1[0].count())
-        << " ns"
-        << std::endl;
-
-    auto p99Index = tmp1.size() * 99 / 100;
-    std::chrono::nanoseconds p99Total = std::chrono::nanoseconds::zero();
-    for (size_t i = 0; i < p99Index; i++)
-    {
-        p99Total += tmp1[i];
-    }
-    std::cout << "p99:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(p99Total).count()/ p99Index)
-        << " ms ,"
-        << (p99Total.count() / p99Index)
-        << " ns"
-        << std::endl;
     return 0;
 }

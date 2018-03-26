@@ -56,6 +56,10 @@ public:
     bool login(const LoginRequest& request,
         const echo_service::LoginReply::PTR& replyObj) override
     {
+        LoginResponse response;
+        response.set_message(request.message());
+        replyObj->reply(response);
+
         return true;
     }
 

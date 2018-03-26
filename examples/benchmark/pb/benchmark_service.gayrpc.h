@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include <cstdint>
+#include <future>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -51,6 +52,23 @@ namespace benchmark_service
 			const EchoHandle& handle = nullptr)
 		{
 			call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::echo), handle);
+		}
+		
+
+		 dodo::benchmark::EchoResponse sync_echo(const dodo::benchmark::EchoRequest& request,
+			gayrpc::core::RpcError& error)
+		{
+				auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+            	auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
+
+            	echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
+                	const gayrpc::core::RpcError& error) {
+                	errorPromise->set_value(error);
+                	responsePromise->set_value(response);
+            	});
+
+            	error = errorPromise->get_future().get();
+            	return responsePromise->get_future().get();
 		}
 		
 

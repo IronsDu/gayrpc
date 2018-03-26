@@ -53,13 +53,13 @@ private:
     std::shared_ptr<echo_service::EchoServerClient>   mClient;
 };
 
-static void onConnection(const TCPSession::PTR& session)
+static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop::PTR eventLoop)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
+    session->setDataCallback([rpcHandlerManager, eventLoop](const TCPSession::PTR& session,
         const char* buffer,
         size_t len) {
-        return dataHandle(rpcHandlerManager, buffer, len);
+        return dataHandle(rpcHandlerManager, buffer, len, eventLoop);
     });
 
     // 入站拦截器
@@ -109,20 +109,23 @@ int main(int argc, char **argv)
     connector->startWorkerThread();
     auto num = std::atoi(argv[3]);
 
+    auto mainLoop = std::make_shared<brynet::net::EventLoop>();
+
     for (int i = 0; i < num; i++)
     {
         try
         {
+            // mainLoop 作为 onConnection 参数，以让RPC的逻辑处理(请求或Response回调)全部交给主线程
             connector->asyncConnect(
                 argv[1],
                 atoi(argv[2]),
                 std::chrono::seconds(10),
-                [server](TcpSocket::PTR socket) {
+                [server, mainLoop](TcpSocket::PTR socket) {
                 std::cout << "connect success" << std::endl;
                 socket->SocketNodelay();
                 server->addSession(
                     std::move(socket),
-                    onConnection,
+                    std::bind(onConnection, std::placeholders::_1, mainLoop),
                     false,
                     nullptr,
                     1024 * 1024);
@@ -135,7 +138,11 @@ int main(int argc, char **argv)
             std::cout << "error:" << e.what() << std::endl;
         }
     }
-    
 
-    std::cin.get();
+    while (true)
+    {
+        mainLoop->loop(1);
+    }
+
+    return 0;
 }

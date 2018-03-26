@@ -28,6 +28,9 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/repeated_field.h>  // IWYU pragma: export
 #include <google/protobuf/extension_set.h>  // IWYU pragma: export
+#include <google/protobuf/map.h>  // IWYU pragma: export
+#include <google/protobuf/map_entry.h>
+#include <google/protobuf/map_field_inl.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
 // @@protoc_insertion_point(includes)
@@ -37,7 +40,7 @@ namespace protobuf_meta_2eproto {
 struct TableStruct {
   static const ::google::protobuf::internal::ParseTableField entries[];
   static const ::google::protobuf::internal::AuxillaryParseTableField aux[];
-  static const ::google::protobuf::internal::ParseTable schema[3];
+  static const ::google::protobuf::internal::ParseTable schema[4];
   static const ::google::protobuf::internal::FieldMetadata field_metadata[];
   static const ::google::protobuf::internal::SerializationTable serialization_table[];
   static const ::google::protobuf::uint32 offsets[];
@@ -47,11 +50,14 @@ void InitDefaultsRpcMeta_RequestImpl();
 void InitDefaultsRpcMeta_Request();
 void InitDefaultsRpcMeta_ResponseImpl();
 void InitDefaultsRpcMeta_Response();
+void InitDefaultsRpcMeta_MetaDataEntry_DoNotUseImpl();
+void InitDefaultsRpcMeta_MetaDataEntry_DoNotUse();
 void InitDefaultsRpcMetaImpl();
 void InitDefaultsRpcMeta();
 inline void InitDefaults() {
   InitDefaultsRpcMeta_Request();
   InitDefaultsRpcMeta_Response();
+  InitDefaultsRpcMeta_MetaDataEntry_DoNotUse();
   InitDefaultsRpcMeta();
 }
 }  // namespace protobuf_meta_2eproto
@@ -60,6 +66,9 @@ namespace core {
 class RpcMeta;
 class RpcMetaDefaultTypeInternal;
 extern RpcMetaDefaultTypeInternal _RpcMeta_default_instance_;
+class RpcMeta_MetaDataEntry_DoNotUse;
+class RpcMeta_MetaDataEntry_DoNotUseDefaultTypeInternal;
+extern RpcMeta_MetaDataEntry_DoNotUseDefaultTypeInternal _RpcMeta_MetaDataEntry_DoNotUse_default_instance_;
 class RpcMeta_Request;
 class RpcMeta_RequestDefaultTypeInternal;
 extern RpcMeta_RequestDefaultTypeInternal _RpcMeta_Request_default_instance_;
@@ -356,6 +365,27 @@ class RpcMeta_Response : public ::google::protobuf::Message /* @@protoc_insertio
 };
 // -------------------------------------------------------------------
 
+class RpcMeta_MetaDataEntry_DoNotUse : public ::google::protobuf::internal::MapEntry<RpcMeta_MetaDataEntry_DoNotUse, 
+    ::std::string, ::std::string,
+    ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+    ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+    0 > {
+public:
+  typedef ::google::protobuf::internal::MapEntry<RpcMeta_MetaDataEntry_DoNotUse, 
+    ::std::string, ::std::string,
+    ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+    ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+    0 > SuperType;
+  RpcMeta_MetaDataEntry_DoNotUse();
+  RpcMeta_MetaDataEntry_DoNotUse(::google::protobuf::Arena* arena);
+  void MergeFrom(const RpcMeta_MetaDataEntry_DoNotUse& other);
+  static const RpcMeta_MetaDataEntry_DoNotUse* internal_default_instance() { return reinterpret_cast<const RpcMeta_MetaDataEntry_DoNotUse*>(&_RpcMeta_MetaDataEntry_DoNotUse_default_instance_); }
+  void MergeFrom(const ::google::protobuf::Message& other) PROTOBUF_FINAL;
+  ::google::protobuf::Metadata GetMetadata() const;
+};
+
+// -------------------------------------------------------------------
+
 class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(class_definition:gayrpc.core.RpcMeta) */ {
  public:
   RpcMeta();
@@ -391,7 +421,7 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
                &_RpcMeta_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    2;
+    3;
 
   void Swap(RpcMeta* other);
   friend void swap(RpcMeta& a, RpcMeta& b) {
@@ -493,6 +523,15 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 
   // accessors -------------------------------------------------------
 
+  // map<string, string> meta_data = 5;
+  int meta_data_size() const;
+  void clear_meta_data();
+  static const int kMetaDataFieldNumber = 5;
+  const ::google::protobuf::Map< ::std::string, ::std::string >&
+      meta_data() const;
+  ::google::protobuf::Map< ::std::string, ::std::string >*
+      mutable_meta_data();
+
   // .gayrpc.core.RpcMeta.Request request_info = 3;
   bool has_request_info() const;
   void clear_request_info();
@@ -527,6 +566,12 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
+  ::google::protobuf::internal::MapField<
+      RpcMeta_MetaDataEntry_DoNotUse,
+      ::std::string, ::std::string,
+      ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+      ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
+      0 > meta_data_;
   ::gayrpc::core::RpcMeta_Request* request_info_;
   ::gayrpc::core::RpcMeta_Response* response_info_;
   int type_;
@@ -689,6 +734,8 @@ inline void RpcMeta_Response::set_allocated_reason(::std::string* reason) {
 
 // -------------------------------------------------------------------
 
+// -------------------------------------------------------------------
+
 // RpcMeta
 
 // .gayrpc.core.RpcMeta.Type type = 1;
@@ -819,9 +866,29 @@ inline void RpcMeta::set_allocated_response_info(::gayrpc::core::RpcMeta_Respons
   // @@protoc_insertion_point(field_set_allocated:gayrpc.core.RpcMeta.response_info)
 }
 
+// map<string, string> meta_data = 5;
+inline int RpcMeta::meta_data_size() const {
+  return meta_data_.size();
+}
+inline void RpcMeta::clear_meta_data() {
+  meta_data_.Clear();
+}
+inline const ::google::protobuf::Map< ::std::string, ::std::string >&
+RpcMeta::meta_data() const {
+  // @@protoc_insertion_point(field_map:gayrpc.core.RpcMeta.meta_data)
+  return meta_data_.GetMap();
+}
+inline ::google::protobuf::Map< ::std::string, ::std::string >*
+RpcMeta::mutable_meta_data() {
+  // @@protoc_insertion_point(field_mutable_map:gayrpc.core.RpcMeta.meta_data)
+  return meta_data_.MutableMap();
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <memory>
 #include <cstdint>
+#include <future>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -59,6 +60,38 @@ namespace echo_service
 			const LoginHandle& handle = nullptr)
 		{
 			call<dodo::test::LoginResponse>(request, static_cast<uint64_t>(EchoServerMsgID::login), handle);
+		}
+		
+
+		 dodo::test::EchoResponse sync_echo(const dodo::test::EchoRequest& request,
+			gayrpc::core::RpcError& error)
+		{
+				auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+            	auto responsePromise = std::make_shared<std::promise<dodo::test::EchoResponse>>();
+
+            	echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
+                	const gayrpc::core::RpcError& error) {
+                	errorPromise->set_value(error);
+                	responsePromise->set_value(response);
+            	});
+
+            	error = errorPromise->get_future().get();
+            	return responsePromise->get_future().get();
+		}
+		 dodo::test::LoginResponse sync_login(const dodo::test::LoginRequest& request,
+			gayrpc::core::RpcError& error)
+		{
+				auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+            	auto responsePromise = std::make_shared<std::promise<dodo::test::LoginResponse>>();
+
+            	login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
+                	const gayrpc::core::RpcError& error) {
+                	errorPromise->set_value(error);
+                	responsePromise->set_value(response);
+            	});
+
+            	error = errorPromise->get_future().get();
+            	return responsePromise->get_future().get();
 		}
 		
 

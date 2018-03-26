@@ -41,4 +41,6 @@ message RpcMeta {
     Request request_info = 3;
     // 回应元信息
     Response response_info = 4;
+	// 附加信息
+	map<string, string>	meta_data = 5;
 }

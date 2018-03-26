@@ -52,8 +52,7 @@ namespace gayrpc
 
                 {
                     std::lock_guard<std::mutex> lck(mStubMapGruad);
-                    auto sharedThis = shared_from_this();
-                    mStubHandleMap[sequenceID] = [handle, sharedThis](const RpcMeta& meta,
+                    mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
                         const std::string& data,
                         const UnaryServerInterceptor& inboundInterceptor) {
                         return parseWrapper<Response>(handle,

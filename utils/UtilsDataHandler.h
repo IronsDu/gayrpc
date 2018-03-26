@@ -8,22 +8,34 @@
 
 static size_t dataHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
     const char* buffer,
-    size_t len)
+    size_t len,
+    brynet::net::EventLoop::PTR handleRpcEventLoop = nullptr)
 {
-    auto opHandle = [rpcHandlerManager](const gayrpc::oppacket::OpPacket& opPacket) {
+    auto opHandle = [rpcHandlerManager, handleRpcEventLoop](const gayrpc::oppacket::OpPacket& opPacket) {
         if (opPacket.head.op != gayrpc::oppacket::OpCode::OpCodeProtobuf)
         {
             return false;
         }
 
-        auto pbPacketHandle = [rpcHandlerManager](const gayrpc::oppacket::ProtobufPacket& msg) {
+        auto pbPacketHandle = [rpcHandlerManager, handleRpcEventLoop](const gayrpc::oppacket::ProtobufPacket& msg) {
             gayrpc::core::RpcMeta meta;
             if (!meta.ParseFromString(msg.meta))
             {
                 std::cerr << "parse RpcMeta protobuf failed" << std::endl;
                 return false;
             }
-            return rpcHandlerManager->handleRpcMsg(meta, msg.data);
+
+            if (handleRpcEventLoop != nullptr)
+            {
+                handleRpcEventLoop->pushAsyncProc([rpcHandlerManager, meta, msg]() {
+                    rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                });
+                return true;
+            }
+            else
+            {
+                return rpcHandlerManager->handleRpcMsg(meta, msg.data);
+            }
         };
 
         if (!parseProtobufPacket(opPacket, pbPacketHandle))

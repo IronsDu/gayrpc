@@ -72,7 +72,8 @@ namespace gayrpc
                 meta.mutable_response_info()->set_reason(reason);
 
                 Response response;
-                mOutboundInterceptor(meta, response);
+                mOutboundInterceptor(meta, response, [](const RpcMeta&, const google::protobuf::Message&) {
+                });
             }
 
         private:
