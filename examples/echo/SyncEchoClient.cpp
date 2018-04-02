@@ -1,16 +1,9 @@
 #include <iostream>
-#include <string>
 
-#include <brynet/net/SocketLibFunction.h>
-#include <brynet/net/WrapTCPService.h>
-#include <brynet/net/Connector.h>
-#include <brynet/utils/packet.h>
+#include <brynet/net/SyncConnector.h>
 
-#include "OpPacket.h"
-#include "GayRpcInterceptor.h"
 #include "UtilsDataHandler.h"
 #include "UtilsInterceptor.h"
-#include "GayRpcClient.h"
 
 #include "./pb/echo_service.gayrpc.h"
 
@@ -43,46 +36,21 @@ int main(int argc, char **argv)
 {
     if (argc != 3)
     {
-        fprintf(stderr, "Usage: <host> <port>\n");
+        std::cerr << "Usage: <host> <port>\n" << std::endl;
         exit(-1);
     }
 
     auto service = std::make_shared<WrapTcpService>();
-    service->startWorkThread(std::thread::hardware_concurrency());
-
-    auto connector = AsyncConnector::Create();
-    connector->startWorkerThread();
-
-    auto clientPromise = std::make_shared<std::promise<echo_service::EchoServerClient::PTR>>();
-
-    connector->asyncConnect(
-        argv[1],
-        atoi(argv[2]),
-        std::chrono::seconds(10),
-        [service, clientPromise](TcpSocket::PTR socket) {
-        std::cout << "connect success" << std::endl;
-        socket->SocketNodelay();
-        service->addSession(
-            std::move(socket),
-            [clientPromise](const TCPSession::PTR& session) {
-                auto client = createEchoClient(session);
-                clientPromise->set_value(client);
-            },
-            false,
-            nullptr,
-            1024 * 1024);
-    }, []() {
-        std::cout << "connect failed" << std::endl;
-    });
-
-    auto client = clientPromise->get_future().get();
+    service->startWorkThread(1);
+    auto session = brynet::net::SyncConnectSession(argv[1], atoi(argv[2]), std::chrono::seconds(10), service);
+    auto client = createEchoClient(session);
 
     {
         gayrpc::core::RpcError error;
         EchoRequest request;
         request.set_message("sync echo test");
 
-        // TODO::timeout
+        // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
         auto response = client->sync_echo(request, error);
 
