@@ -85,11 +85,9 @@ int main(int argc, char **argv)
         atoi(argv[1]), 
         [=](TcpSocket::PTR socket){
             socket->SocketNodelay();
-            server->addSession(std::move(socket), 
-                onConnection, 
-                false, 
-                nullptr, 
-                1024*1024);
+            server->addSession(std::move(socket),
+                brynet::net::AddSessionOption::WithEnterCallback(onConnection),
+                brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024 * 1024));
         });
 
     server->startWorkThread(std::thread::hardware_concurrency());

@@ -28,49 +28,49 @@ namespace benchmark {
 
 namespace benchmark_service
 {
-	using namespace gayrpc::core;
-	using namespace google::protobuf::util;
-	
-	
-	enum class EchoServerMsgID:uint64_t
-	{
-		echo = 2333,
-		
-	};
+    using namespace gayrpc::core;
+    using namespace google::protobuf::util;
+    
+    
+    enum class EchoServerMsgID:uint64_t
+    {
+        echo = 2333,
+        
+    };
 
-	class EchoServerClient : public BaseClient
-	{
-	public:
-		typedef std::shared_ptr<EchoServerClient> PTR;
+    class EchoServerClient : public BaseClient
+    {
+    public:
+        typedef std::shared_ptr<EchoServerClient> PTR;
 
-		typedef std::function<void(const dodo::benchmark::EchoResponse&,
-			const gayrpc::core::RpcError&)> EchoHandle;
-		
+        typedef std::function<void(const dodo::benchmark::EchoResponse&,
+            const gayrpc::core::RpcError&)> EchoHandle;
+        
 
     public:
-		void echo(const dodo::benchmark::EchoRequest& request,
-			const EchoHandle& handle = nullptr)
-		{
-			call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::echo), handle);
-		}
-		
+        void echo(const dodo::benchmark::EchoRequest& request,
+            const EchoHandle& handle = nullptr)
+        {
+            call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::echo), handle);
+        }
+        
 
-		 dodo::benchmark::EchoResponse sync_echo(const dodo::benchmark::EchoRequest& request,
-			gayrpc::core::RpcError& error)
-		{
-				auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            	auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
+         dodo::benchmark::EchoResponse sync_echo(const dodo::benchmark::EchoRequest& request,
+            gayrpc::core::RpcError& error)
+        {
+                auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+                auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
 
-            	echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
-                	const gayrpc::core::RpcError& error) {
-                	errorPromise->set_value(error);
-                	responsePromise->set_value(response);
-            	});
+                echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
+                    const gayrpc::core::RpcError& error) {
+                    errorPromise->set_value(error);
+                    responsePromise->set_value(response);
+                });
 
-            	error = errorPromise->get_future().get();
-            	return responsePromise->get_future().get();
-		}
-		
+                error = errorPromise->get_future().get();
+                return responsePromise->get_future().get();
+        }
+        
 
     public:
         static PTR Create(const RpcTypeHandleManager::PTR& rpcHandlerManager,
@@ -96,8 +96,8 @@ namespace benchmark_service
         using BaseClient::BaseClient;
     };
 
-	typedef TemplateReply<dodo::benchmark::EchoResponse> EchoReply;
-	
+    typedef TemplateReply<dodo::benchmark::EchoResponse> EchoReply;
+    
 
     class EchoServerService : public BaseService
     {
@@ -110,9 +110,9 @@ namespace benchmark_service
         virtual void onClose() {}
 
     private:
-		virtual bool echo(const dodo::benchmark::EchoRequest& request, 
+        virtual bool echo(const dodo::benchmark::EchoRequest& request, 
             const EchoReply::PTR& replyObj) = 0;
-		
+        
 
     private:
         friend  void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
@@ -120,74 +120,120 @@ namespace benchmark_service
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor);
 
-		static bool echo_stub(const RpcMeta& meta,
-			const std::string& data,
-			const EchoServerService::PTR& service,
-			const UnaryServerInterceptor& inboundInterceptor,
-			const UnaryServerInterceptor& outboundInterceptor)
-		{
-			dodo::benchmark::EchoRequest request;
-			if (!request.ParseFromString(data))
-			{
-			    std::cerr << "parse EchoRequst error " << std::endl;
-			    return false;
-			}
+        static bool echo_stub(const RpcMeta& meta,
+            const std::string& data,
+            const EchoServerService::PTR& service,
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryServerInterceptor& outboundInterceptor)
+        {
+            dodo::benchmark::EchoRequest request;
+            
+            switch (meta.encoding())
+            {
+            case RpcMeta::BINARY:
+                if (!request.ParseFromString(data))
+                {
+                    std::cerr << "parse binary EchoRequst error " << std::endl;
+                    return false;
+                }
+                break;
+            case RpcMeta::JSON:
+                {
+                    auto s = JsonStringToMessage(data, &request);
+                    if (!s.ok())
+                    {
+                        throw std::runtime_error("parse json EchoRequst failed:" +
+                            s.error_message().as_string());
+                    }
+                }
+                break;
+            default:
+                std::cerr << "parse EchoRequst of unspported encoding type:" << meta.encoding() << std::endl;
+                return false;
+            }
 
-			inboundInterceptor(meta,
-			    request,
-			    [service,
-			    outboundInterceptor,
-			    &request](const RpcMeta& meta, const google::protobuf::Message& message) {
-			    auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-			    service->echo(request, replyObject);
-			});
-			return true;
-		}
-		
+            inboundInterceptor(meta,
+                request,
+                [service,
+                outboundInterceptor,
+                &request](const RpcMeta& meta, const google::protobuf::Message& message) {
+                auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
+                service->echo(request, replyObject);
+            });
+            return true;
+        }
+        
     };
 
-	inline void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+    inline void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
         const EchoServerService::PTR& service,
         const UnaryServerInterceptor& inboundInterceptor,
         const UnaryServerInterceptor& outboundInterceptor)
     {
-		typedef std::function<bool(const RpcMeta&,
-		    const std::string& data,
-		    const EchoServerService::PTR&,
-		    const UnaryServerInterceptor&,
-		    const UnaryServerInterceptor&)> EchoServerServiceRequestHandler;
+        typedef std::function<bool(const RpcMeta&,
+            const std::string& data,
+            const EchoServerService::PTR&,
+            const UnaryServerInterceptor&,
+            const UnaryServerInterceptor&)> EchoServerServiceRequestHandler;
 
-		typedef std::unordered_map<uint64_t, EchoServerServiceRequestHandler> EchoServerServiceHandlerMap;
+        typedef std::unordered_map<uint64_t, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapById;
+        typedef std::unordered_map<std::string, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapByStr;
 
-		auto serviceHandlerMap = std::make_shared<EchoServerServiceHandlerMap>();
+        // TODO::这里不应该每一次注册都构造一个单独的map,应该此服务的所有服务对象共享这两个map
+        auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
+        auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
 
-		(*serviceHandlerMap)[static_cast<uint64_t>(EchoServerMsgID::echo)] = EchoServerService::echo_stub;
-		
+        std::string namespaceStr = "dodo.benchmark.";
 
-		auto requestStub = [service,
-		    serviceHandlerMap,
-		    inboundInterceptor,
-		    outboundInterceptor](const RpcMeta& meta, const std::string& data) {
-		    if (meta.type() == RpcMeta::REQUEST)
-		    {
-		        auto it = serviceHandlerMap->find(meta.request_info().method());
-		        if (it == serviceHandlerMap->end())
-		        {
-		            std::cerr << "not found handle, method:" << meta.request_info().method();
-		            return false;
-		        }
+        // TODO::避免method.MethodName默认为小写开头，而是需要和proto里定义的函数名称完全一致
+        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::echo)] = EchoServerService::echo_stub;
+        
+        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.echo"] = EchoServerService::echo_stub;
+        
 
-		        (*it).second(meta,
-		            data,
-		            service,
-		            inboundInterceptor,
-		            outboundInterceptor);
-		    }
-		    return true;
-		};
-		rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
-	}
-	
+        auto requestStub = [service,
+            serviceHandlerMapById,
+            serviceHandlerMapByStr,
+            inboundInterceptor,
+            outboundInterceptor](const RpcMeta& meta, const std::string& data) {
+            
+            if (meta.type() != RpcMeta::REQUEST)
+            {
+                return false;
+            }
+            
+            EchoServerServiceRequestHandler handler;
+
+            if (!meta.request_info().strmethod().empty())
+            {
+                auto it = serviceHandlerMapByStr->find(meta.request_info().strmethod());
+                if (it == serviceHandlerMapByStr->end())
+                {
+                    std::cerr << "not found handle, method:" << meta.request_info().strmethod();
+                    return false;
+                }
+                handler = (*it).second;
+            }
+            else
+            {
+                auto it = serviceHandlerMapById->find(meta.request_info().intmethod());
+                if (it == serviceHandlerMapById->end())
+                {
+                    std::cerr << "not found handle, method:" << meta.request_info().intmethod();
+                    return false;
+                }
+                handler = (*it).second;
+            }
+
+            return handler(meta,
+                data,
+                service,
+                inboundInterceptor,
+                outboundInterceptor);
+        };
+        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
+    }
+    
 }
 
 }

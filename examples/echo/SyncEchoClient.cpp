@@ -42,7 +42,11 @@ int main(int argc, char **argv)
 
     auto service = std::make_shared<WrapTcpService>();
     service->startWorkThread(1);
-    auto session = brynet::net::SyncConnectSession(argv[1], atoi(argv[2]), std::chrono::seconds(10), service);
+    auto session = brynet::net::SyncConnectSession(argv[1], 
+        atoi(argv[2]), 
+        std::chrono::seconds(10),
+        service,
+        {brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024*1024)});
     auto client = createEchoClient(session);
 
     {

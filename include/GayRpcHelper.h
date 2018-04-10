@@ -23,7 +23,7 @@ namespace gayrpc
             RpcMeta meta;
             meta.set_type(RpcMeta::REQUEST);
             meta.set_encoding(type);
-            meta.mutable_request_info()->set_method(msgID);
+            meta.mutable_request_info()->set_intmethod(msgID);
             meta.mutable_request_info()->set_sequence_id(sequenceID);
             meta.mutable_request_info()->set_expect_response(expectResponse);
 
@@ -40,13 +40,13 @@ namespace gayrpc
             Response response;
             switch (meta.encoding())
             {
-            case RpcMeta_DataEncodingType_BINARY:
+            case RpcMeta::BINARY:
                 if (!response.ParseFromString(data))
                 {
                     throw std::runtime_error("parse binary echo response failed");
                 }
                 break;
-            case RpcMeta_DataEncodingType_JSON:
+            case RpcMeta::JSON:
             {
                 auto s = JsonStringToMessage(data, &response);
                 if (!s.ok())

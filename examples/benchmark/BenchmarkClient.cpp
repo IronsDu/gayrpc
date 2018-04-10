@@ -241,12 +241,10 @@ int main(int argc, char **argv)
                 [server, wg, maxRequestNumEveryClient, latency, payload](TcpSocket::PTR socket) {
                 std::cout << "connect success" << std::endl;
                 socket->SocketNodelay();
-                server->addSession(
-                    std::move(socket),
-                    std::bind(onConnection, std::placeholders::_1, wg, maxRequestNumEveryClient, latency, payload),
-                    false,
-                    nullptr,
-                    1024 * 1024);
+                auto enterCallback = std::bind(onConnection, std::placeholders::_1, wg, maxRequestNumEveryClient, latency, payload);
+                server->addSession(std::move(socket),
+                    brynet::net::AddSessionOption::WithEnterCallback(enterCallback),
+                    brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024*1024));
             }, []() {
                 std::cout << "connect failed" << std::endl;
             });

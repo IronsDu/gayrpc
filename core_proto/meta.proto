@@ -14,12 +14,14 @@ message RpcMeta {
     };
 
     message Request {
-        // 请求的服务函数
-        uint64  method = 1;
+        // 请求的服务函数的id
+        uint64  intMethod = 1;
+		// 请求的服务函数的名称(如果名称为空,则服务端以method id为key寻找服务函数)
+		string  strMethod = 2;
         // 请求方是否期待服务方返回response
-        bool    expect_response = 2;
+        bool    expect_response = 3;
         // 请求方的序号ID
-        uint64  sequence_id = 3;
+        uint64  sequence_id = 4;
     };
 
     message Response {
