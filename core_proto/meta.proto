@@ -16,12 +16,14 @@ message RpcMeta {
     message Request {
         // 请求的服务函数的id
         uint64  intMethod = 1;
-		// 请求的服务函数的名称(如果名称为空,则服务端以method id为key寻找服务函数)
-		string  strMethod = 2;
+        // 请求的服务函数的名称(如果名称为空,则服务端以method id为key寻找服务函数)
+        string  strMethod = 2;
         // 请求方是否期待服务方返回response
         bool    expect_response = 3;
         // 请求方的序号ID
         uint64  sequence_id = 4;
+        // 超时时间:单位秒(大于0则表示需要进行超时检测)
+        uint64  timeout = 5;
     };
 
     message Response {
@@ -33,6 +35,8 @@ message RpcMeta {
         int32   error_code = 3;
         // (当failed为true)错误原因
         string  reason = 4;
+        // 是否超时(超时仅仅由调用段端自己模拟一个Response,其timeout为true)
+        bool    timeout = 5;
     };
     
     // Rpc类型(请求、回应)
@@ -43,6 +47,6 @@ message RpcMeta {
     Request request_info = 3;
     // 回应元信息
     Response response_info = 4;
-	// 附加信息
-	map<string, string>	meta_data = 5;
+    // 附加信息
+    map<string, string> meta_data = 5;
 }

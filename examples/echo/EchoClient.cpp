@@ -66,7 +66,8 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)));
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
     auto client = echo_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
@@ -91,6 +92,9 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
             return;
         }
         //std::cout << "recv reply, data:" << response.message() << std::endl;
+    }, std::chrono::seconds(3),
+    []() {
+        std::cout << "timeout" << std::endl;
     });
 }
 

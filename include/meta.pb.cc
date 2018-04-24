@@ -143,6 +143,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, strmethod_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, expect_response_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, sequence_id_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, timeout_),
   ~0u,  // no _has_bits_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -152,6 +153,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, failed_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, error_code_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, reason_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, timeout_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _has_bits_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -174,9 +176,9 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
 };
 static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::gayrpc::core::RpcMeta_Request)},
-  { 9, -1, sizeof(::gayrpc::core::RpcMeta_Response)},
-  { 18, 25, sizeof(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse)},
-  { 27, -1, sizeof(::gayrpc::core::RpcMeta)},
+  { 10, -1, sizeof(::gayrpc::core::RpcMeta_Response)},
+  { 20, 27, sizeof(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse)},
+  { 29, -1, sizeof(::gayrpc::core::RpcMeta)},
 };
 
 static ::google::protobuf::Message const * const file_default_instances[] = {
@@ -208,25 +210,26 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\nmeta.proto\022\013gayrpc.core\"\276\004\n\007RpcMeta\022\'\n"
+      "\n\nmeta.proto\022\013gayrpc.core\"\340\004\n\007RpcMeta\022\'\n"
       "\004type\030\001 \001(\0162\031.gayrpc.core.RpcMeta.Type\0227"
       "\n\010encoding\030\002 \001(\0162%.gayrpc.core.RpcMeta.D"
       "ataEncodingType\0222\n\014request_info\030\003 \001(\0132\034."
       "gayrpc.core.RpcMeta.Request\0224\n\rresponse_"
       "info\030\004 \001(\0132\035.gayrpc.core.RpcMeta.Respons"
       "e\0225\n\tmeta_data\030\005 \003(\0132\".gayrpc.core.RpcMe"
-      "ta.MetaDataEntry\032]\n\007Request\022\021\n\tintMethod"
+      "ta.MetaDataEntry\032n\n\007Request\022\021\n\tintMethod"
       "\030\001 \001(\004\022\021\n\tstrMethod\030\002 \001(\t\022\027\n\017expect_resp"
-      "onse\030\003 \001(\010\022\023\n\013sequence_id\030\004 \001(\004\032S\n\010Respo"
-      "nse\022\023\n\013sequence_id\030\001 \001(\004\022\016\n\006failed\030\002 \001(\010"
-      "\022\022\n\nerror_code\030\003 \001(\005\022\016\n\006reason\030\004 \001(\t\032/\n\r"
-      "MetaDataEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001("
-      "\t:\0028\001\"!\n\004Type\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001"
-      "\"(\n\020DataEncodingType\022\n\n\006BINARY\020\000\022\010\n\004JSON"
-      "\020\001b\006proto3"
+      "onse\030\003 \001(\010\022\023\n\013sequence_id\030\004 \001(\004\022\017\n\007timeo"
+      "ut\030\005 \001(\004\032d\n\010Response\022\023\n\013sequence_id\030\001 \001("
+      "\004\022\016\n\006failed\030\002 \001(\010\022\022\n\nerror_code\030\003 \001(\005\022\016\n"
+      "\006reason\030\004 \001(\t\022\017\n\007timeout\030\005 \001(\010\032/\n\rMetaDa"
+      "taEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\""
+      "!\n\004Type\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001\"(\n\020Da"
+      "taEncodingType\022\n\n\006BINARY\020\000\022\010\n\004JSON\020\001b\006pr"
+      "oto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 610);
+      descriptor, 644);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "meta.proto", &protobuf_RegisterTypes);
 }
@@ -296,6 +299,7 @@ const int RpcMeta_Request::kIntMethodFieldNumber;
 const int RpcMeta_Request::kStrMethodFieldNumber;
 const int RpcMeta_Request::kExpectResponseFieldNumber;
 const int RpcMeta_Request::kSequenceIdFieldNumber;
+const int RpcMeta_Request::kTimeoutFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 RpcMeta_Request::RpcMeta_Request()
@@ -442,6 +446,20 @@ bool RpcMeta_Request::MergePartialFromCodedStream(
         break;
       }
 
+      // uint64 timeout = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &timeout_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -493,6 +511,11 @@ void RpcMeta_Request::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt64(4, this->sequence_id(), output);
   }
 
+  // uint64 timeout = 5;
+  if (this->timeout() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(5, this->timeout(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -533,6 +556,11 @@ void RpcMeta_Request::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->sequence_id(), target);
   }
 
+  // uint64 timeout = 5;
+  if (this->timeout() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(5, this->timeout(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -569,6 +597,13 @@ size_t RpcMeta_Request::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::UInt64Size(
         this->sequence_id());
+  }
+
+  // uint64 timeout = 5;
+  if (this->timeout() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt64Size(
+        this->timeout());
   }
 
   // bool expect_response = 3;
@@ -615,6 +650,9 @@ void RpcMeta_Request::MergeFrom(const RpcMeta_Request& from) {
   if (from.sequence_id() != 0) {
     set_sequence_id(from.sequence_id());
   }
+  if (from.timeout() != 0) {
+    set_timeout(from.timeout());
+  }
   if (from.expect_response() != 0) {
     set_expect_response(from.expect_response());
   }
@@ -647,6 +685,7 @@ void RpcMeta_Request::InternalSwap(RpcMeta_Request* other) {
   strmethod_.Swap(&other->strmethod_);
   swap(intmethod_, other->intmethod_);
   swap(sequence_id_, other->sequence_id_);
+  swap(timeout_, other->timeout_);
   swap(expect_response_, other->expect_response_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
@@ -667,6 +706,7 @@ const int RpcMeta_Response::kSequenceIdFieldNumber;
 const int RpcMeta_Response::kFailedFieldNumber;
 const int RpcMeta_Response::kErrorCodeFieldNumber;
 const int RpcMeta_Response::kReasonFieldNumber;
+const int RpcMeta_Response::kTimeoutFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 RpcMeta_Response::RpcMeta_Response()
@@ -687,16 +727,16 @@ RpcMeta_Response::RpcMeta_Response(const RpcMeta_Response& from)
     reason_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.reason_);
   }
   ::memcpy(&sequence_id_, &from.sequence_id_,
-    static_cast<size_t>(reinterpret_cast<char*>(&error_code_) -
-    reinterpret_cast<char*>(&sequence_id_)) + sizeof(error_code_));
+    static_cast<size_t>(reinterpret_cast<char*>(&timeout_) -
+    reinterpret_cast<char*>(&sequence_id_)) + sizeof(timeout_));
   // @@protoc_insertion_point(copy_constructor:gayrpc.core.RpcMeta.Response)
 }
 
 void RpcMeta_Response::SharedCtor() {
   reason_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&sequence_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&error_code_) -
-      reinterpret_cast<char*>(&sequence_id_)) + sizeof(error_code_));
+      reinterpret_cast<char*>(&timeout_) -
+      reinterpret_cast<char*>(&sequence_id_)) + sizeof(timeout_));
   _cached_size_ = 0;
 }
 
@@ -740,8 +780,8 @@ void RpcMeta_Response::Clear() {
 
   reason_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   ::memset(&sequence_id_, 0, static_cast<size_t>(
-      reinterpret_cast<char*>(&error_code_) -
-      reinterpret_cast<char*>(&sequence_id_)) + sizeof(error_code_));
+      reinterpret_cast<char*>(&timeout_) -
+      reinterpret_cast<char*>(&sequence_id_)) + sizeof(timeout_));
   _internal_metadata_.Clear();
 }
 
@@ -813,6 +853,20 @@ bool RpcMeta_Response::MergePartialFromCodedStream(
         break;
       }
 
+      // bool timeout = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &timeout_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       default: {
       handle_unusual:
         if (tag == 0) {
@@ -864,6 +918,11 @@ void RpcMeta_Response::SerializeWithCachedSizes(
       4, this->reason(), output);
   }
 
+  // bool timeout = 5;
+  if (this->timeout() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->timeout(), output);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
@@ -904,6 +963,11 @@ void RpcMeta_Response::SerializeWithCachedSizes(
         4, this->reason(), target);
   }
 
+  // bool timeout = 5;
+  if (this->timeout() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->timeout(), target);
+  }
+
   if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
@@ -935,16 +999,21 @@ size_t RpcMeta_Response::ByteSizeLong() const {
         this->sequence_id());
   }
 
-  // bool failed = 2;
-  if (this->failed() != 0) {
-    total_size += 1 + 1;
-  }
-
   // int32 error_code = 3;
   if (this->error_code() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int32Size(
         this->error_code());
+  }
+
+  // bool failed = 2;
+  if (this->failed() != 0) {
+    total_size += 1 + 1;
+  }
+
+  // bool timeout = 5;
+  if (this->timeout() != 0) {
+    total_size += 1 + 1;
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -983,11 +1052,14 @@ void RpcMeta_Response::MergeFrom(const RpcMeta_Response& from) {
   if (from.sequence_id() != 0) {
     set_sequence_id(from.sequence_id());
   }
+  if (from.error_code() != 0) {
+    set_error_code(from.error_code());
+  }
   if (from.failed() != 0) {
     set_failed(from.failed());
   }
-  if (from.error_code() != 0) {
-    set_error_code(from.error_code());
+  if (from.timeout() != 0) {
+    set_timeout(from.timeout());
   }
 }
 
@@ -1017,8 +1089,9 @@ void RpcMeta_Response::InternalSwap(RpcMeta_Response* other) {
   using std::swap;
   reason_.Swap(&other->reason_);
   swap(sequence_id_, other->sequence_id_);
-  swap(failed_, other->failed_);
   swap(error_code_, other->error_code_);
+  swap(failed_, other->failed_);
+  swap(timeout_, other->timeout_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);
 }

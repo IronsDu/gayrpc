@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <string>
 
-#include "meta.pb.h"
-
 namespace gayrpc
 {
     namespace core

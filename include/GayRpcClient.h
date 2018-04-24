@@ -20,6 +20,7 @@ namespace gayrpc
         {
         public:
             typedef std::shared_ptr<BaseClient> PTR;
+            typedef std::function<void(void)>   TIMEOUT_CALLBACK;
 
         protected:
             BaseClient(UnaryServerInterceptor outboundInterceptor,
@@ -29,6 +30,41 @@ namespace gayrpc
                 mOutboundInterceptor(std::move(outboundInterceptor)),
                 mInboundInterceptor(std::move(inboundInterceptor))
             {}
+
+            virtual ~BaseClient()
+            {}
+
+            template<typename Response, typename Request, typename Handle>
+            void call(const Request& request,
+                uint64_t msgID,
+                const Handle& handle,
+                std::chrono::seconds timeout,
+                TIMEOUT_CALLBACK timeoutCallback)
+            {
+                const auto sequenceID = mSequenceID++;
+
+                RpcMeta meta = makeRequestRpcMeta(sequenceID,
+                    msgID,
+                    RpcMeta_DataEncodingType_BINARY,
+                    true);
+                meta.mutable_request_info()->set_timeout(timeout.count());
+
+                mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&) {
+                });
+
+                {
+                    std::lock_guard<std::mutex> lck(mStubMapGruad);
+                    mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
+                        const std::string& data,
+                        const UnaryServerInterceptor& inboundInterceptor) {
+                        return parseWrapper<Response>(handle,
+                            meta,
+                            data,
+                            inboundInterceptor);
+                    };
+                    mTimeoutHandleMap[sequenceID] = std::move(timeoutCallback);
+                }
+            }
 
             template<typename Response, typename Request, typename Handle>
             void call(const Request& request,
@@ -41,7 +77,9 @@ namespace gayrpc
                 RpcMeta meta = makeRequestRpcMeta(sequenceID,
                     msgID,
                     RpcMeta_DataEncodingType_BINARY,
-                    handle != nullptr);
+                    expectResponse);
+                meta.mutable_request_info()->set_timeout(0);
+
                 mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&) {
                 });
 
@@ -83,9 +121,29 @@ namespace gayrpc
                     throw std::runtime_error("type :" + std::to_string(meta.type()) + " not Response");
                 }
 
+                if (meta.response_info().timeout())
+                {
+                    std::lock_guard<std::mutex> lck(mStubMapGruad);
+
+                    mStubHandleMap.erase(meta.response_info().sequence_id());
+
+                    auto it = mTimeoutHandleMap.find(meta.response_info().sequence_id());
+                    if (it == mTimeoutHandleMap.end())
+                    {
+                        return;
+                    }
+                    (*it).second();
+                    mTimeoutHandleMap.erase(it);
+
+                    return;
+                }
+
                 ResponseStubHandle handle;
                 {
                     std::lock_guard<std::mutex> lck(mStubMapGruad);
+                    
+                    mTimeoutHandleMap.erase(meta.response_info().sequence_id());
+                    
                     auto it = mStubHandleMap.find(meta.response_info().sequence_id());
                     if (it == mStubHandleMap.end())
                     {
@@ -104,14 +162,16 @@ namespace gayrpc
                     const RpcMeta&, 
                     const std::string& data, 
                     const UnaryServerInterceptor&)> ResponseStubHandle;
-            typedef std::unordered_map<uint64_t, ResponseStubHandle> ResponseStubHandleMap;
+            typedef std::unordered_map<uint64_t, ResponseStubHandle>    ResponseStubHandleMap;
+            typedef std::unordered_map<uint64_t, TIMEOUT_CALLBACK>      TimeoutHandleMap;
 
             UnaryServerInterceptor      mInboundInterceptor;
             UnaryServerInterceptor      mOutboundInterceptor;
 
-            std::atomic<uint64_t>        mSequenceID;
+            std::atomic<uint64_t>       mSequenceID;
             std::mutex                  mStubMapGruad;
             ResponseStubHandleMap       mStubHandleMap;
+            TimeoutHandleMap            mTimeoutHandleMap;
         };
     }
 }

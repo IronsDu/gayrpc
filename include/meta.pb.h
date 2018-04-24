@@ -232,6 +232,12 @@ class RpcMeta_Request : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::uint64 sequence_id() const;
   void set_sequence_id(::google::protobuf::uint64 value);
 
+  // uint64 timeout = 5;
+  void clear_timeout();
+  static const int kTimeoutFieldNumber = 5;
+  ::google::protobuf::uint64 timeout() const;
+  void set_timeout(::google::protobuf::uint64 value);
+
   // bool expect_response = 3;
   void clear_expect_response();
   static const int kExpectResponseFieldNumber = 3;
@@ -245,6 +251,7 @@ class RpcMeta_Request : public ::google::protobuf::Message /* @@protoc_insertion
   ::google::protobuf::internal::ArenaStringPtr strmethod_;
   ::google::protobuf::uint64 intmethod_;
   ::google::protobuf::uint64 sequence_id_;
+  ::google::protobuf::uint64 timeout_;
   bool expect_response_;
   mutable int _cached_size_;
   friend struct ::protobuf_meta_2eproto::TableStruct;
@@ -354,17 +361,23 @@ class RpcMeta_Response : public ::google::protobuf::Message /* @@protoc_insertio
   ::google::protobuf::uint64 sequence_id() const;
   void set_sequence_id(::google::protobuf::uint64 value);
 
+  // int32 error_code = 3;
+  void clear_error_code();
+  static const int kErrorCodeFieldNumber = 3;
+  ::google::protobuf::int32 error_code() const;
+  void set_error_code(::google::protobuf::int32 value);
+
   // bool failed = 2;
   void clear_failed();
   static const int kFailedFieldNumber = 2;
   bool failed() const;
   void set_failed(bool value);
 
-  // int32 error_code = 3;
-  void clear_error_code();
-  static const int kErrorCodeFieldNumber = 3;
-  ::google::protobuf::int32 error_code() const;
-  void set_error_code(::google::protobuf::int32 value);
+  // bool timeout = 5;
+  void clear_timeout();
+  static const int kTimeoutFieldNumber = 5;
+  bool timeout() const;
+  void set_timeout(bool value);
 
   // @@protoc_insertion_point(class_scope:gayrpc.core.RpcMeta.Response)
  private:
@@ -372,8 +385,9 @@ class RpcMeta_Response : public ::google::protobuf::Message /* @@protoc_insertio
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::internal::ArenaStringPtr reason_;
   ::google::protobuf::uint64 sequence_id_;
-  bool failed_;
   ::google::protobuf::int32 error_code_;
+  bool failed_;
+  bool timeout_;
   mutable int _cached_size_;
   friend struct ::protobuf_meta_2eproto::TableStruct;
   friend void ::protobuf_meta_2eproto::InitDefaultsRpcMeta_ResponseImpl();
@@ -701,6 +715,20 @@ inline void RpcMeta_Request::set_sequence_id(::google::protobuf::uint64 value) {
   // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.Request.sequence_id)
 }
 
+// uint64 timeout = 5;
+inline void RpcMeta_Request::clear_timeout() {
+  timeout_ = GOOGLE_ULONGLONG(0);
+}
+inline ::google::protobuf::uint64 RpcMeta_Request::timeout() const {
+  // @@protoc_insertion_point(field_get:gayrpc.core.RpcMeta.Request.timeout)
+  return timeout_;
+}
+inline void RpcMeta_Request::set_timeout(::google::protobuf::uint64 value) {
+  
+  timeout_ = value;
+  // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.Request.timeout)
+}
+
 // -------------------------------------------------------------------
 
 // RpcMeta_Response
@@ -798,6 +826,20 @@ inline void RpcMeta_Response::set_allocated_reason(::std::string* reason) {
   }
   reason_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), reason);
   // @@protoc_insertion_point(field_set_allocated:gayrpc.core.RpcMeta.Response.reason)
+}
+
+// bool timeout = 5;
+inline void RpcMeta_Response::clear_timeout() {
+  timeout_ = false;
+}
+inline bool RpcMeta_Response::timeout() const {
+  // @@protoc_insertion_point(field_get:gayrpc.core.RpcMeta.Response.timeout)
+  return timeout_;
+}
+inline void RpcMeta_Response::set_timeout(bool value) {
+  
+  timeout_ = value;
+  // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.Response.timeout)
 }
 
 // -------------------------------------------------------------------

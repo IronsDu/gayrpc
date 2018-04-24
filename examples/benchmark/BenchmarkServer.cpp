@@ -61,7 +61,8 @@ static void onConnection(const TCPSession::PTR& session)
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall(), counter);
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)));
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 创建服务对象
     auto rpcServer = std::make_shared<MyService>();

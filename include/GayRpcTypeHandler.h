@@ -57,8 +57,8 @@ namespace gayrpc
             }
 
         private:
-            std::unordered_map<int, TypeHandler>  mTypeHandlers;
-            std::mutex                                      mMutex;
+            std::unordered_map<int, TypeHandler>    mTypeHandlers;
+            std::mutex                              mMutex;
         };
     }
 }

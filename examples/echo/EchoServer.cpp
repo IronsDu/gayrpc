@@ -95,7 +95,8 @@ static void onNormalTCPConnection(const TCPSession::PTR& session)
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall(), counter);
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)));
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 创建客户端
     auto client = echo_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);

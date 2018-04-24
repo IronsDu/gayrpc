@@ -45,6 +45,7 @@ namespace gayrpc
                 meta.set_type(RpcMeta::RESPONSE);
                 meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
                 meta.mutable_response_info()->set_failed(false);
+                meta.mutable_response_info()->set_timeout(false);
 
                 mOutboundInterceptor(meta, response, [](const RpcMeta&, const google::protobuf::Message&) {
                 });
@@ -70,6 +71,7 @@ namespace gayrpc
                 meta.mutable_response_info()->set_failed(true);
                 meta.mutable_response_info()->set_error_code(errorCode);
                 meta.mutable_response_info()->set_reason(reason);
+                meta.mutable_response_info()->set_timeout(false);
 
                 Response response;
                 mOutboundInterceptor(meta, response, [](const RpcMeta&, const google::protobuf::Message&) {

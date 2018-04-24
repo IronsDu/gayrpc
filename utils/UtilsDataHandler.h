@@ -53,7 +53,7 @@ static size_t dataHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandl
 static void sender(const gayrpc::core::RpcMeta& meta,
     const google::protobuf::Message& message,
     const gayrpc::core::UnaryHandler& next,
-    const std::weak_ptr<brynet::net::TCPSession>& weakSession)
+    const brynet::net::TCPSession::WEAK_PTR& weakSession)
 {
     // 实际的发送
     BigPacket bpw(true, true);
@@ -65,10 +65,6 @@ static void sender(const gayrpc::core::RpcMeta& meta,
     if (session != nullptr)
     {
         session->send(bpw.getData(), bpw.getPos());
-    }
-    else
-    {
-        // throw ConnectionClose exception
     }
     next(meta, message);
 }
