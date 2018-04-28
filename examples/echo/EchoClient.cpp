@@ -19,38 +19,38 @@ using namespace brynet::net;
 using namespace utils_interceptor;
 using namespace dodo::test;
 
-class MyService : public echo_service::EchoServerService
+class MyService : public EchoServerService
 {
 public:
-    MyService(const std::shared_ptr<echo_service::EchoServerClient>& client)
+    MyService(const std::shared_ptr<EchoServerClient>& client)
         :
         mClient(client)
     {
     }
 
-    bool echo(const EchoRequest& request,
-        const echo_service::EchoReply::PTR& replyObj) override
+    bool Echo(const EchoRequest& request,
+        const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
         response.set_message("world");
 
         replyObj->reply(response); // 重复reply或error将产生异常
         // 在收到请求后再调用对端
-        mClient->echo(request, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
+        mClient->Echo(request, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
             err.failed();
         });
 
         return true;
     }
 
-    bool login(const LoginRequest& request,
-        const echo_service::LoginReply::PTR& replyObj) override
+    bool Login(const LoginRequest& request,
+        const LoginReply::PTR& replyObj) override
     {
         return true;
     }
 
 private:
-    std::shared_ptr<echo_service::EchoServerClient>   mClient;
+    std::shared_ptr<EchoServerClient>   mClient;
 };
 
 static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop::PTR eventLoop)
@@ -70,10 +70,10 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
-    auto client = echo_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
+    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
 
     auto rpcServer = std::make_shared<MyService>(client);
-    registerEchoServerService(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
+    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 
     session->setDisConnectCallback([rpcServer](const TCPSession::PTR& session) {
         std::cout << "close session" << std::endl;
@@ -84,7 +84,7 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
     EchoRequest request;
     request.set_message("hello");
 
-    client->echo(request, [](const EchoResponse& response,
+    client->Echo(request, [](const EchoResponse& response,
         const gayrpc::core::RpcError& error) {
         if (error.failed())
         {

@@ -28,7 +28,7 @@ typedef std::shared_ptr<LATENTY_TYPE> LATENCY_PTR;
 class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
-    BenchmarkClient(const benchmark_service::EchoServerClient::PTR& client,
+    BenchmarkClient(const EchoServerClient::PTR& client,
         const WaitGroup::PTR& wg,
         int maxNum,
         LATENCY_PTR latency,
@@ -50,7 +50,7 @@ public:
         request.set_message(mPayload);
 
         mRequestTime = std::chrono::steady_clock::now();
-        mClient->echo(request, std::bind(&BenchmarkClient::onEchoResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+        mClient->Echo(request, std::bind(&BenchmarkClient::onEchoResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     }
 
 private:
@@ -78,7 +78,7 @@ private:
 
 private:
     const WaitGroup::PTR                            mWg;
-    const benchmark_service::EchoServerClient::PTR  mClient;
+    const EchoServerClient::PTR                     mClient;
     const int                                       maxRequestNum;
     const std::string                               mPayload;
 
@@ -113,7 +113,7 @@ static void onConnection(const TCPSession::PTR& session,
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
-    auto client = benchmark_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
+    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
     auto b = std::make_shared<BenchmarkClient>(client, wg, maxRequestNum, latency, payload);
     b->sendRequest();
 }

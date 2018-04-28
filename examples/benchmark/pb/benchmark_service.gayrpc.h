@@ -10,6 +10,7 @@
 #include <memory>
 #include <cstdint>
 #include <future>
+#include <chrono>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -26,15 +27,13 @@
 namespace dodo {
 namespace benchmark {
 
-namespace benchmark_service
-{
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
     
     enum class EchoServerMsgID:uint64_t
     {
-        echo = 2333,
+        Echo = 2333,
         
     };
 
@@ -48,20 +47,32 @@ namespace benchmark_service
         
 
     public:
-        void echo(const dodo::benchmark::EchoRequest& request,
+        void Echo(const dodo::benchmark::EchoRequest& request,
             const EchoHandle& handle = nullptr)
         {
-            call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::echo), handle);
+            call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
+        }
+        
+        void Echo(const dodo::benchmark::EchoRequest& request,
+            const EchoHandle& handle,
+            std::chrono::seconds timeout, 
+            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+        {
+            call<dodo::benchmark::EchoResponse>(request, 
+                static_cast<uint64_t>(EchoServerMsgID::Echo), 
+                handle,
+                timeout,
+                std::move(timeoutCallback));
         }
         
 
-         dodo::benchmark::EchoResponse sync_echo(const dodo::benchmark::EchoRequest& request,
+         dodo::benchmark::EchoResponse sync_Echo(const dodo::benchmark::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
                 auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
 
-                echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
+                Echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
                     const gayrpc::core::RpcError& error) {
                     errorPromise->set_value(error);
                     responsePromise->set_value(response);
@@ -109,18 +120,18 @@ namespace benchmark_service
 
         virtual void onClose() {}
 
+        static  void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+            const EchoServerService::PTR& service,
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryServerInterceptor& outboundInterceptor);
     private:
-        virtual bool echo(const dodo::benchmark::EchoRequest& request, 
+        virtual bool Echo(const dodo::benchmark::EchoRequest& request, 
             const EchoReply::PTR& replyObj) = 0;
         
 
     private:
-        friend  void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
-            const EchoServerService::PTR& service,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor);
 
-        static bool echo_stub(const RpcMeta& meta,
+        static bool Echo_stub(const RpcMeta& meta,
             const std::string& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
@@ -158,14 +169,14 @@ namespace benchmark_service
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message) {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-                service->echo(request, replyObject);
+                service->Echo(request, replyObject);
             });
             return true;
         }
         
     };
 
-    inline void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+    void EchoServerService::Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
         const EchoServerService::PTR& service,
         const UnaryServerInterceptor& inboundInterceptor,
         const UnaryServerInterceptor& outboundInterceptor)
@@ -179,16 +190,15 @@ namespace benchmark_service
         typedef std::unordered_map<uint64_t, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapById;
         typedef std::unordered_map<std::string, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapByStr;
 
-        // TODO::这里不应该每一次注册都构造一个单独的map,应该此服务的所有服务对象共享这两个map
+        // TODO::static unordered map
         auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
         auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
 
         std::string namespaceStr = "dodo.benchmark.";
 
-        // TODO::避免method.MethodName默认为小写开头，而是需要和proto里定义的函数名称完全一致
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::echo)] = EchoServerService::echo_stub;
+        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
         
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.echo"] = EchoServerService::echo_stub;
+        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Echo"] = EchoServerService::Echo_stub;
         
 
         auto requestStub = [service,
@@ -234,8 +244,6 @@ namespace benchmark_service
         rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
     }
     
-}
-
 }
 }
 

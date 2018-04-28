@@ -10,6 +10,7 @@
 #include <memory>
 #include <cstdint>
 #include <future>
+#include <chrono>
 
 #include <google/protobuf/util/json_util.h>
 
@@ -26,16 +27,14 @@
 namespace dodo {
 namespace test {
 
-namespace echo_service
-{
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
     
     enum class EchoServerMsgID:uint64_t
     {
-        echo = 2333,
-        login = 3333,
+        Echo = 2333,
+        Login = 3333,
         
     };
 
@@ -51,25 +50,48 @@ namespace echo_service
         
 
     public:
-        void echo(const dodo::test::EchoRequest& request,
+        void Echo(const dodo::test::EchoRequest& request,
             const EchoHandle& handle = nullptr)
         {
-            call<dodo::test::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::echo), handle);
+            call<dodo::test::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
         }
-        void login(const dodo::test::LoginRequest& request,
+        void Login(const dodo::test::LoginRequest& request,
             const LoginHandle& handle = nullptr)
         {
-            call<dodo::test::LoginResponse>(request, static_cast<uint64_t>(EchoServerMsgID::login), handle);
+            call<dodo::test::LoginResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Login), handle);
+        }
+        
+        void Echo(const dodo::test::EchoRequest& request,
+            const EchoHandle& handle,
+            std::chrono::seconds timeout, 
+            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+        {
+            call<dodo::test::EchoResponse>(request, 
+                static_cast<uint64_t>(EchoServerMsgID::Echo), 
+                handle,
+                timeout,
+                std::move(timeoutCallback));
+        }
+        void Login(const dodo::test::LoginRequest& request,
+            const LoginHandle& handle,
+            std::chrono::seconds timeout, 
+            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+        {
+            call<dodo::test::LoginResponse>(request, 
+                static_cast<uint64_t>(EchoServerMsgID::Login), 
+                handle,
+                timeout,
+                std::move(timeoutCallback));
         }
         
 
-         dodo::test::EchoResponse sync_echo(const dodo::test::EchoRequest& request,
+         dodo::test::EchoResponse sync_Echo(const dodo::test::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
                 auto responsePromise = std::make_shared<std::promise<dodo::test::EchoResponse>>();
 
-                echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
+                Echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
                     const gayrpc::core::RpcError& error) {
                     errorPromise->set_value(error);
                     responsePromise->set_value(response);
@@ -78,13 +100,13 @@ namespace echo_service
                 error = errorPromise->get_future().get();
                 return responsePromise->get_future().get();
         }
-         dodo::test::LoginResponse sync_login(const dodo::test::LoginRequest& request,
+         dodo::test::LoginResponse sync_Login(const dodo::test::LoginRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
                 auto responsePromise = std::make_shared<std::promise<dodo::test::LoginResponse>>();
 
-                login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
+                Login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
                     const gayrpc::core::RpcError& error) {
                     errorPromise->set_value(error);
                     responsePromise->set_value(response);
@@ -133,20 +155,20 @@ namespace echo_service
 
         virtual void onClose() {}
 
+        static  void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+            const EchoServerService::PTR& service,
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryServerInterceptor& outboundInterceptor);
     private:
-        virtual bool echo(const dodo::test::EchoRequest& request, 
+        virtual bool Echo(const dodo::test::EchoRequest& request, 
             const EchoReply::PTR& replyObj) = 0;
-        virtual bool login(const dodo::test::LoginRequest& request, 
+        virtual bool Login(const dodo::test::LoginRequest& request, 
             const LoginReply::PTR& replyObj) = 0;
         
 
     private:
-        friend  void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
-            const EchoServerService::PTR& service,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor);
 
-        static bool echo_stub(const RpcMeta& meta,
+        static bool Echo_stub(const RpcMeta& meta,
             const std::string& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
@@ -184,11 +206,11 @@ namespace echo_service
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message) {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-                service->echo(request, replyObject);
+                service->Echo(request, replyObject);
             });
             return true;
         }
-        static bool login_stub(const RpcMeta& meta,
+        static bool Login_stub(const RpcMeta& meta,
             const std::string& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
@@ -226,14 +248,14 @@ namespace echo_service
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message) {
                 auto replyObject = std::make_shared<LoginReply>(meta, outboundInterceptor);
-                service->login(request, replyObject);
+                service->Login(request, replyObject);
             });
             return true;
         }
         
     };
 
-    inline void registerEchoServerService(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+    void EchoServerService::Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
         const EchoServerService::PTR& service,
         const UnaryServerInterceptor& inboundInterceptor,
         const UnaryServerInterceptor& outboundInterceptor)
@@ -247,18 +269,17 @@ namespace echo_service
         typedef std::unordered_map<uint64_t, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapById;
         typedef std::unordered_map<std::string, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapByStr;
 
-        // TODO::这里不应该每一次注册都构造一个单独的map,应该此服务的所有服务对象共享这两个map
+        // TODO::static unordered map
         auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
         auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
 
         std::string namespaceStr = "dodo.test.";
 
-        // TODO::避免method.MethodName默认为小写开头，而是需要和proto里定义的函数名称完全一致
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::echo)] = EchoServerService::echo_stub;
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::login)] = EchoServerService::login_stub;
+        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
+        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Login)] = EchoServerService::Login_stub;
         
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.echo"] = EchoServerService::echo_stub;
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.login"] = EchoServerService::login_stub;
+        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Echo"] = EchoServerService::Echo_stub;
+        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Login"] = EchoServerService::Login_stub;
         
 
         auto requestStub = [service,
@@ -304,8 +325,6 @@ namespace echo_service
         rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
     }
     
-}
-
 }
 }
 

@@ -29,17 +29,17 @@ using namespace dodo::test;
 
 std::atomic<int64_t> count(0);
 
-class MyService : public echo_service::EchoServerService
+class MyService : public EchoServerService
 {
 public:
-    MyService(const std::shared_ptr<echo_service::EchoServerClient>& client)
+    MyService(const std::shared_ptr<EchoServerClient>& client)
         :
         mClient(client)
     {
     }
 
-    bool echo(const EchoRequest& request, 
-        const echo_service::EchoReply::PTR& replyObj) override
+    bool Echo(const EchoRequest& request, 
+        const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
         response.set_message("world");
@@ -51,7 +51,7 @@ public:
             // 演示双向RPC(调用对端服务)
             EchoRequest r;
             r.set_message("hello");
-            mClient->echo(r, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
+            mClient->Echo(r, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
                 err.failed();
             });
         }
@@ -59,8 +59,8 @@ public:
         return true;
     }
 
-    bool login(const LoginRequest& request,
-        const echo_service::LoginReply::PTR& replyObj) override
+    bool Login(const LoginRequest& request,
+        const LoginReply::PTR& replyObj) override
     {
         LoginResponse response;
         response.set_message(request.message());
@@ -70,7 +70,7 @@ public:
     }
 
 private:
-    std::shared_ptr<echo_service::EchoServerClient>   mClient;
+    std::shared_ptr<EchoServerClient>   mClient;
 };
 
 static void counter(const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next)
@@ -99,11 +99,11 @@ static void onNormalTCPConnection(const TCPSession::PTR& session)
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 创建客户端
-    auto client = echo_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
+    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
 
     // 创建服务
     auto rpcServer = std::make_shared<MyService>(client);
-    registerEchoServerService(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
+    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 
     session->setDisConnectCallback([rpcServer](const TCPSession::PTR& session) {
         std::cout << "close session" << std::endl;
@@ -158,7 +158,7 @@ static void onHTTPConnection(const HttpSession::PTR& httpSession)
 
     // 创建服务
     auto rpcServer = std::make_shared<MyService>(nullptr);
-    registerEchoServerService(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
+    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 }
 
 int main(int argc, char **argv)

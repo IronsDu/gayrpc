@@ -12,7 +12,7 @@ using namespace brynet::net;
 using namespace utils_interceptor;
 using namespace dodo::test;
 
-static echo_service::EchoServerClient::PTR createEchoClient(const TCPSession::PTR& session)
+static EchoServerClient::PTR createEchoClient(const TCPSession::PTR& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
     session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
@@ -29,7 +29,7 @@ static echo_service::EchoServerClient::PTR createEchoClient(const TCPSession::PT
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
-    auto client = echo_service::EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
+    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
     return client;
 }
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
         // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
-        auto response = client->sync_echo(request, error);
+        auto response = client->sync_Echo(request, error);
 
         std::cout << "echo result:" << error.failed() << std::endl;
         std::cout << "echo message:" << response.message() << std::endl;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         LoginRequest request;
         request.set_message("sync login test");
 
-        auto response = client->sync_login(request, error);
+        auto response = client->sync_Login(request, error);
 
         std::cout << "login result:" << error.failed() << std::endl;
         std::cout << "login message:" << response.message() << std::endl;

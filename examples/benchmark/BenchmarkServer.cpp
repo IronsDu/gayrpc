@@ -27,11 +27,11 @@ using namespace gayrpc::core;
 
 std::atomic<int64_t> count(0);
 
-class MyService : public benchmark_service::EchoServerService
+class MyService : public EchoServerService
 {
 public:
-    bool echo(const EchoRequest& request, 
-        const benchmark_service::EchoReply::PTR& replyObj) override
+    bool Echo(const EchoRequest& request, 
+        const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
         response.set_message(request.message());
@@ -66,7 +66,7 @@ static void onConnection(const TCPSession::PTR& session)
 
     // 创建服务对象
     auto rpcServer = std::make_shared<MyService>();
-    registerEchoServerService(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
+    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 }
 
 int main(int argc, char **argv)
