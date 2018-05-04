@@ -41,12 +41,14 @@ message RpcMeta {
     
     // Rpc类型(请求、回应)
     Type    type = 1;
+    // 所属服务ID
+    uint32  service_id = 2;
     // RpcData的编码方式
-    DataEncodingType encoding = 2;
+    DataEncodingType encoding = 3;
     // 请求元信息
-    Request request_info = 3;
+    Request request_info = 4;
     // 回应元信息
-    Response response_info = 4;
+    Response response_info = 5;
     // 附加信息
-    map<string, string> meta_data = 5;
+    map<string, string> meta_data = 6;
 }

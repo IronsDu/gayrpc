@@ -36,6 +36,7 @@ namespace gayrpc
 
             template<typename Response, typename Request, typename Handle>
             void call(const Request& request,
+                uint32_t serviceID,
                 uint64_t msgID,
                 const Handle& handle,
                 std::chrono::seconds timeout,
@@ -44,6 +45,7 @@ namespace gayrpc
                 const auto sequenceID = mSequenceID++;
 
                 RpcMeta meta = makeRequestRpcMeta(sequenceID,
+                    serviceID,
                     msgID,
                     RpcMeta_DataEncodingType_BINARY,
                     true);
@@ -68,6 +70,7 @@ namespace gayrpc
 
             template<typename Response, typename Request, typename Handle>
             void call(const Request& request,
+                uint32_t serviceID,
                 uint64_t msgID,
                 const Handle& handle = nullptr)
             {
@@ -75,6 +78,7 @@ namespace gayrpc
                 const auto expectResponse = (handle != nullptr);
 
                 RpcMeta meta = makeRequestRpcMeta(sequenceID,
+                    serviceID,
                     msgID,
                     RpcMeta_DataEncodingType_BINARY,
                     expectResponse);
@@ -101,7 +105,8 @@ namespace gayrpc
                 }
             }
 
-            void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::PTR& rpcTypeHandleManager)
+            void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::PTR& rpcTypeHandleManager,
+                uint32_t serviceID)
             {
                 auto sharedThis = shared_from_this();
                 auto responseStub = [sharedThis](const RpcMeta& meta,
@@ -109,7 +114,7 @@ namespace gayrpc
                     sharedThis->processRpcResponse(meta, data);
                     return true;
                 };
-                rpcTypeHandleManager->registerTypeHandle(RpcMeta::RESPONSE, responseStub);
+                rpcTypeHandleManager->registerTypeHandle(RpcMeta::RESPONSE, responseStub, serviceID);
             }
 
         private:

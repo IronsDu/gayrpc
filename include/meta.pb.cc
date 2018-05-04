@@ -169,6 +169,7 @@ const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUT
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, type_),
+  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, service_id_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, encoding_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, request_info_),
   GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, response_info_),
@@ -210,26 +211,26 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\nmeta.proto\022\013gayrpc.core\"\340\004\n\007RpcMeta\022\'\n"
-      "\004type\030\001 \001(\0162\031.gayrpc.core.RpcMeta.Type\0227"
-      "\n\010encoding\030\002 \001(\0162%.gayrpc.core.RpcMeta.D"
-      "ataEncodingType\0222\n\014request_info\030\003 \001(\0132\034."
-      "gayrpc.core.RpcMeta.Request\0224\n\rresponse_"
-      "info\030\004 \001(\0132\035.gayrpc.core.RpcMeta.Respons"
-      "e\0225\n\tmeta_data\030\005 \003(\0132\".gayrpc.core.RpcMe"
-      "ta.MetaDataEntry\032n\n\007Request\022\021\n\tintMethod"
-      "\030\001 \001(\004\022\021\n\tstrMethod\030\002 \001(\t\022\027\n\017expect_resp"
-      "onse\030\003 \001(\010\022\023\n\013sequence_id\030\004 \001(\004\022\017\n\007timeo"
-      "ut\030\005 \001(\004\032d\n\010Response\022\023\n\013sequence_id\030\001 \001("
-      "\004\022\016\n\006failed\030\002 \001(\010\022\022\n\nerror_code\030\003 \001(\005\022\016\n"
-      "\006reason\030\004 \001(\t\022\017\n\007timeout\030\005 \001(\010\032/\n\rMetaDa"
-      "taEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\""
-      "!\n\004Type\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001\"(\n\020Da"
-      "taEncodingType\022\n\n\006BINARY\020\000\022\010\n\004JSON\020\001b\006pr"
-      "oto3"
+      "\n\nmeta.proto\022\013gayrpc.core\"\364\004\n\007RpcMeta\022\'\n"
+      "\004type\030\001 \001(\0162\031.gayrpc.core.RpcMeta.Type\022\022"
+      "\n\nservice_id\030\002 \001(\r\0227\n\010encoding\030\003 \001(\0162%.g"
+      "ayrpc.core.RpcMeta.DataEncodingType\0222\n\014r"
+      "equest_info\030\004 \001(\0132\034.gayrpc.core.RpcMeta."
+      "Request\0224\n\rresponse_info\030\005 \001(\0132\035.gayrpc."
+      "core.RpcMeta.Response\0225\n\tmeta_data\030\006 \003(\013"
+      "2\".gayrpc.core.RpcMeta.MetaDataEntry\032n\n\007"
+      "Request\022\021\n\tintMethod\030\001 \001(\004\022\021\n\tstrMethod\030"
+      "\002 \001(\t\022\027\n\017expect_response\030\003 \001(\010\022\023\n\013sequen"
+      "ce_id\030\004 \001(\004\022\017\n\007timeout\030\005 \001(\004\032d\n\010Response"
+      "\022\023\n\013sequence_id\030\001 \001(\004\022\016\n\006failed\030\002 \001(\010\022\022\n"
+      "\nerror_code\030\003 \001(\005\022\016\n\006reason\030\004 \001(\t\022\017\n\007tim"
+      "eout\030\005 \001(\010\032/\n\rMetaDataEntry\022\013\n\003key\030\001 \001(\t"
+      "\022\r\n\005value\030\002 \001(\t:\0028\001\"!\n\004Type\022\013\n\007REQUEST\020\000"
+      "\022\014\n\010RESPONSE\020\001\"(\n\020DataEncodingType\022\n\n\006BI"
+      "NARY\020\000\022\010\n\004JSON\020\001b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 644);
+      descriptor, 664);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "meta.proto", &protobuf_RegisterTypes);
 }
@@ -1129,6 +1130,7 @@ void RpcMeta::InitAsDefaultInstance() {
 }
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int RpcMeta::kTypeFieldNumber;
+const int RpcMeta::kServiceIdFieldNumber;
 const int RpcMeta::kEncodingFieldNumber;
 const int RpcMeta::kRequestInfoFieldNumber;
 const int RpcMeta::kResponseInfoFieldNumber;
@@ -1251,10 +1253,24 @@ bool RpcMeta::MergePartialFromCodedStream(
         break;
       }
 
-      // .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
+      // uint32 service_id = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
+                 input, &service_id_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
           int value;
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
@@ -1266,10 +1282,10 @@ bool RpcMeta::MergePartialFromCodedStream(
         break;
       }
 
-      // .gayrpc.core.RpcMeta.Request request_info = 3;
-      case 3: {
+      // .gayrpc.core.RpcMeta.Request request_info = 4;
+      case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(26u /* 26 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_request_info()));
         } else {
@@ -1278,10 +1294,10 @@ bool RpcMeta::MergePartialFromCodedStream(
         break;
       }
 
-      // .gayrpc.core.RpcMeta.Response response_info = 4;
-      case 4: {
+      // .gayrpc.core.RpcMeta.Response response_info = 5;
+      case 5: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
                input, mutable_response_info()));
         } else {
@@ -1290,10 +1306,10 @@ bool RpcMeta::MergePartialFromCodedStream(
         break;
       }
 
-      // map<string, string> meta_data = 5;
-      case 5: {
+      // map<string, string> meta_data = 6;
+      case 6: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
+            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
           RpcMeta_MetaDataEntry_DoNotUse::Parser< ::google::protobuf::internal::MapField<
               RpcMeta_MetaDataEntry_DoNotUse,
               ::std::string, ::std::string,
@@ -1349,25 +1365,30 @@ void RpcMeta::SerializeWithCachedSizes(
       1, this->type(), output);
   }
 
-  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
+  // uint32 service_id = 2;
+  if (this->service_id() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->service_id(), output);
+  }
+
+  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
   if (this->encoding() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      2, this->encoding(), output);
+      3, this->encoding(), output);
   }
 
-  // .gayrpc.core.RpcMeta.Request request_info = 3;
+  // .gayrpc.core.RpcMeta.Request request_info = 4;
   if (this->has_request_info()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      3, *this->request_info_, output);
+      4, *this->request_info_, output);
   }
 
-  // .gayrpc.core.RpcMeta.Response response_info = 4;
+  // .gayrpc.core.RpcMeta.Response response_info = 5;
   if (this->has_response_info()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, *this->response_info_, output);
+      5, *this->response_info_, output);
   }
 
-  // map<string, string> meta_data = 5;
+  // map<string, string> meta_data = 6;
   if (!this->meta_data().empty()) {
     typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
         ConstPtr;
@@ -1403,7 +1424,7 @@ void RpcMeta::SerializeWithCachedSizes(
         entry.reset(meta_data_.NewEntryWrapper(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
         ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            5, *entry, output);
+            6, *entry, output);
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
     } else {
@@ -1414,7 +1435,7 @@ void RpcMeta::SerializeWithCachedSizes(
         entry.reset(meta_data_.NewEntryWrapper(
             it->first, it->second));
         ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            5, *entry, output);
+            6, *entry, output);
         Utf8Check::Check(&*it);
       }
     }
@@ -1440,27 +1461,32 @@ void RpcMeta::SerializeWithCachedSizes(
       1, this->type(), target);
   }
 
-  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
-  if (this->encoding() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      2, this->encoding(), target);
+  // uint32 service_id = 2;
+  if (this->service_id() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->service_id(), target);
   }
 
-  // .gayrpc.core.RpcMeta.Request request_info = 3;
+  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
+  if (this->encoding() != 0) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
+      3, this->encoding(), target);
+  }
+
+  // .gayrpc.core.RpcMeta.Request request_info = 4;
   if (this->has_request_info()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        3, *this->request_info_, deterministic, target);
+        4, *this->request_info_, deterministic, target);
   }
 
-  // .gayrpc.core.RpcMeta.Response response_info = 4;
+  // .gayrpc.core.RpcMeta.Response response_info = 5;
   if (this->has_response_info()) {
     target = ::google::protobuf::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        4, *this->response_info_, deterministic, target);
+        5, *this->response_info_, deterministic, target);
   }
 
-  // map<string, string> meta_data = 5;
+  // map<string, string> meta_data = 6;
   if (!this->meta_data().empty()) {
     typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
         ConstPtr;
@@ -1497,7 +1523,7 @@ void RpcMeta::SerializeWithCachedSizes(
             items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
         target = ::google::protobuf::internal::WireFormatLite::
                    InternalWriteMessageNoVirtualToArray(
-                       5, *entry, deterministic, target);
+                       6, *entry, deterministic, target);
 ;
         Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
       }
@@ -1510,7 +1536,7 @@ void RpcMeta::SerializeWithCachedSizes(
             it->first, it->second));
         target = ::google::protobuf::internal::WireFormatLite::
                    InternalWriteMessageNoVirtualToArray(
-                       5, *entry, deterministic, target);
+                       6, *entry, deterministic, target);
 ;
         Utf8Check::Check(&*it);
       }
@@ -1534,7 +1560,7 @@ size_t RpcMeta::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // map<string, string> meta_data = 5;
+  // map<string, string> meta_data = 6;
   total_size += 1 *
       ::google::protobuf::internal::FromIntSize(this->meta_data_size());
   {
@@ -1548,14 +1574,14 @@ size_t RpcMeta::ByteSizeLong() const {
     }
   }
 
-  // .gayrpc.core.RpcMeta.Request request_info = 3;
+  // .gayrpc.core.RpcMeta.Request request_info = 4;
   if (this->has_request_info()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
         *this->request_info_);
   }
 
-  // .gayrpc.core.RpcMeta.Response response_info = 4;
+  // .gayrpc.core.RpcMeta.Response response_info = 5;
   if (this->has_response_info()) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::MessageSize(
@@ -1568,7 +1594,14 @@ size_t RpcMeta::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
   }
 
-  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
+  // uint32 service_id = 2;
+  if (this->service_id() != 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::UInt32Size(
+        this->service_id());
+  }
+
+  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
   if (this->encoding() != 0) {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::EnumSize(this->encoding());
@@ -1613,6 +1646,9 @@ void RpcMeta::MergeFrom(const RpcMeta& from) {
   if (from.type() != 0) {
     set_type(from.type());
   }
+  if (from.service_id() != 0) {
+    set_service_id(from.service_id());
+  }
   if (from.encoding() != 0) {
     set_encoding(from.encoding());
   }
@@ -1646,6 +1682,7 @@ void RpcMeta::InternalSwap(RpcMeta* other) {
   swap(request_info_, other->request_info_);
   swap(response_info_, other->response_info_);
   swap(type_, other->type_);
+  swap(service_id_, other->service_id_);
   swap(encoding_, other->encoding_);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   swap(_cached_size_, other->_cached_size_);

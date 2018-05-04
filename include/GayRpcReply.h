@@ -43,6 +43,7 @@ namespace gayrpc
 
                 RpcMeta meta;
                 meta.set_type(RpcMeta::RESPONSE);
+                meta.set_service_id(mRequestMeta.service_id());
                 meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
                 meta.mutable_response_info()->set_failed(false);
                 meta.mutable_response_info()->set_timeout(false);
@@ -67,6 +68,7 @@ namespace gayrpc
                 RpcMeta meta;
                 meta.set_type(RpcMeta::RESPONSE);
                 meta.set_encoding(RpcMeta_DataEncodingType_BINARY);
+                meta.set_service_id(mRequestMeta.service_id());
                 meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
                 meta.mutable_response_info()->set_failed(true);
                 meta.mutable_response_info()->set_error_code(errorCode);

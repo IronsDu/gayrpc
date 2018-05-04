@@ -2,8 +2,8 @@
 // Coding by github.com/liuhan907
 // DO NOT EDIT!!!
 
-#ifndef _ECHO_SERVICE_H
-#define _ECHO_SERVICE_H
+#ifndef DODO_TEST_ECHO_SERVICE_H
+#define DODO_TEST_ECHO_SERVICE_H
 
 #include <string>
 #include <unordered_map>
@@ -30,6 +30,12 @@ namespace test {
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
+    enum class ServiceID:uint32_t
+    {
+        EchoServer,
+        
+    };
+
     
     enum class EchoServerMsgID:uint64_t
     {
@@ -53,12 +59,12 @@ namespace test {
         void Echo(const dodo::test::EchoRequest& request,
             const EchoHandle& handle = nullptr)
         {
-            call<dodo::test::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
+            call<dodo::test::EchoResponse>(request, static_cast<uint32_t>(ServiceID::EchoServer), static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
         }
         void Login(const dodo::test::LoginRequest& request,
             const LoginHandle& handle = nullptr)
         {
-            call<dodo::test::LoginResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Login), handle);
+            call<dodo::test::LoginResponse>(request, static_cast<uint32_t>(ServiceID::EchoServer), static_cast<uint64_t>(EchoServerMsgID::Login), handle);
         }
         
         void Echo(const dodo::test::EchoRequest& request,
@@ -68,6 +74,7 @@ namespace test {
         {
             call<dodo::test::EchoResponse>(request, 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
+                static_cast<uint32_t>(ServiceID::EchoServer), 
                 handle,
                 timeout,
                 std::move(timeoutCallback));
@@ -79,6 +86,7 @@ namespace test {
         {
             call<dodo::test::LoginResponse>(request, 
                 static_cast<uint64_t>(EchoServerMsgID::Login), 
+                static_cast<uint32_t>(ServiceID::EchoServer), 
                 handle,
                 timeout,
                 std::move(timeoutCallback));
@@ -132,7 +140,7 @@ namespace test {
             };
 
             auto client = PTR(new make_shared_enabler(outboundInterceptor, inboundInterceptor));
-            client->installResponseStub(rpcHandlerManager);
+            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(ServiceID::EchoServer));
 
             return client;
         }
@@ -155,7 +163,7 @@ namespace test {
 
         virtual void onClose() {}
 
-        static  void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+        static void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor);
@@ -322,7 +330,7 @@ namespace test {
                 inboundInterceptor,
                 outboundInterceptor);
         };
-        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
+        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(ServiceID::EchoServer));
     }
     
 }

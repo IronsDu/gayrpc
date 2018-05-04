@@ -552,28 +552,28 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 
   // accessors -------------------------------------------------------
 
-  // map<string, string> meta_data = 5;
+  // map<string, string> meta_data = 6;
   int meta_data_size() const;
   void clear_meta_data();
-  static const int kMetaDataFieldNumber = 5;
+  static const int kMetaDataFieldNumber = 6;
   const ::google::protobuf::Map< ::std::string, ::std::string >&
       meta_data() const;
   ::google::protobuf::Map< ::std::string, ::std::string >*
       mutable_meta_data();
 
-  // .gayrpc.core.RpcMeta.Request request_info = 3;
+  // .gayrpc.core.RpcMeta.Request request_info = 4;
   bool has_request_info() const;
   void clear_request_info();
-  static const int kRequestInfoFieldNumber = 3;
+  static const int kRequestInfoFieldNumber = 4;
   const ::gayrpc::core::RpcMeta_Request& request_info() const;
   ::gayrpc::core::RpcMeta_Request* release_request_info();
   ::gayrpc::core::RpcMeta_Request* mutable_request_info();
   void set_allocated_request_info(::gayrpc::core::RpcMeta_Request* request_info);
 
-  // .gayrpc.core.RpcMeta.Response response_info = 4;
+  // .gayrpc.core.RpcMeta.Response response_info = 5;
   bool has_response_info() const;
   void clear_response_info();
-  static const int kResponseInfoFieldNumber = 4;
+  static const int kResponseInfoFieldNumber = 5;
   const ::gayrpc::core::RpcMeta_Response& response_info() const;
   ::gayrpc::core::RpcMeta_Response* release_response_info();
   ::gayrpc::core::RpcMeta_Response* mutable_response_info();
@@ -585,9 +585,15 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::gayrpc::core::RpcMeta_Type type() const;
   void set_type(::gayrpc::core::RpcMeta_Type value);
 
-  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
+  // uint32 service_id = 2;
+  void clear_service_id();
+  static const int kServiceIdFieldNumber = 2;
+  ::google::protobuf::uint32 service_id() const;
+  void set_service_id(::google::protobuf::uint32 value);
+
+  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
   void clear_encoding();
-  static const int kEncodingFieldNumber = 2;
+  static const int kEncodingFieldNumber = 3;
   ::gayrpc::core::RpcMeta_DataEncodingType encoding() const;
   void set_encoding(::gayrpc::core::RpcMeta_DataEncodingType value);
 
@@ -604,6 +610,7 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
   ::gayrpc::core::RpcMeta_Request* request_info_;
   ::gayrpc::core::RpcMeta_Response* response_info_;
   int type_;
+  ::google::protobuf::uint32 service_id_;
   int encoding_;
   mutable int _cached_size_;
   friend struct ::protobuf_meta_2eproto::TableStruct;
@@ -862,7 +869,21 @@ inline void RpcMeta::set_type(::gayrpc::core::RpcMeta_Type value) {
   // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.type)
 }
 
-// .gayrpc.core.RpcMeta.DataEncodingType encoding = 2;
+// uint32 service_id = 2;
+inline void RpcMeta::clear_service_id() {
+  service_id_ = 0u;
+}
+inline ::google::protobuf::uint32 RpcMeta::service_id() const {
+  // @@protoc_insertion_point(field_get:gayrpc.core.RpcMeta.service_id)
+  return service_id_;
+}
+inline void RpcMeta::set_service_id(::google::protobuf::uint32 value) {
+  
+  service_id_ = value;
+  // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.service_id)
+}
+
+// .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
 inline void RpcMeta::clear_encoding() {
   encoding_ = 0;
 }
@@ -876,7 +897,7 @@ inline void RpcMeta::set_encoding(::gayrpc::core::RpcMeta_DataEncodingType value
   // @@protoc_insertion_point(field_set:gayrpc.core.RpcMeta.encoding)
 }
 
-// .gayrpc.core.RpcMeta.Request request_info = 3;
+// .gayrpc.core.RpcMeta.Request request_info = 4;
 inline bool RpcMeta::has_request_info() const {
   return this != internal_default_instance() && request_info_ != NULL;
 }
@@ -926,7 +947,7 @@ inline void RpcMeta::set_allocated_request_info(::gayrpc::core::RpcMeta_Request*
   // @@protoc_insertion_point(field_set_allocated:gayrpc.core.RpcMeta.request_info)
 }
 
-// .gayrpc.core.RpcMeta.Response response_info = 4;
+// .gayrpc.core.RpcMeta.Response response_info = 5;
 inline bool RpcMeta::has_response_info() const {
   return this != internal_default_instance() && response_info_ != NULL;
 }
@@ -976,7 +997,7 @@ inline void RpcMeta::set_allocated_response_info(::gayrpc::core::RpcMeta_Respons
   // @@protoc_insertion_point(field_set_allocated:gayrpc.core.RpcMeta.response_info)
 }
 
-// map<string, string> meta_data = 5;
+// map<string, string> meta_data = 6;
 inline int RpcMeta::meta_data_size() const {
   return meta_data_.size();
 }

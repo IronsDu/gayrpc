@@ -3,9 +3,10 @@
 
 #include <string>
 #include <unordered_map>
+#include <map>
 #include <functional>
 #include <memory>
-#include <mutex>
+#include <shared_mutex>
 
 #include "meta.pb.h"
 
@@ -13,18 +14,35 @@ namespace gayrpc
 {
     namespace core
     {
-        // 管理不同类型RPC消息(REQUEST和Response)的处理器
+        // 管理不同类型RPC消息(REQUEST和Response)以及不同服务的处理器
         class RpcTypeHandleManager : public std::enable_shared_from_this<RpcTypeHandleManager>
         {
         public:
             typedef std::shared_ptr<RpcTypeHandleManager> PTR;
-            typedef std::function<bool(const RpcMeta&, const std::string& body)> TypeHandler;
+            typedef std::function<bool(const RpcMeta&, const std::string& body)>    ServiceHandler;
+            typedef std::unordered_map<int, ServiceHandler>                         ServiceHandlerMap;
 
         public:
-            void    registerTypeHandle(RpcMeta::Type type, TypeHandler handle)
+            bool    registerTypeHandle(RpcMeta::Type type, ServiceHandler handle, int serviceID)
             {
-                std::lock_guard<std::mutex> lock(mMutex);
-                mTypeHandlers[type] = std::move(handle);
+                std::unique_lock<std::shared_mutex> lock(mMutex);
+                auto& serviceMap = mTypeHandlers[type];
+                if (serviceMap.find(serviceID) != serviceMap.end())
+                {
+                    return false;
+                }
+                serviceMap[serviceID] = std::move(handle);
+                return true;
+            }
+
+            void    removeTypeHandle(RpcMeta::Type type, int serviceID)
+            {
+                std::unique_lock<std::shared_mutex> lock(mMutex);
+                if (mTypeHandlers.find(type) == mTypeHandlers.end())
+                {
+                    return;
+                }
+                mTypeHandlers[type].erase(serviceID);
             }
 
             virtual ~RpcTypeHandleManager()
@@ -34,15 +52,21 @@ namespace gayrpc
             bool    handleRpcMsg(const RpcMeta& meta,
                 const std::string& data)
             {
-                TypeHandler handler;
+                ServiceHandler handler;
                 {
-                    std::lock_guard<std::mutex> lock(mMutex);
+                    std::shared_lock<std::shared_mutex> lock(mMutex);
                     auto it = mTypeHandlers.find(meta.type());
                     if (it == mTypeHandlers.end())
                     {
                         return false;
                     }
-                    handler = (*it).second;
+                    auto& serviceMap = (*it).second;
+                    auto serviceIt = serviceMap.find(meta.service_id());
+                    if (serviceIt == serviceMap.end())
+                    {
+                        return false;
+                    }
+                    handler = (*serviceIt).second;
                 }
 
                 try
@@ -57,8 +81,8 @@ namespace gayrpc
             }
 
         private:
-            std::unordered_map<int, TypeHandler>    mTypeHandlers;
-            std::mutex                              mMutex;
+            std::map<int, ServiceHandlerMap>            mTypeHandlers;
+            std::shared_mutex                           mMutex;
         };
     }
 }

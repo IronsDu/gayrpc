@@ -2,8 +2,8 @@
 // Coding by github.com/liuhan907
 // DO NOT EDIT!!!
 
-#ifndef _BENCHMARK_SERVICE_H
-#define _BENCHMARK_SERVICE_H
+#ifndef DODO_BENCHMARK_BENCHMARK_SERVICE_H
+#define DODO_BENCHMARK_BENCHMARK_SERVICE_H
 
 #include <string>
 #include <unordered_map>
@@ -30,6 +30,12 @@ namespace benchmark {
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
+    enum class ServiceID:uint32_t
+    {
+        EchoServer,
+        
+    };
+
     
     enum class EchoServerMsgID:uint64_t
     {
@@ -50,7 +56,7 @@ namespace benchmark {
         void Echo(const dodo::benchmark::EchoRequest& request,
             const EchoHandle& handle = nullptr)
         {
-            call<dodo::benchmark::EchoResponse>(request, static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
+            call<dodo::benchmark::EchoResponse>(request, static_cast<uint32_t>(ServiceID::EchoServer), static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
         }
         
         void Echo(const dodo::benchmark::EchoRequest& request,
@@ -60,6 +66,7 @@ namespace benchmark {
         {
             call<dodo::benchmark::EchoResponse>(request, 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
+                static_cast<uint32_t>(ServiceID::EchoServer), 
                 handle,
                 timeout,
                 std::move(timeoutCallback));
@@ -98,7 +105,7 @@ namespace benchmark {
             };
 
             auto client = PTR(new make_shared_enabler(outboundInterceptor, inboundInterceptor));
-            client->installResponseStub(rpcHandlerManager);
+            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(ServiceID::EchoServer));
 
             return client;
         }
@@ -120,7 +127,7 @@ namespace benchmark {
 
         virtual void onClose() {}
 
-        static  void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+        static void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor);
@@ -241,7 +248,7 @@ namespace benchmark {
                 inboundInterceptor,
                 outboundInterceptor);
         };
-        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub);
+        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(ServiceID::EchoServer));
     }
     
 }
