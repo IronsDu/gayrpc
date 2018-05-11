@@ -37,8 +37,7 @@ namespace gayrpc
 
                 if (!mRequestMeta.request_info().expect_response())
                 {
-                    //TODO::是否直接忽略不必抛出异常
-                    throw std::runtime_error("server not expect response");
+                    return;
                 }
 
                 RpcMeta meta;
