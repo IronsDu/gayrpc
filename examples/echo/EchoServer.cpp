@@ -38,7 +38,7 @@ public:
     {
     }
 
-    bool Echo(const EchoRequest& request, 
+    void Echo(const EchoRequest& request, 
         const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
@@ -55,18 +55,14 @@ public:
                 err.failed();
             });
         }
-
-        return true;
     }
 
-    bool Login(const LoginRequest& request,
+    void Login(const LoginRequest& request,
         const LoginReply::PTR& replyObj) override
     {
         LoginResponse response;
         response.set_message(request.message());
         replyObj->reply(response);
-
-        return true;
     }
 
 private:

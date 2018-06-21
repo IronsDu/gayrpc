@@ -3,7 +3,6 @@ project(gayrpc)
 
 include_directories("${PROJECT_SOURCE_DIR}/include/")
 include_directories("${PROJECT_SOURCE_DIR}/utils/")
-include_directories("${PROJECT_SOURCE_DIR}/../brynet/src/")
 
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")

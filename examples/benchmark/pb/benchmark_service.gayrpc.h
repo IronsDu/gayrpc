@@ -30,7 +30,7 @@ namespace benchmark {
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
-    enum class ServiceID:uint32_t
+    enum class benchmark_service_ServiceID:uint32_t
     {
         EchoServer,
         
@@ -47,6 +47,7 @@ namespace benchmark {
     {
     public:
         typedef std::shared_ptr<EchoServerClient> PTR;
+        typedef std::weak_ptr<EchoServerClient> WeakPtr;
 
         typedef std::function<void(const dodo::benchmark::EchoResponse&,
             const gayrpc::core::RpcError&)> EchoHandle;
@@ -56,7 +57,10 @@ namespace benchmark {
         void Echo(const dodo::benchmark::EchoRequest& request,
             const EchoHandle& handle = nullptr)
         {
-            call<dodo::benchmark::EchoResponse>(request, static_cast<uint32_t>(ServiceID::EchoServer), static_cast<uint64_t>(EchoServerMsgID::Echo), handle);
+            call<dodo::benchmark::EchoResponse>(request, 
+                static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
+                static_cast<uint64_t>(EchoServerMsgID::Echo), 
+                handle);
         }
         
         void Echo(const dodo::benchmark::EchoRequest& request,
@@ -65,15 +69,15 @@ namespace benchmark {
             BaseClient::TIMEOUT_CALLBACK timeoutCallback)
         {
             call<dodo::benchmark::EchoResponse>(request, 
+                static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                static_cast<uint32_t>(ServiceID::EchoServer), 
                 handle,
                 timeout,
                 std::move(timeoutCallback));
         }
         
 
-         dodo::benchmark::EchoResponse sync_Echo(const dodo::benchmark::EchoRequest& request,
+        dodo::benchmark::EchoResponse SyncEcho(const dodo::benchmark::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
@@ -105,7 +109,7 @@ namespace benchmark {
             };
 
             auto client = PTR(new make_shared_enabler(outboundInterceptor, inboundInterceptor));
-            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(ServiceID::EchoServer));
+            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
 
             return client;
         }
@@ -114,31 +118,33 @@ namespace benchmark {
         using BaseClient::BaseClient;
     };
 
-    typedef TemplateReply<dodo::benchmark::EchoResponse> EchoReply;
-    
-
     class EchoServerService : public BaseService
     {
     public:
         typedef std::shared_ptr<EchoServerService> PTR;
+        typedef std::weak_ptr<EchoServerService> WeakPtr;
+
+        typedef TemplateReply<dodo::benchmark::EchoResponse> EchoReply;
+        
+
         virtual ~EchoServerService()
         {
         }
 
         virtual void onClose() {}
 
-        static void Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+        static inline bool Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor);
     private:
-        virtual bool Echo(const dodo::benchmark::EchoRequest& request, 
+        virtual void Echo(const dodo::benchmark::EchoRequest& request, 
             const EchoReply::PTR& replyObj) = 0;
         
 
     private:
 
-        static bool Echo_stub(const RpcMeta& meta,
+        static void Echo_stub(const RpcMeta& meta,
             const std::string& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
@@ -151,8 +157,7 @@ namespace benchmark {
             case RpcMeta::BINARY:
                 if (!request.ParseFromString(data))
                 {
-                    std::cerr << "parse binary EchoRequst error " << std::endl;
-                    return false;
+                    throw std::runtime_error("parse binary Echo error");
                 }
                 break;
             case RpcMeta::JSON:
@@ -160,14 +165,13 @@ namespace benchmark {
                     auto s = JsonStringToMessage(data, &request);
                     if (!s.ok())
                     {
-                        throw std::runtime_error("parse json EchoRequst failed:" +
+                        throw std::runtime_error("parse json Echo failed:" +
                             s.error_message().as_string());
                     }
                 }
                 break;
             default:
-                std::cerr << "parse EchoRequst of unspported encoding type:" << meta.encoding() << std::endl;
-                return false;
+                throw std::runtime_error("parse Echo of unsupported encoding type:" + meta.encoding());
             }
 
             inboundInterceptor(meta,
@@ -178,17 +182,16 @@ namespace benchmark {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
                 service->Echo(request, replyObject);
             });
-            return true;
         }
         
     };
 
-    void EchoServerService::Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
+    inline bool EchoServerService::Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
         const EchoServerService::PTR& service,
         const UnaryServerInterceptor& inboundInterceptor,
         const UnaryServerInterceptor& outboundInterceptor)
     {
-        typedef std::function<bool(const RpcMeta&,
+        typedef std::function<void(const RpcMeta&,
             const std::string& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
@@ -226,8 +229,7 @@ namespace benchmark {
                 auto it = serviceHandlerMapByStr->find(meta.request_info().strmethod());
                 if (it == serviceHandlerMapByStr->end())
                 {
-                    std::cerr << "not found handle, method:" << meta.request_info().strmethod();
-                    return false;
+                    throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
                 }
                 handler = (*it).second;
             }
@@ -236,19 +238,19 @@ namespace benchmark {
                 auto it = serviceHandlerMapById->find(meta.request_info().intmethod());
                 if (it == serviceHandlerMapById->end())
                 {
-                    std::cerr << "not found handle, method:" << meta.request_info().intmethod();
-                    return false;
+                    throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
                 }
                 handler = (*it).second;
             }
 
-            return handler(meta,
+            handler(meta,
                 data,
                 service,
                 inboundInterceptor,
                 outboundInterceptor);
         };
-        rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(ServiceID::EchoServer));
+
+        return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
     }
     
 }

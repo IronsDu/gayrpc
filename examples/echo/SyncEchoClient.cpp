@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
         // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
-        auto response = client->sync_Echo(request, error);
+        auto response = client->SyncEcho(request, error);
 
         std::cout << "echo result:" << error.failed() << std::endl;
         std::cout << "echo message:" << response.message() << std::endl;
@@ -68,7 +68,7 @@ int main(int argc, char **argv)
         LoginRequest request;
         request.set_message("sync login test");
 
-        auto response = client->sync_Login(request, error);
+        auto response = client->SyncLogin(request, error);
 
         std::cout << "login result:" << error.failed() << std::endl;
         std::cout << "login message:" << response.message() << std::endl;

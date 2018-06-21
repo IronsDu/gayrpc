@@ -30,15 +30,13 @@ std::atomic<int64_t> count(0);
 class MyService : public EchoServerService
 {
 public:
-    bool Echo(const EchoRequest& request, 
+    void Echo(const EchoRequest& request, 
         const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
         response.set_message(request.message());
 
         replyObj->reply(response);
-
-        return true;
     }
 };
 

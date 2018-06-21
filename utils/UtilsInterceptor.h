@@ -15,7 +15,7 @@ namespace utils_interceptor
 {
     // 一些辅助型拦截器
 
-    auto withProtectedCall()
+    static auto withProtectedCall()
     {
         return [](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
@@ -35,7 +35,7 @@ namespace utils_interceptor
         };
     }
 
-    auto withSessionSender(brynet::net::TCPSession::WEAK_PTR weakSession)
+    static auto withSessionSender(brynet::net::TCPSession::WEAK_PTR weakSession)
     {
         return [weakSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
@@ -51,11 +51,16 @@ namespace utils_interceptor
         timeoutMeta.set_type(gayrpc::core::RpcMeta::RESPONSE);
         timeoutMeta.mutable_response_info()->set_timeout(true);
         timeoutMeta.mutable_response_info()->set_sequence_id(seq_id);
-        handleManager->handleRpcMsg(timeoutMeta, "");
+        try
+        {
+            handleManager->handleRpcMsg(timeoutMeta, "");
+        }
+        catch(...)
+        { }
     }
 
     // 由eventLoop线程处理超时检测
-    auto withTimeoutCheck(const brynet::net::EventLoop::PTR& eventLoop,
+    static auto withTimeoutCheck(const brynet::net::EventLoop::PTR& eventLoop,
         const gayrpc::core::RpcTypeHandleManager::PTR& handleManager)
     {
         return [eventLoop, handleManager](const gayrpc::core::RpcMeta& meta,

@@ -19,7 +19,7 @@ namespace gayrpc
         {
         public:
             typedef std::shared_ptr<RpcTypeHandleManager> PTR;
-            typedef std::function<bool(const RpcMeta&, const std::string& body)>    ServiceHandler;
+            typedef std::function<void(const RpcMeta&, const std::string& body)>    ServiceHandler;
             typedef std::unordered_map<int, ServiceHandler>                         ServiceHandlerMap;
 
         public:
@@ -49,7 +49,7 @@ namespace gayrpc
             {
             }
 
-            bool    handleRpcMsg(const RpcMeta& meta,
+            void    handleRpcMsg(const RpcMeta& meta,
                 const std::string& data)
             {
                 ServiceHandler handler;
@@ -58,18 +58,18 @@ namespace gayrpc
                     auto it = mTypeHandlers.find(meta.type());
                     if (it == mTypeHandlers.end())
                     {
-                        return false;
+                        throw std::runtime_error("not found type handle of type:" + std::to_string(meta.type()));
                     }
                     auto& serviceMap = (*it).second;
                     auto serviceIt = serviceMap.find(meta.service_id());
                     if (serviceIt == serviceMap.end())
                     {
-                        return false;
+                        throw std::runtime_error("not found service handle of id:" + std::to_string(meta.service_id()));
                     }
                     handler = (*serviceIt).second;
                 }
 
-                return handler(meta, data);
+                handler(meta, data);
             }
 
         private:

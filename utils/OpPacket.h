@@ -53,7 +53,7 @@ namespace gayrpc
             OpPacketHandler;
 
         // 解析网络消息中的OpPacket
-        size_t parseOpPacket(const char* buffer,
+        static size_t parseOpPacket(const char* buffer,
             size_t len,
             const OpPacketHandler& handler)
         {
@@ -93,7 +93,7 @@ namespace gayrpc
 
 
         // 解析OpPacket中的protobuf packet
-        bool parseProtobufPacket(const OpPacket& opPacket,
+        static bool parseProtobufPacket(const OpPacket& opPacket,
             const ProtobufPacketHandler& handler)
         {
             BasePacketReader bpr(opPacket.data, opPacket.head.data_len);
@@ -132,7 +132,7 @@ namespace gayrpc
             return true;
         }
 
-        void serializeProtobufPacket(BasePacketWriter& bpw,
+        static void serializeProtobufPacket(BasePacketWriter& bpw,
             const std::string& meta,
             const std::string& data)
         {

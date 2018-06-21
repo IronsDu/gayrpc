@@ -14,7 +14,7 @@ namespace gayrpc
     namespace utils
     {
         // 实现拦截器
-        auto togetherInterceptor(std::vector<core::UnaryServerInterceptor>& interceptorArray)
+        static auto togetherInterceptor(std::vector<core::UnaryServerInterceptor>& interceptorArray)
         {
         }
         template<class T>

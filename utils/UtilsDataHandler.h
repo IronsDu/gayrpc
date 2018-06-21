@@ -22,19 +22,38 @@ static size_t dataHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandl
             if (!meta.ParseFromString(msg.meta))
             {
                 std::cerr << "parse RpcMeta protobuf failed" << std::endl;
-                return false;
+                return;
             }
 
             if (handleRpcEventLoop != nullptr)
             {
                 handleRpcEventLoop->pushAsyncProc([rpcHandlerManager, meta, msg]() {
-                    rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                    try
+                    {
+                        rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                    }
+                    catch (const std::runtime_error& e)
+                    {
+                        std::cerr << e.what() << std::endl;
+                    }
+                    catch(...)
+                    { }
                 });
-                return true;
             }
             else
             {
-                return rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                try
+                {
+                    rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                }
+                catch(const std::runtime_error& e)
+                {
+                    std::cerr << e.what() << std::endl;
+                }
+                catch (...)
+                {
+
+                }
             }
         };
 
@@ -56,7 +75,7 @@ static void sender(const gayrpc::core::RpcMeta& meta,
     const brynet::net::TCPSession::WEAK_PTR& weakSession)
 {
     // 实际的发送
-    BigPacket bpw(true, true);
+    AutoMallocPacket<4096> bpw(true, true);
     gayrpc::oppacket::serializeProtobufPacket(bpw,
         meta.SerializeAsString(),
         message.SerializeAsString());

@@ -28,7 +28,7 @@ public:
     {
     }
 
-    bool Echo(const EchoRequest& request,
+    void Echo(const EchoRequest& request,
         const EchoReply::PTR& replyObj) override
     {
         EchoResponse response;
@@ -39,14 +39,11 @@ public:
         mClient->Echo(request, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
             err.failed();
         });
-
-        return true;
     }
 
-    bool Login(const LoginRequest& request,
+    void Login(const LoginRequest& request,
         const LoginReply::PTR& replyObj) override
     {
-        return true;
     }
 
 private:
