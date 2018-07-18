@@ -77,7 +77,8 @@ namespace benchmark {
         }
         
 
-        dodo::benchmark::EchoResponse SyncEcho(const dodo::benchmark::EchoRequest& request,
+        dodo::benchmark::EchoResponse SyncEcho(
+            const dodo::benchmark::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
@@ -219,7 +220,7 @@ namespace benchmark {
             
             if (meta.type() != RpcMeta::REQUEST)
             {
-                return false;
+                throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
             }
             
             EchoServerServiceRequestHandler handler;

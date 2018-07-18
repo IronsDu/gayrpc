@@ -100,7 +100,8 @@ namespace test {
         }
         
 
-        dodo::test::EchoResponse SyncEcho(const dodo::test::EchoRequest& request,
+        dodo::test::EchoResponse SyncEcho(
+            const dodo::test::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
@@ -115,7 +116,8 @@ namespace test {
                 error = errorPromise->get_future().get();
                 return responsePromise->get_future().get();
         }
-        dodo::test::LoginResponse SyncLogin(const dodo::test::LoginRequest& request,
+        dodo::test::LoginResponse SyncLogin(
+            const dodo::test::LoginRequest& request,
             gayrpc::core::RpcError& error)
         {
                 auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
@@ -301,7 +303,7 @@ namespace test {
             
             if (meta.type() != RpcMeta::REQUEST)
             {
-                throw std::runtime_error("rpc meta type not request, is :" + std::to_string(meta.type()));
+                throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
             }
             
             EchoServerServiceRequestHandler handler;
