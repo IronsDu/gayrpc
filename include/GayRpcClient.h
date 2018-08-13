@@ -26,9 +26,9 @@ namespace gayrpc
             BaseClient(UnaryServerInterceptor outboundInterceptor,
                 UnaryServerInterceptor inboundInterceptor)
                 :
-                mSequenceID(0),
+                mInboundInterceptor(std::move(inboundInterceptor)),
                 mOutboundInterceptor(std::move(outboundInterceptor)),
-                mInboundInterceptor(std::move(inboundInterceptor))
+                mSequenceID(0)
             {}
 
             virtual ~BaseClient()

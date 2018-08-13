@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include <brynet/net/SocketLibFunction.h>
-#include <brynet/net/WrapTCPService.h>
+#include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
 #include <brynet/utils/packet.h>
 #include <brynet/utils/WaitGroup.h>
@@ -89,7 +89,7 @@ private:
 
 std::atomic<int64_t> connectionCounter(0);
 
-static void onConnection(const TCPSession::PTR& session,
+static void onConnection(const DataSocket::PTR& session,
     const WaitGroup::PTR& wg,
     int maxRequestNum,
     LATENCY_PTR latency,
@@ -99,8 +99,7 @@ static void onConnection(const TCPSession::PTR& session,
     std::cout << "connection counter is:" << connectionCounter << std::endl;
 
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
-        const char* buffer,
+    session->setDataCallback([rpcHandlerManager](const char* buffer,
         size_t len) {
         return dataHandle(rpcHandlerManager, buffer, len);
     });
@@ -109,7 +108,7 @@ static void onConnection(const TCPSession::PTR& session,
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
@@ -210,8 +209,8 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto server = std::make_shared<WrapTcpService>();
-    server->startWorkThread(std::thread::hardware_concurrency());
+    auto server = TcpService::Create();
+    server->startWorkerThread(std::thread::hardware_concurrency());
 
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
@@ -243,9 +242,9 @@ int main(int argc, char **argv)
                 std::cout << "connect success" << std::endl;
                 socket->SocketNodelay();
                 auto enterCallback = std::bind(onConnection, std::placeholders::_1, wg, maxRequestNumEveryClient, latency, payload);
-                server->addSession(std::move(socket),
-                    brynet::net::AddSessionOption::WithEnterCallback(enterCallback),
-                    brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024*1024));
+                server->addDataSocket(std::move(socket),
+                    brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
+                    brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024*1024));
             }, []() {
                 std::cout << "connect failed" << std::endl;
             });

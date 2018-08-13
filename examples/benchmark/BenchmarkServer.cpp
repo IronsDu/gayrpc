@@ -5,7 +5,7 @@
 
 #include <brynet/net/SocketLibFunction.h>
 #include <brynet/net/EventLoop.h>
-#include <brynet/net/WrapTCPService.h>
+#include <brynet/net/TCPService.h>
 #include <brynet/net/ListenThread.h>
 #include <brynet/net/Socket.h>
 #include <brynet/utils/packet.h>
@@ -46,11 +46,10 @@ static void counter(const RpcMeta& meta, const google::protobuf::Message& messag
     next(meta, message);
 }
 
-static void onConnection(const TCPSession::PTR& session)
+static void onConnection(const DataSocket::PTR& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
-        const char* buffer,
+    session->setDataCallback([rpcHandlerManager](const char* buffer,
         size_t len) {
         return dataHandle(rpcHandlerManager, buffer, len);
     });
@@ -59,7 +58,7 @@ static void onConnection(const TCPSession::PTR& session)
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall(), counter);
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 创建服务对象
@@ -75,7 +74,7 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto server = std::make_shared<WrapTcpService>();
+    auto server = TcpService::Create();
     auto listenThread = ListenThread::Create();
 
     listenThread->startListen(
@@ -84,12 +83,12 @@ int main(int argc, char **argv)
         atoi(argv[1]), 
         [=](TcpSocket::PTR socket){
             socket->SocketNodelay();
-            server->addSession(std::move(socket),
-                brynet::net::AddSessionOption::WithEnterCallback(onConnection),
-                brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024 * 1024));
+            server->addDataSocket(std::move(socket),
+                brynet::net::TcpService::AddSocketOption::WithEnterCallback(onConnection),
+                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
         });
 
-    server->startWorkThread(std::thread::hardware_concurrency());
+    server->startWorkerThread(std::thread::hardware_concurrency());
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);

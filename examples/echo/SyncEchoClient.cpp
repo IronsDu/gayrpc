@@ -12,11 +12,10 @@ using namespace brynet::net;
 using namespace utils_interceptor;
 using namespace dodo::test;
 
-static EchoServerClient::PTR createEchoClient(const TCPSession::PTR& session)
+static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
-        const char* buffer,
+    session->setDataCallback([rpcHandlerManager](const char* buffer,
         size_t len) {
         return dataHandle(rpcHandlerManager, buffer, len);
     });
@@ -25,7 +24,7 @@ static EchoServerClient::PTR createEchoClient(const TCPSession::PTR& session)
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
@@ -41,13 +40,13 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto service = std::make_shared<WrapTcpService>();
-    service->startWorkThread(1);
+    auto service = TcpService::Create();
+    service->startWorkerThread(1);
     auto session = brynet::net::SyncConnectSession(argv[1], 
         atoi(argv[2]), 
         std::chrono::seconds(10),
         service,
-        {brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024*1024)});
+        {brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024*1024)});
     auto client = createEchoClient(session);
 
     {

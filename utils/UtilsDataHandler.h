@@ -1,7 +1,7 @@
 #ifndef _UTILS_RPC_DATA_HANDLER_H
 #define _UTILS_RPC_DATA_HANDLER_H
 
-#include <brynet/net/WrapTCPService.h>
+#include <brynet/net/TCPService.h>
 #include "OpPacket.h"
 #include "GayRpcCore.h"
 #include "GayRpcTypeHandler.h"
@@ -72,7 +72,7 @@ static size_t dataHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandl
 static void sender(const gayrpc::core::RpcMeta& meta,
     const google::protobuf::Message& message,
     const gayrpc::core::UnaryHandler& next,
-    const brynet::net::TCPSession::WEAK_PTR& weakSession)
+    const std::weak_ptr<brynet::net::DataSocket>& weakSession)
 {
     // 实际的发送
     AutoMallocPacket<4096> bpw(true, true);

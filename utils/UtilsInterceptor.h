@@ -35,7 +35,7 @@ namespace utils_interceptor
         };
     }
 
-    static auto withSessionSender(brynet::net::TCPSession::WEAK_PTR weakSession)
+    static auto withSessionSender(std::weak_ptr<brynet::net::DataSocket> weakSession)
     {
         return [weakSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,

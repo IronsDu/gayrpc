@@ -43,7 +43,7 @@ namespace gayrpc
                 return [interceptors, lastIndex](const gayrpc::core::RpcMeta& meta,
                     const google::protobuf::Message& message, 
                     const core::UnaryHandler& next) {
-                    int curI = 0;
+                    size_t curI = 0;
                     core::UnaryHandler fuck;
                     fuck = [lastIndex, &curI, &interceptors, &next, &fuck](const gayrpc::core::RpcMeta& meta,
                         const google::protobuf::Message& message) {

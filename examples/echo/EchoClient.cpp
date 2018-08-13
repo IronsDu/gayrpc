@@ -2,7 +2,7 @@
 #include <string>
 
 #include <brynet/net/SocketLibFunction.h>
-#include <brynet/net/WrapTCPService.h>
+#include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
 #include <brynet/utils/packet.h>
 
@@ -50,11 +50,10 @@ private:
     std::shared_ptr<EchoServerClient>   mClient;
 };
 
-static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop::PTR eventLoop)
+static void onConnection(const DataSocket::PTR& session, brynet::net::EventLoop::PTR eventLoop)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager, eventLoop](const TCPSession::PTR& session,
-        const char* buffer,
+    session->setDataCallback([rpcHandlerManager, eventLoop](const char* buffer,
         size_t len) {
         return dataHandle(rpcHandlerManager, buffer, len, eventLoop);
     });
@@ -63,7 +62,7 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
@@ -72,7 +71,7 @@ static void onConnection(const TCPSession::PTR& session, brynet::net::EventLoop:
     auto rpcServer = std::make_shared<MyService>(client);
     EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 
-    session->setDisConnectCallback([rpcServer](const TCPSession::PTR& session) {
+    session->setDisConnectCallback([rpcServer](const DataSocket::PTR& session) {
         std::cout << "close session" << std::endl;
         rpcServer->onClose();
     });
@@ -103,8 +102,8 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto server = std::make_shared<WrapTcpService>();
-    server->startWorkThread(std::thread::hardware_concurrency());
+    auto server = TcpService::Create();
+    server->startWorkerThread(std::thread::hardware_concurrency());
 
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
@@ -124,9 +123,9 @@ int main(int argc, char **argv)
                 [server, mainLoop](TcpSocket::PTR socket) {
                 std::cout << "connect success" << std::endl;
                 socket->SocketNodelay();
-                server->addSession(std::move(socket),
-                    brynet::net::AddSessionOption::WithEnterCallback(std::bind(onConnection, std::placeholders::_1, mainLoop)),
-                    brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024 * 1024));
+                server->addDataSocket(std::move(socket),
+                    brynet::net::TcpService::AddSocketOption::WithEnterCallback(std::bind(onConnection, std::placeholders::_1, mainLoop)),
+                    brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
             }, []() {
                 std::cout << "connect failed" << std::endl;
             });

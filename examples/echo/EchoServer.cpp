@@ -5,7 +5,7 @@
 
 #include <brynet/net/SocketLibFunction.h>
 #include <brynet/net/EventLoop.h>
-#include <brynet/net/WrapTCPService.h>
+#include <brynet/net/TCPService.h>
 #include <brynet/net/ListenThread.h>
 #include <brynet/net/Socket.h>
 #include <brynet/utils/packet.h>
@@ -75,13 +75,12 @@ static void counter(const RpcMeta& meta, const google::protobuf::Message& messag
     next(meta, message);
 }
 
-static void onNormalTCPConnection(const TCPSession::PTR& session)
+static void onNormalTCPConnection(const DataSocket::PTR& session)
 {
     std::cout << "connection enter" << std::endl;
 
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const TCPSession::PTR& session,
-        const char* buffer,
+    session->setDataCallback([rpcHandlerManager](const char* buffer,
         size_t len) {
         // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
         return dataHandle(rpcHandlerManager, buffer, len);
@@ -91,7 +90,7 @@ static void onNormalTCPConnection(const TCPSession::PTR& session)
     auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall(), counter);
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<TCPSession>(session)),
+    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 创建客户端
@@ -101,7 +100,7 @@ static void onNormalTCPConnection(const TCPSession::PTR& session)
     auto rpcServer = std::make_shared<MyService>(client);
     EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
 
-    session->setDisConnectCallback([rpcServer](const TCPSession::PTR& session) {
+    session->setDisConnectCallback([rpcServer](const DataSocket::PTR& session) {
         std::cout << "close session" << std::endl;
         rpcServer->onClose();
     });
@@ -165,21 +164,21 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto server = std::make_shared<WrapTcpService>();
+    auto server = TcpService::Create();
 
     // TODO::抽象下面开启HTTP服务的代码
     // 开启HTTP监听（提供RPC)
     // Test:curl -d '{"message":"Hello, world!"}' http://localhost:8080/dodo.test.EchoServer.echo
     auto httpListenThread = ListenThread::Create();
     httpListenThread->startListen(false, "0.0.0.0", 8080, [server](TcpSocket::PTR socket) {
-        auto enterCallback = [](const TCPSession::PTR& session) {
+        auto enterCallback = [](const DataSocket::PTR& session) {
             HttpService::setup(session, [](const HttpSession::PTR& httpSession) {
                 onHTTPConnection(httpSession);
             });
         };
-        server->addSession(std::move(socket),
-            AddSessionOption::WithEnterCallback(enterCallback),
-            AddSessionOption::WithMaxRecvBufferSize(1024 * 1024));
+        server->addDataSocket(std::move(socket),
+            TcpService::AddSocketOption::WithEnterCallback(enterCallback),
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
     });
 
     // 开启普通TCP监听，采用二进制协议（提供RPC）
@@ -190,12 +189,12 @@ int main(int argc, char **argv)
         atoi(argv[1]), 
         [=](TcpSocket::PTR socket){
             socket->SocketNodelay();
-            server->addSession(std::move(socket), 
-                brynet::net::AddSessionOption::WithEnterCallback(onNormalTCPConnection),
-                brynet::net::AddSessionOption::WithMaxRecvBufferSize(1024 * 1024));
+            server->addDataSocket(std::move(socket), 
+                brynet::net::TcpService::AddSocketOption::WithEnterCallback(onNormalTCPConnection),
+                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
         });
 
-    server->startWorkThread(std::thread::hardware_concurrency());
+    server->startWorkerThread(std::thread::hardware_concurrency());
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);
