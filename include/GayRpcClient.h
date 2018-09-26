@@ -19,8 +19,8 @@ namespace gayrpc
         class BaseClient : public std::enable_shared_from_this<BaseClient>
         {
         public:
-            typedef std::shared_ptr<BaseClient> PTR;
-            typedef std::function<void(void)>   TIMEOUT_CALLBACK;
+            using PTR = std::shared_ptr<BaseClient>;
+            using TIMEOUT_CALLBACK = std::function<void(void)>;
 
         protected:
             BaseClient(UnaryServerInterceptor outboundInterceptor,
@@ -36,8 +36,8 @@ namespace gayrpc
 
             template<typename Response, typename Request, typename Handle>
             void call(const Request& request,
-                uint32_t serviceID,
-                uint64_t msgID,
+                ServiceIDType serviceID,
+                ServiceFunctionMsgIDType msgID,
                 const Handle& handle,
                 std::chrono::seconds timeout,
                 TIMEOUT_CALLBACK timeoutCallback)
@@ -56,6 +56,9 @@ namespace gayrpc
 
                 {
                     std::lock_guard<std::mutex> lck(mStubMapGruad);
+                    assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
+                    assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
+
                     mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
                         const std::string& data,
                         const UnaryServerInterceptor& inboundInterceptor) {
@@ -70,8 +73,8 @@ namespace gayrpc
 
             template<typename Response, typename Request, typename Handle>
             void call(const Request& request,
-                uint32_t serviceID,
-                uint64_t msgID,
+                ServiceIDType serviceID,
+                ServiceFunctionMsgIDType msgID,
                 const Handle& handle = nullptr)
             {
                 const auto sequenceID = mSequenceID++;
@@ -94,6 +97,8 @@ namespace gayrpc
 
                 {
                     std::lock_guard<std::mutex> lck(mStubMapGruad);
+                    assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
+
                     mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
                         const std::string& data,
                         const UnaryServerInterceptor& inboundInterceptor) {
@@ -106,7 +111,7 @@ namespace gayrpc
             }
 
             void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::PTR& rpcTypeHandleManager,
-                uint32_t serviceID)
+                ServiceIDType serviceID)
             {
                 auto sharedThis = shared_from_this();
                 auto responseStub = [sharedThis](const RpcMeta& meta,
@@ -162,13 +167,14 @@ namespace gayrpc
             }
 
         private:
-            typedef std::function<
+            using ResponseStubHandle = 
+                std::function<
                 void(
                     const RpcMeta&, 
                     const std::string& data, 
-                    const UnaryServerInterceptor&)> ResponseStubHandle;
-            typedef std::unordered_map<uint64_t, ResponseStubHandle>    ResponseStubHandleMap;
-            typedef std::unordered_map<uint64_t, TIMEOUT_CALLBACK>      TimeoutHandleMap;
+                    const UnaryServerInterceptor&)>;
+            using ResponseStubHandleMap = std::unordered_map<uint64_t, ResponseStubHandle>;
+            using TimeoutHandleMap = std::unordered_map<uint64_t, TIMEOUT_CALLBACK>;
 
             UnaryServerInterceptor      mInboundInterceptor;
             UnaryServerInterceptor      mOutboundInterceptor;

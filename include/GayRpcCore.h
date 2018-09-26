@@ -9,8 +9,10 @@ namespace gayrpc
 {
     namespace core
     {
-        typedef std::function<void(const gayrpc::core::RpcMeta&, const google::protobuf::Message&)> UnaryHandler;
-        typedef std::function<void(const gayrpc::core::RpcMeta&, const google::protobuf::Message&, const UnaryHandler& next)> UnaryServerInterceptor;
+        using ServiceIDType = decltype(std::declval<RpcMeta>().service_id());
+        using ServiceFunctionMsgIDType = uint64_t;
+        using UnaryHandler = std::function<void(const gayrpc::core::RpcMeta&, const google::protobuf::Message&)>;
+        using UnaryServerInterceptor = std::function<void(const gayrpc::core::RpcMeta&, const google::protobuf::Message&, const UnaryHandler& next)>;
     }
 }
 

@@ -13,28 +13,10 @@ namespace gayrpc
 {
     namespace utils
     {
-        // 实现拦截器
-        static auto togetherInterceptor(std::vector<core::UnaryServerInterceptor>& interceptorArray)
-        {
-        }
-        template<class T>
-        auto togetherInterceptor(std::vector<core::UnaryServerInterceptor>& interceptorArray, T handler)
-        {
-            interceptorArray.push_back(std::forward<T>(handler));
-        }
-
-        template<class T, class... Args>
-        auto togetherInterceptor(std::vector<core::UnaryServerInterceptor>& interceptorArray, T headHandler, Args... leftHandlers)
-        {
-            interceptorArray.push_back(std::forward<T>(headHandler));
-            togetherInterceptor(interceptorArray, std::forward<Args>(leftHandlers)...);
-        }
-
         template<class... Args>
         core::UnaryServerInterceptor makeInterceptor(Args... args)
         {
-            std::vector<core::UnaryServerInterceptor> interceptors;
-            togetherInterceptor(interceptors, args...);
+            std::vector<core::UnaryServerInterceptor> interceptors = { args... };
 
             auto n = interceptors.size();
             if (n > 1)

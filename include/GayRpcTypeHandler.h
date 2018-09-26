@@ -18,12 +18,12 @@ namespace gayrpc
         class RpcTypeHandleManager : public std::enable_shared_from_this<RpcTypeHandleManager>
         {
         public:
-            typedef std::shared_ptr<RpcTypeHandleManager> PTR;
-            typedef std::function<void(const RpcMeta&, const std::string& body)>    ServiceHandler;
-            typedef std::unordered_map<int, ServiceHandler>                         ServiceHandlerMap;
+            using PTR = std::shared_ptr<RpcTypeHandleManager>;
+            using ServiceHandler = std::function<void(const RpcMeta&, const std::string& body)>;
+            using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
         public:
-            bool    registerTypeHandle(RpcMeta::Type type, ServiceHandler handle, int serviceID)
+            bool    registerTypeHandle(RpcMeta::Type type, ServiceHandler handle, ServiceIDType serviceID)
             {
                 std::unique_lock<std::shared_mutex> lock(mMutex);
                 auto& serviceMap = mTypeHandlers[type];
@@ -35,7 +35,7 @@ namespace gayrpc
                 return true;
             }
 
-            void    removeTypeHandle(RpcMeta::Type type, int serviceID)
+            void    removeTypeHandle(RpcMeta::Type type, ServiceIDType serviceID)
             {
                 std::unique_lock<std::shared_mutex> lock(mMutex);
                 if (mTypeHandlers.find(type) == mTypeHandlers.end())
@@ -73,7 +73,7 @@ namespace gayrpc
             }
 
         private:
-            std::map<int, ServiceHandlerMap>            mTypeHandlers;
+            std::map<RpcMeta::Type, ServiceHandlerMap>  mTypeHandlers;
             std::shared_mutex                           mMutex;
         };
     }

@@ -16,8 +16,8 @@ namespace gayrpc
         using namespace google::protobuf::util;
         // 构造用于RPC请求的Meta对象
         inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
-            uint32_t serviceID,
-            uint64_t msgID,
+            ServiceIDType serviceID,
+            ServiceFunctionMsgIDType msgID,
             RpcMeta_DataEncodingType type,
             bool expectResponse)
         {
