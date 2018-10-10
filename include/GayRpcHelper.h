@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include <google/protobuf/util/json_util.h>
 #include "meta.pb.h"
@@ -34,7 +35,7 @@ namespace gayrpc
 
         // 解析Response然后(通过拦截器)调用回调
         template<typename Response, typename Hanele>
-        inline void    parseWrapper(const Hanele& handle,
+        inline void    parseResponseWrapper(const Hanele& handle,
             const RpcMeta& meta,
             const std::string& data,
             const UnaryServerInterceptor& inboundInterceptor)
@@ -45,7 +46,7 @@ namespace gayrpc
             case RpcMeta::BINARY:
                 if (!response.ParseFromString(data))
                 {
-                    throw std::runtime_error("parse binary echo response failed");
+                    throw std::runtime_error(std::string("parse binary response failed, type of:") + typeid(Response).name());
                 }
                 break;
             case RpcMeta::JSON:
@@ -53,13 +54,12 @@ namespace gayrpc
                 auto s = JsonStringToMessage(data, &response);
                 if (!s.ok())
                 {
-                    throw std::runtime_error("parse json echo response failed:" +
-                        s.error_message().as_string());
+                    throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
                 }
                 break;
             }
             default:
-                throw std::runtime_error("unknow encoding" + meta.encoding());
+                throw std::runtime_error(std::string("response by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(Response).name());
             }
 
             gayrpc::core::RpcError error;
@@ -76,6 +76,38 @@ namespace gayrpc
                 [&response, &error, &handle](const RpcMeta&, const google::protobuf::Message&) {
                     handle(response, error);
                 });
+        }
+
+        // 解析Request然后(通过拦截器)调用服务处理函数
+        template<typename RequestType>
+        inline void parseRequestWrapper(RequestType& request,
+            const RpcMeta& meta,
+            const std::string& data,
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryHandler& handler)
+        {
+            switch (meta.encoding())
+            {
+            case RpcMeta::BINARY:
+                if (!request.ParseFromString(data))
+                {
+                    throw std::runtime_error(std::string("parse binary request failed, type of:") + typeid(RequestType).name());
+                }
+                break;
+            case RpcMeta::JSON:
+                {
+                    auto s = JsonStringToMessage(data, &request);
+                    if (!s.ok())
+                    {
+                        throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
+                    }
+                }
+                break;
+            default:
+                throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
+            }
+
+            inboundInterceptor(meta, request, handler);
         }
     }
 }

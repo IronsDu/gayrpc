@@ -62,7 +62,7 @@ namespace gayrpc
                     mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
                         const std::string& data,
                         const UnaryServerInterceptor& inboundInterceptor) {
-                        return parseWrapper<Response>(handle,
+                        return parseResponseWrapper<Response>(handle,
                             meta,
                             data,
                             inboundInterceptor);
@@ -102,7 +102,7 @@ namespace gayrpc
                     mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
                         const std::string& data,
                         const UnaryServerInterceptor& inboundInterceptor) {
-                        return parseWrapper<Response>(handle,
+                        return parseResponseWrapper<Response>(handle,
                             meta,
                             data,
                             inboundInterceptor);
