@@ -1,16 +1,10 @@
 #include <iostream>
 #include <string>
 
-#include <brynet/net/SocketLibFunction.h>
 #include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
-#include <brynet/utils/packet.h>
 
-#include "OpPacket.h"
-#include "GayRpcInterceptor.h"
-#include "UtilsDataHandler.h"
-#include "UtilsInterceptor.h"
-#include "GayRpcClient.h"
+#include "UtilsWrapper.h"
 
 #include "./pb/echo_service.gayrpc.h"
 
@@ -22,9 +16,9 @@ using namespace dodo::test;
 class MyService : public EchoServerService
 {
 public:
-    MyService(const std::shared_ptr<EchoServerClient>& client)
+    MyService(gayrpc::core::ServiceContext context)
         :
-        mClient(client)
+        EchoServerService(context)
     {
     }
 
@@ -34,47 +28,25 @@ public:
         EchoResponse response;
         response.set_message("world");
 
-        replyObj->reply(response); // 重复reply或error将产生异常
-        // 在收到请求后再调用对端
-        mClient->Echo(request, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
-            err.failed();
-        });
+        replyObj->reply(response);
     }
 
     void Login(const LoginRequest& request,
         const LoginReply::PTR& replyObj) override
     {
+        LoginResponse response;
+        response.set_message(request.message());
+        replyObj->reply(response);
     }
 
 private:
-    std::shared_ptr<EchoServerClient>   mClient;
 };
 
-static void onConnection(const DataSocket::PTR& session, brynet::net::EventLoop::PTR eventLoop)
+static void OnConnection(dodo::test::EchoServerClient::PTR client)
 {
-    auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager, eventLoop](const char* buffer,
-        size_t len) {
-        return dataHandle(rpcHandlerManager, buffer, len, eventLoop);
-    });
-
-    // 入站拦截器
-    auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
-
-    // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
-        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
-
-    // 注册RPC客户端
-    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
-
-    auto rpcServer = std::make_shared<MyService>(client);
-    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
-
-    session->setDisConnectCallback([rpcServer](const DataSocket::PTR& session) {
-        std::cout << "close session" << std::endl;
-        rpcServer->onClose();
-    });
+    gayrpc::core::ServiceContext context(client->getTypeHandleManager(), client->getInInterceptor(), client->getOutInterceptor());
+    auto service = std::make_shared< MyService>(context);
+    dodo::test::EchoServerService::Install(service);
 
     // 发送RPC请求
     EchoRequest request;
@@ -89,7 +61,7 @@ static void onConnection(const DataSocket::PTR& session, brynet::net::EventLoop:
         }
         //std::cout << "recv reply, data:" << response.message() << std::endl;
     }, std::chrono::seconds(3),
-    []() {
+        []() {
         std::cout << "timeout" << std::endl;
     });
 }
@@ -115,20 +87,14 @@ int main(int argc, char **argv)
     {
         try
         {
-            // mainLoop 作为 onConnection 参数，以让RPC的逻辑处理(请求或Response回调)全部交给主线程
-            connector->asyncConnect(
-                argv[1],
-                atoi(argv[2]),
-                std::chrono::seconds(10),
-                [server, mainLoop](TcpSocket::PTR socket) {
-                std::cout << "connect success" << std::endl;
-                socket->SocketNodelay();
-                server->addDataSocket(std::move(socket),
-                    brynet::net::TcpService::AddSocketOption::WithEnterCallback(std::bind(onConnection, std::placeholders::_1, mainLoop)),
-                    brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
-            }, []() {
-                std::cout << "connect failed" << std::endl;
-            });
+            utils_wrapper::AsyncCreateRpcClient< EchoServerClient>(server, connector,
+                argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
+                nullptr, nullptr,
+                [=]() -> brynet::net::EventLoop::PTR {
+                    return mainLoop;
+                }, [](dodo::test::EchoServerClient::PTR client) {
+                    OnConnection(client);
+                }, []() {}, 1024 * 1024);
         }
         catch (std::runtime_error& e)
         {

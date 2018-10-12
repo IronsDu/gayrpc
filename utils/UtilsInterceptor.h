@@ -5,6 +5,9 @@
 #include <memory>
 #include <exception>
 
+#include <google/protobuf/util/json_util.h>
+#include <brynet/net/http/HttpService.h>
+#include <brynet/net/http/HttpFormat.h>
 #include "meta.pb.h"
 #include "GayRpcCore.h"
 #include "GayRpcInterceptor.h"
@@ -79,6 +82,29 @@ namespace utils_interceptor
                     });
                 });
             }
+
+            next(meta, message);
+        };
+    }
+
+    static auto withHttpSessionSender(const brynet::net::HttpSession::PTR& httpSession)
+    {
+        return [httpSession](const gayrpc::core::RpcMeta& meta,
+            const google::protobuf::Message& message,
+            const gayrpc::core::UnaryHandler& next) {
+
+            std::string jsonMsg;
+            google::protobuf::util::MessageToJsonString(message, &jsonMsg);
+
+            brynet::net::HttpResponse httpResponse;
+            httpResponse.setStatus(brynet::net::HttpResponse::HTTP_RESPONSE_STATUS::OK);
+            httpResponse.setContentType("application/json");
+            httpResponse.setBody(jsonMsg.c_str());
+
+            auto result = httpResponse.getResult();
+            httpSession->send(result.c_str(), result.size(), nullptr);
+
+            httpSession->postShutdown();
 
             next(meta, message);
         };

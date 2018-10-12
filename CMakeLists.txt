@@ -21,3 +21,4 @@ endif()
 
 add_subdirectory(examples/echo)
 add_subdirectory(examples/benchmark)
+add_subdirectory(examples/raft)

@@ -49,8 +49,7 @@ namespace gayrpc
             {
             }
 
-            void    handleRpcMsg(const RpcMeta& meta,
-                const std::string& data)
+            void    handleRpcMsg(const RpcMeta& meta, const std::string& data)
             {
                 ServiceHandler handler;
                 {

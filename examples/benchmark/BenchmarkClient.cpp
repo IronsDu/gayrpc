@@ -4,17 +4,11 @@
 #include <chrono>
 #include <algorithm>
 
-#include <brynet/net/SocketLibFunction.h>
 #include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
-#include <brynet/utils/packet.h>
 #include <brynet/utils/WaitGroup.h>
 
-#include "OpPacket.h"
-#include "GayRpcInterceptor.h"
-#include "UtilsDataHandler.h"
-#include "UtilsInterceptor.h"
-
+#include "UtilsWrapper.h"
 #include "./pb/benchmark_service.gayrpc.h"
 
 using namespace brynet;
@@ -89,7 +83,7 @@ private:
 
 std::atomic<int64_t> connectionCounter(0);
 
-static void onConnection(const DataSocket::PTR& session,
+static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
     const WaitGroup::PTR& wg,
     int maxRequestNum,
     LATENCY_PTR latency,
@@ -97,22 +91,6 @@ static void onConnection(const DataSocket::PTR& session,
 {
     connectionCounter++;
     std::cout << "connection counter is:" << connectionCounter << std::endl;
-
-    auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const char* buffer,
-        size_t len) {
-        return dataHandle(rpcHandlerManager, buffer, len);
-    });
-
-    // 入站拦截器
-    auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
-
-    // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
-        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
-
-    // 注册RPC客户端
-    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
     auto b = std::make_shared<BenchmarkClient>(client, wg, maxRequestNum, latency, payload);
     b->sendRequest();
 }
@@ -234,20 +212,13 @@ int main(int argc, char **argv)
             auto latency = std::make_shared<LATENTY_TYPE>();
             latencyArray.push_back(latency);
 
-            connector->asyncConnect(
-                argv[1],
-                atoi(argv[2]),
-                std::chrono::seconds(10),
-                [server, wg, maxRequestNumEveryClient, latency, payload](TcpSocket::PTR socket) {
-                std::cout << "connect success" << std::endl;
-                socket->SocketNodelay();
-                auto enterCallback = std::bind(onConnection, std::placeholders::_1, wg, maxRequestNumEveryClient, latency, payload);
-                server->addDataSocket(std::move(socket),
-                    brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
-                    brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024*1024));
-            }, []() {
-                std::cout << "connect failed" << std::endl;
-            });
+            utils_wrapper::AsyncCreateRpcClient< EchoServerClient>(server, connector,
+                argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
+                nullptr, nullptr, nullptr, [=](dodo::benchmark::EchoServerClient::PTR client) {
+                    onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
+                }, []() {
+                    std::cout << "connect failed" << std::endl;
+                }, 1024*1024);
         }
         catch (std::runtime_error& e)
         {

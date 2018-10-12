@@ -22,10 +22,28 @@ namespace gayrpc
             using PTR = std::shared_ptr<BaseClient>;
             using TIMEOUT_CALLBACK = std::function<void(void)>;
 
+        public:
+            RpcTypeHandleManager::PTR   getTypeHandleManager() const
+            {
+                return mTypeHandleManager;
+            }
+
+            UnaryServerInterceptor      getInInterceptor() const
+            {
+                return mInboundInterceptor;
+            }
+
+            UnaryServerInterceptor      getOutInterceptor() const
+            {
+                return mOutboundInterceptor;
+            }
+
         protected:
-            BaseClient(UnaryServerInterceptor outboundInterceptor,
-                UnaryServerInterceptor inboundInterceptor)
+            BaseClient(RpcTypeHandleManager::PTR rpcHandlerManager,
+                UnaryServerInterceptor inboundInterceptor,
+                UnaryServerInterceptor outboundInterceptor)
                 :
+                mTypeHandleManager(std::move(rpcHandlerManager)),
                 mInboundInterceptor(std::move(inboundInterceptor)),
                 mOutboundInterceptor(std::move(outboundInterceptor)),
                 mSequenceID(0)
@@ -176,13 +194,14 @@ namespace gayrpc
             using ResponseStubHandleMap = std::unordered_map<uint64_t, ResponseStubHandle>;
             using TimeoutHandleMap = std::unordered_map<uint64_t, TIMEOUT_CALLBACK>;
 
-            UnaryServerInterceptor      mInboundInterceptor;
-            UnaryServerInterceptor      mOutboundInterceptor;
+            const RpcTypeHandleManager::PTR     mTypeHandleManager;
+            const UnaryServerInterceptor        mInboundInterceptor;
+            const UnaryServerInterceptor        mOutboundInterceptor;
 
-            std::atomic<uint64_t>       mSequenceID;
-            std::mutex                  mStubMapGruad;
-            ResponseStubHandleMap       mStubHandleMap;
-            TimeoutHandleMap            mTimeoutHandleMap;
+            std::atomic<uint64_t>               mSequenceID;
+            std::mutex                          mStubMapGruad;
+            ResponseStubHandleMap               mStubHandleMap;
+            TimeoutHandleMap                    mTimeoutHandleMap;
         };
     }
 }

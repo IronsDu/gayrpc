@@ -47,13 +47,11 @@ namespace test {
     class EchoServerClient : public BaseClient
     {
     public:
-        typedef std::shared_ptr<EchoServerClient> PTR;
-        typedef std::weak_ptr<EchoServerClient> WeakPtr;
+        using PTR = std::shared_ptr<EchoServerClient>;
+        using WeakPtr = std::weak_ptr<EchoServerClient>;
 
-        typedef std::function<void(const dodo::test::EchoResponse&,
-            const gayrpc::core::RpcError&)> EchoHandle;
-        typedef std::function<void(const dodo::test::LoginResponse&,
-            const gayrpc::core::RpcError&)> LoginHandle;
+        using EchoHandle = std::function<void(const dodo::test::EchoResponse&, const gayrpc::core::RpcError&)>;
+        using LoginHandle = std::function<void(const dodo::test::LoginResponse&, const gayrpc::core::RpcError&)>;
         
 
     public:
@@ -104,51 +102,52 @@ namespace test {
             const dodo::test::EchoRequest& request,
             gayrpc::core::RpcError& error)
         {
-                auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-                auto responsePromise = std::make_shared<std::promise<dodo::test::EchoResponse>>();
+            auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+            auto responsePromise = std::make_shared<std::promise<dodo::test::EchoResponse>>();
 
-                Echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
-                    const gayrpc::core::RpcError& error) {
-                    errorPromise->set_value(error);
-                    responsePromise->set_value(response);
-                });
+            Echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
+                const gayrpc::core::RpcError& error) {
+                errorPromise->set_value(error);
+                responsePromise->set_value(response);
+            });
 
-                error = errorPromise->get_future().get();
-                return responsePromise->get_future().get();
+            error = errorPromise->get_future().get();
+            return responsePromise->get_future().get();
         }
         dodo::test::LoginResponse SyncLogin(
             const dodo::test::LoginRequest& request,
             gayrpc::core::RpcError& error)
         {
-                auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-                auto responsePromise = std::make_shared<std::promise<dodo::test::LoginResponse>>();
+            auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
+            auto responsePromise = std::make_shared<std::promise<dodo::test::LoginResponse>>();
 
-                Login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
-                    const gayrpc::core::RpcError& error) {
-                    errorPromise->set_value(error);
-                    responsePromise->set_value(response);
-                });
+            Login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
+                const gayrpc::core::RpcError& error) {
+                errorPromise->set_value(error);
+                responsePromise->set_value(response);
+            });
 
-                error = errorPromise->get_future().get();
-                return responsePromise->get_future().get();
+            error = errorPromise->get_future().get();
+            return responsePromise->get_future().get();
         }
         
 
     public:
         static PTR Create(const RpcTypeHandleManager::PTR& rpcHandlerManager,
-            const UnaryServerInterceptor& outboundInterceptor,
-            const UnaryServerInterceptor& inboundInterceptor)
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryServerInterceptor& outboundInterceptor)
         {
             struct make_shared_enabler : public EchoServerClient
             {
             public:
-                make_shared_enabler(const UnaryServerInterceptor& outboundInterceptor,
-                    const UnaryServerInterceptor& inboundInterceptor)
+                make_shared_enabler(const RpcTypeHandleManager::PTR& rpcHandlerManager,
+                    const UnaryServerInterceptor& inboundInterceptor,
+                    const UnaryServerInterceptor& outboundInterceptor)
                     : 
-                    EchoServerClient(outboundInterceptor, inboundInterceptor) {}
+                    EchoServerClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor) {}
             };
 
-            auto client = PTR(new make_shared_enabler(outboundInterceptor, inboundInterceptor));
+            auto client = PTR(new make_shared_enabler(rpcHandlerManager, inboundInterceptor, outboundInterceptor));
             client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
 
             return client;
@@ -161,12 +160,14 @@ namespace test {
     class EchoServerService : public BaseService
     {
     public:
-        typedef std::shared_ptr<EchoServerService> PTR;
-        typedef std::weak_ptr<EchoServerService> WeakPtr;
+        using PTR = std::shared_ptr<EchoServerService>;
+        using WeakPtr = std::weak_ptr<EchoServerService>;
 
-        typedef TemplateReply<dodo::test::EchoResponse> EchoReply;
-        typedef TemplateReply<dodo::test::LoginResponse> LoginReply;
+        using EchoReply = TemplateReply<dodo::test::EchoResponse>;
+        using LoginReply = TemplateReply<dodo::test::LoginResponse>;
         
+
+        using BaseService::BaseService;
 
         virtual ~EchoServerService()
         {
@@ -174,10 +175,7 @@ namespace test {
 
         virtual void onClose() {}
 
-        static inline bool Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
-            const EchoServerService::PTR& service,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor);
+        static inline bool Install(const EchoServerService::PTR& service);
     private:
         virtual void Echo(const dodo::test::EchoRequest& request, 
             const EchoReply::PTR& replyObj) = 0;
@@ -194,32 +192,7 @@ namespace test {
             const UnaryServerInterceptor& outboundInterceptor)
         {
             dodo::test::EchoRequest request;
-            
-            switch (meta.encoding())
-            {
-            case RpcMeta::BINARY:
-                if (!request.ParseFromString(data))
-                {
-                    throw std::runtime_error("parse binary Echo error");
-                }
-                break;
-            case RpcMeta::JSON:
-                {
-                    auto s = JsonStringToMessage(data, &request);
-                    if (!s.ok())
-                    {
-                        throw std::runtime_error("parse json Echo failed:" +
-                            s.error_message().as_string());
-                    }
-                }
-                break;
-            default:
-                throw std::runtime_error("parse Echo of unsupported encoding type:" + meta.encoding());
-            }
-
-            inboundInterceptor(meta,
-                request,
-                [service,
+            parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message) {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
@@ -233,32 +206,7 @@ namespace test {
             const UnaryServerInterceptor& outboundInterceptor)
         {
             dodo::test::LoginRequest request;
-            
-            switch (meta.encoding())
-            {
-            case RpcMeta::BINARY:
-                if (!request.ParseFromString(data))
-                {
-                    throw std::runtime_error("parse binary Login error");
-                }
-                break;
-            case RpcMeta::JSON:
-                {
-                    auto s = JsonStringToMessage(data, &request);
-                    if (!s.ok())
-                    {
-                        throw std::runtime_error("parse json Login failed:" +
-                            s.error_message().as_string());
-                    }
-                }
-                break;
-            default:
-                throw std::runtime_error("parse Login of unsupported encoding type:" + meta.encoding());
-            }
-
-            inboundInterceptor(meta,
-                request,
-                [service,
+            parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message) {
                 auto replyObject = std::make_shared<LoginReply>(meta, outboundInterceptor);
@@ -268,25 +216,26 @@ namespace test {
         
     };
 
-    inline bool EchoServerService::Install(gayrpc::core::RpcTypeHandleManager::PTR rpcTypeHandleManager,
-        const EchoServerService::PTR& service,
-        const UnaryServerInterceptor& inboundInterceptor,
-        const UnaryServerInterceptor& outboundInterceptor)
+    inline bool EchoServerService::Install(const EchoServerService::PTR& service)
     {
-        typedef std::function<void(const RpcMeta&,
+        auto rpcTypeHandleManager = service->getServiceContext().getTypeHandleManager();
+        auto inboundInterceptor = service->getServiceContext().getInInterceptor();
+        auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
+
+        using EchoServerServiceRequestHandler = std::function<void(const RpcMeta&,
             const std::string& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
-            const UnaryServerInterceptor&)> EchoServerServiceRequestHandler;
+            const UnaryServerInterceptor&)>;
 
-        typedef std::unordered_map<uint64_t, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapById;
-        typedef std::unordered_map<std::string, EchoServerServiceRequestHandler> EchoServerServiceHandlerMapByStr;
+        using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
+        using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
 
         // TODO::static unordered map
         auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
         auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
 
-        std::string namespaceStr = "dodo.test.";
+        const std::string namespaceStr = "dodo.test.";
 
         (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
         (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Login)] = EchoServerService::Login_stub;

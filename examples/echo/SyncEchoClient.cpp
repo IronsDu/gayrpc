@@ -28,7 +28,7 @@ static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
         withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
-    auto client = EchoServerClient::Create(rpcHandlerManager, outBoundInterceptor, inboundInterceptor);
+    auto client = EchoServerClient::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
     return client;
 }
 

@@ -1,21 +1,11 @@
 #include <iostream>
-#include <mutex>
 #include <atomic>
-#include <map>
 
-#include <brynet/net/SocketLibFunction.h>
 #include <brynet/net/EventLoop.h>
 #include <brynet/net/TCPService.h>
 #include <brynet/net/ListenThread.h>
-#include <brynet/net/Socket.h>
-#include <brynet/utils/packet.h>
 
-#include "meta.pb.h"
-#include "GayRpcCore.h"
-#include "OpPacket.h"
-#include "UtilsDataHandler.h"
-#include "GayRpcInterceptor.h"
-#include "UtilsInterceptor.h"
+#include "UtilsWrapper.h"
 
 #include "./pb/benchmark_service.gayrpc.h"
 
@@ -30,6 +20,11 @@ std::atomic<int64_t> count(0);
 class MyService : public EchoServerService
 {
 public:
+    MyService(gayrpc::core::ServiceContext context)
+        :
+        EchoServerService(context)
+    {}
+
     void Echo(const EchoRequest& request, 
         const EchoReply::PTR& replyObj) override
     {
@@ -46,26 +41,6 @@ static void counter(const RpcMeta& meta, const google::protobuf::Message& messag
     next(meta, message);
 }
 
-static void onConnection(const DataSocket::PTR& session)
-{
-    auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const char* buffer,
-        size_t len) {
-        return dataHandle(rpcHandlerManager, buffer, len);
-    });
-
-    // 入站拦截器
-    auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall(), counter);
-
-    // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
-        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
-
-    // 创建服务对象
-    auto rpcServer = std::make_shared<MyService>();
-    EchoServerService::Install(rpcHandlerManager, rpcServer, inboundInterceptor, outBoundInterceptor);
-}
-
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -74,21 +49,13 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto server = TcpService::Create();
-    auto listenThread = ListenThread::Create();
+    auto service = TcpService::Create();
+    service->startWorkerThread(std::thread::hardware_concurrency());
 
-    listenThread->startListen(
-        false, 
-        "0.0.0.0", 
-        atoi(argv[1]), 
-        [=](TcpSocket::PTR socket){
-            socket->SocketNodelay();
-            server->addDataSocket(std::move(socket),
-                brynet::net::TcpService::AddSocketOption::WithEnterCallback(onConnection),
-                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
-        });
-
-    server->startWorkerThread(std::thread::hardware_concurrency());
+    auto binaryListenThread = ListenThread::Create();
+    utils_wrapper::StartBinaryRpcServer<EchoServerService>(service, binaryListenThread, "0.0.0.0", std::stoi(argv[1]), [](gayrpc::core::ServiceContext context) {
+        return std::make_shared<MyService>(context);
+    }, counter, counter, nullptr, 1024 * 1024);
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);
