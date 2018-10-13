@@ -22,19 +22,19 @@ typedef std::shared_ptr<LATENTY_TYPE> LATENCY_PTR;
 class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
-    BenchmarkClient(const EchoServerClient::PTR& client,
-        const WaitGroup::PTR& wg,
+    BenchmarkClient(EchoServerClient::PTR client,
+        WaitGroup::PTR wg,
         int maxNum,
         LATENCY_PTR latency,
         std::string payload)
         :
         maxRequestNum(maxNum),
-        mClient(client),
-        mWg(wg),
-        mPayload(payload)
+        mClient(std::move(client)),
+        mWg(std::move(wg)),
+        mPayload(std::move(payload)),
+        mLatency(std::move(latency))
     {
         mCurrentNum = 0;
-        mLatency = latency;
     }
 
     void sendRequest()
@@ -71,9 +71,9 @@ private:
     }
 
 private:
-    const WaitGroup::PTR                            mWg;
-    const EchoServerClient::PTR                     mClient;
     const int                                       maxRequestNum;
+    const EchoServerClient::PTR                     mClient;
+    const WaitGroup::PTR                            mWg;
     const std::string                               mPayload;
 
     int                                             mCurrentNum;
@@ -192,10 +192,10 @@ int main(int argc, char **argv)
 
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
-    auto clientNum = std::atoi(argv[3]);
-    auto maxRequestNumEveryClient = std::atoi(argv[4]) / clientNum;
+    auto clientNum = std::stoi(argv[3]);
+    auto maxRequestNumEveryClient = std::stoi(argv[4]) / clientNum;
     auto realyTotalRequestNum = maxRequestNumEveryClient * clientNum;
-    auto payload = std::string(std::atoi(argv[5]), 'a');
+    auto payload = std::string(std::stoi(argv[5]), 'a');
 
     auto wg = WaitGroup::Create();
 
