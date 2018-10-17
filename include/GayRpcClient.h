@@ -23,17 +23,17 @@ namespace gayrpc
             using TIMEOUT_CALLBACK = std::function<void(void)>;
 
         public:
-            RpcTypeHandleManager::PTR   getTypeHandleManager() const
+            const RpcTypeHandleManager::PTR&    getTypeHandleManager() const
             {
                 return mTypeHandleManager;
             }
 
-            UnaryServerInterceptor      getInInterceptor() const
+            const UnaryServerInterceptor&       getInInterceptor() const
             {
                 return mInboundInterceptor;
             }
 
-            UnaryServerInterceptor      getOutInterceptor() const
+            const UnaryServerInterceptor&       getOutInterceptor() const
             {
                 return mOutboundInterceptor;
             }

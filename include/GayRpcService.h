@@ -20,25 +20,25 @@ namespace gayrpc
                 mOutInterceptor(outInterceptor)
             {}
 
-            RpcTypeHandleManager::PTR   getTypeHandleManager() const
+            const RpcTypeHandleManager::PTR&    getTypeHandleManager() const
             {
                 return mTypeHandleManager;
             }
 
-            UnaryServerInterceptor      getInInterceptor() const
+            const UnaryServerInterceptor&       getInInterceptor() const
             {
                 return mInInterceptor;
             }
 
-            UnaryServerInterceptor      getOutInterceptor() const
+            const UnaryServerInterceptor&       getOutInterceptor() const
             {
                 return mOutInterceptor;
             }
 
         private:
-            const RpcTypeHandleManager::PTR mTypeHandleManager;
-            const UnaryServerInterceptor    mInInterceptor;
-            const UnaryServerInterceptor    mOutInterceptor;
+            const RpcTypeHandleManager::PTR     mTypeHandleManager;
+            const UnaryServerInterceptor        mInInterceptor;
+            const UnaryServerInterceptor        mOutInterceptor;
         };
 
         class BaseService : public std::enable_shared_from_this<BaseService>
@@ -54,13 +54,13 @@ namespace gayrpc
 
             virtual void onClose() {}
 
-            const ServiceContext&       getServiceContext() const
+            const ServiceContext&               getServiceContext() const
             {
                 return mContext;
             }
 
         private:
-            const ServiceContext        mContext;
+            const ServiceContext                mContext;
         };
     }
 }

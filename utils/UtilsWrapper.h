@@ -4,6 +4,7 @@
 #include <functional>
 #include <memory>
 #include <exception>
+#include <future>
 
 #include <brynet/net/http/HttpService.h>
 #include <brynet/net/Connector.h>
@@ -28,14 +29,14 @@ namespace utils_wrapper {
 
     template<typename RpcServiceType>
     static void OnHTTPConnectionEnter(const brynet::net::HttpSession::PTR &httpSession,
-                                      ServiceCreator<RpcServiceType> serverCreator,
-                                      const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                      const gayrpc::core::UnaryServerInterceptor *userOutBoundInterceptor,
-                                      const ClaimEventLoopFunctor &claimEventLoopCallback) {
+        ServiceCreator<RpcServiceType> serverCreator,
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor *userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback) {
         auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
 
         httpSession->setHttpCallback([=](const brynet::net::HTTPParser &httpParser,
-                                         const brynet::net::HttpSession::PTR &session) {
+            const brynet::net::HttpSession::PTR &session) {
             // 模拟构造一个RpcMeta，然后将POST body反序列化为RpcRequest对象，以此调用RPC
             gayrpc::core::RpcMeta meta;
             const auto &path = httpParser.getPath();
@@ -63,8 +64,8 @@ namespace utils_wrapper {
         }
         // 出站拦截器
         gayrpc::core::UnaryServerInterceptor outBoundInterceptor = gayrpc::utils::makeInterceptor(
-                utils_interceptor::withProtectedCall(),
-                utils_interceptor::withHttpSessionSender(httpSession));
+            utils_interceptor::withProtectedCall(),
+            utils_interceptor::withHttpSessionSender(httpSession));
         if (userOutBoundInterceptor != nullptr) {
             outBoundInterceptor = gayrpc::utils::makeInterceptor(outBoundInterceptor, userOutBoundInterceptor);
         }
@@ -76,35 +77,36 @@ namespace utils_wrapper {
 
     template<typename RpcServiceType>
     static void StartHttpRpcServer(const brynet::net::TcpService::PTR &service,
-                                   const brynet::net::ListenThread::PTR &listenThread,
-                                   const std::string &ip, int port, ServiceCreator<RpcServiceType> serverCreator,
-                                   const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                   const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
-                                   const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit) {
+        const brynet::net::ListenThread::PTR &listenThread,
+        const std::string &ip, int port, ServiceCreator<RpcServiceType> serverCreator,
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit) {
         listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 brynet::net::HttpService::setup(session, [=](const brynet::net::HttpSession::PTR &httpSession) {
                     OnHTTPConnectionEnter(httpSession, serverCreator, userInboundInterceptor, userOutBoundInterceptor,
-                                          claimEventLoopCallback);
+                        claimEventLoopCallback);
                 });
             };
             socket->SocketNodelay();
             service->addDataSocket(std::move(socket),
-                                   brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
-                                   brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
+                brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
+                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         });
     }
 
     template<typename RpcServiceType>
     static void OnBinaryConnectionEnter(const brynet::net::DataSocket::PTR &session,
-                                        const ServiceCreator<RpcServiceType> &serverCreator,
-                                        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
-                                        const ClaimEventLoopFunctor &claimEventLoopCallback) {
+        const ServiceCreator<RpcServiceType> &serverCreator,
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback,
+        std::chrono::milliseconds heartBeat) {
         auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
 
         session->setDataCallback([=](const char *buffer,
-                                     size_t len) {
+            size_t len) {
             // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
             brynet::net::EventLoop::PTR handleEventLoop;
             if (claimEventLoopCallback != nullptr) {
@@ -112,6 +114,7 @@ namespace utils_wrapper {
             }
             return dataHandle(rpcHandlerManager, buffer, len, handleEventLoop);
         });
+        session->setHeartBeat(heartBeat);
 
         // 入站拦截器
         gayrpc::core::UnaryServerInterceptor inboundInterceptor = utils_interceptor::withProtectedCall();
@@ -120,8 +123,8 @@ namespace utils_wrapper {
         }
         // 出站拦截器
         gayrpc::core::UnaryServerInterceptor outBoundInterceptor = gayrpc::utils::makeInterceptor(
-                utils_interceptor::withProtectedCall(),
-                utils_interceptor::withSessionSender(session));
+            utils_interceptor::withProtectedCall(),
+            utils_interceptor::withSessionSender(session));
         if (userOutBoundInterceptor != nullptr) {
             outBoundInterceptor = gayrpc::utils::makeInterceptor(outBoundInterceptor, userOutBoundInterceptor);
         }
@@ -138,43 +141,48 @@ namespace utils_wrapper {
 
     template<typename RpcServiceType>
     static void StartBinaryRpcServer(const brynet::net::TcpService::PTR &service,
-                                     const brynet::net::ListenThread::PTR &listenThread,
-                                     const std::string &ip, int port,
-                                     const ServiceCreator<RpcServiceType> &serverCreator,
-                                     const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                     const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
-                                     const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit) {
+        const brynet::net::ListenThread::PTR &listenThread,
+        const std::string &ip, int port,
+        const ServiceCreator<RpcServiceType> &serverCreator,
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback, 
+        int packetLimit, 
+        std::chrono::milliseconds heartBeat) {
         listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 OnBinaryConnectionEnter(session,
-                                        serverCreator,
-                                        userInboundInterceptor,
-                                        userOutBoundInterceptor,
-                                        claimEventLoopCallback);
+                    serverCreator,
+                    userInboundInterceptor,
+                    userOutBoundInterceptor,
+                    claimEventLoopCallback,
+                    heartBeat);
             };
 
             socket->SocketNodelay();
             service->addDataSocket(std::move(socket),
-                                   brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
-                                   brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
+                brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
+                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         });
     }
 
     template<typename RpcClientType>
     static void OnBinaryRpcClient(const brynet::net::DataSocket::PTR &session,
-                                  const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                  const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
-                                  const ClaimEventLoopFunctor &claimEventLoopCallback,
-                                  const RpcClientCallback<RpcClientType> &callback) {
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback,
+        const RpcClientCallback<RpcClientType> &callback,
+        std::chrono::milliseconds heartBeat) {
         auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
         session->setDataCallback([=](const char *buffer,
-                                     size_t len) {
+            size_t len) {
             brynet::net::EventLoop::PTR handleEventLoop;
             if (claimEventLoopCallback != nullptr) {
                 handleEventLoop = claimEventLoopCallback();
             }
             return dataHandle(rpcHandlerManager, buffer, len, handleEventLoop);
         });
+        session->setHeartBeat(heartBeat);
 
         // 入站拦截器
         gayrpc::core::UnaryServerInterceptor inboundInterceptor = utils_interceptor::withProtectedCall();
@@ -183,9 +191,9 @@ namespace utils_wrapper {
         }
         // 出站拦截器
         gayrpc::core::UnaryServerInterceptor outBoundInterceptor = gayrpc::utils::makeInterceptor(
-                utils_interceptor::withProtectedCall(),
-                utils_interceptor::withSessionSender(session),
-                utils_interceptor::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
+            utils_interceptor::withProtectedCall(),
+            utils_interceptor::withSessionSender(session),
+            utils_interceptor::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
         if (userOutBoundInterceptor != nullptr) {
             outBoundInterceptor = gayrpc::utils::makeInterceptor(outBoundInterceptor, userOutBoundInterceptor);
         }
@@ -197,28 +205,65 @@ namespace utils_wrapper {
 
     template<typename RpcClientType>
     static void AsyncCreateRpcClient(const brynet::net::TcpService::PTR &service,
-                                     const brynet::net::AsyncConnector::PTR &connector, const std::string &ip,
-                                     int port, std::chrono::milliseconds timeout,
-                                     const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
-                                     const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
-                                     const ClaimEventLoopFunctor &claimEventLoopCallback,
-                                     const RpcClientCallback<RpcClientType> &callback,
-                                     const brynet::net::AsyncConnector::FAILED_CALLBACK &failedCallback,
-                                     int packetLimit) {
+        const brynet::net::AsyncConnector::PTR &connector, const std::string &ip,
+        int port, std::chrono::milliseconds timeout,
+        const gayrpc::core::UnaryServerInterceptor &userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor &userOutBoundInterceptor,
+        const ClaimEventLoopFunctor &claimEventLoopCallback,
+        const RpcClientCallback<RpcClientType> &callback,
+        const brynet::net::AsyncConnector::FAILED_CALLBACK &failedCallback,
+        int packetLimit,
+        std::chrono::milliseconds heartBeat) {
         connector->asyncConnect(ip, port, timeout, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 OnBinaryRpcClient<RpcClientType>(session,
-                                                 userInboundInterceptor,
-                                                 userOutBoundInterceptor,
-                                                 claimEventLoopCallback,
-                                                 callback);
+                    userInboundInterceptor,
+                    userOutBoundInterceptor,
+                    claimEventLoopCallback,
+                    callback,
+                    heartBeat);
             };
 
             socket->SocketNodelay();
             service->addDataSocket(std::move(socket),
-                                   brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
-                                   brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
+                brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
+                brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         }, failedCallback);
+    }
+
+    template<typename RpcClientType>
+    static std::shared_ptr<RpcClientType> SyncCreateRpcClient(const brynet::net::TcpService::PTR& service,
+        brynet::net::AsyncConnector::PTR connector, 
+        const std::string& ip, 
+        int port, 
+        std::chrono::milliseconds timeout,
+        const gayrpc::core::UnaryServerInterceptor& userInboundInterceptor,
+        const gayrpc::core::UnaryServerInterceptor& userOutBoundInterceptor,
+        const ClaimEventLoopFunctor& calcimEventLoopCallback, 
+        int packetLimit,
+        std::chrono::milliseconds heartBeat)
+    {
+        auto rpcClientPromise = std::make_shared<std::promise<std::shared_ptr<RpcClientType>>>();
+
+        RpcClientCallback<RpcClientType> callback = [=](std::shared_ptr<RpcClientType> rpcClient) {
+            rpcClientPromise->set_value(rpcClient);
+        };
+
+        AsyncCreateRpcClient<RpcClientType>(service, connector, ip, port, timeout, 
+            userInboundInterceptor, userOutBoundInterceptor, calcimEventLoopCallback, 
+            callback, 
+            [=]() {
+                rpcClientPromise->set_value(nullptr);
+            },
+            packetLimit, heartBeat);
+
+        auto future = rpcClientPromise->get_future();
+        if (future.wait_for(timeout) != std::future_status::ready)
+        {
+            return nullptr;
+        }
+
+        return future.get();
     }
 }
 
