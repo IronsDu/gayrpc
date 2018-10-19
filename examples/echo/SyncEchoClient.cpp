@@ -2,14 +2,13 @@
 
 #include <brynet/net/SyncConnector.h>
 
-#include "UtilsDataHandler.h"
-#include "UtilsInterceptor.h"
+#include <gayrpc/protocol/BinaryProtocol.h>
+#include <gayrpc/utils/UtilsInterceptor.h>
 
 #include "./pb/echo_service.gayrpc.h"
 
 using namespace brynet;
 using namespace brynet::net;
-using namespace utils_interceptor;
 using namespace dodo::test;
 
 static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
@@ -17,15 +16,15 @@ static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
     session->setDataCallback([rpcHandlerManager](const char* buffer,
         size_t len) {
-        return dataHandle(rpcHandlerManager, buffer, len);
+        return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
     });
 
     // 入站拦截器
-    auto inboundInterceptor = gayrpc::utils::makeInterceptor(withProtectedCall());
+    auto inboundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::utils::makeInterceptor(withSessionSender(std::weak_ptr<DataSocket>(session)),
-        withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
+    auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<DataSocket>(session)),
+        gayrpc::utils::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
     auto client = EchoServerClient::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);

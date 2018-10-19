@@ -5,12 +5,11 @@
 #include <brynet/net/TCPService.h>
 #include <brynet/net/ListenThread.h>
 
-#include "UtilsWrapper.h"
+#include <gayrpc/utils/UtilsWrapper.h>
 #include "./pb/echo_service.gayrpc.h"
 
 using namespace brynet;
 using namespace brynet::net;
-using namespace utils_interceptor;
 using namespace gayrpc::core;
 using namespace dodo::test;
 
@@ -75,12 +74,12 @@ int main(int argc, char **argv)
     service->startWorkerThread(std::thread::hardware_concurrency());
 
     auto binaryListenThread = ListenThread::Create();
-    utils_wrapper::StartBinaryRpcServer<EchoServerService>(service, binaryListenThread, "0.0.0.0", std::stoi(argv[1]), [](gayrpc::core::ServiceContext context) {
+    gayrpc::utils::StartBinaryRpcServer<EchoServerService>(service, binaryListenThread, "0.0.0.0", std::stoi(argv[1]), [](gayrpc::core::ServiceContext context) {
         return std::make_shared<MyService>(context);
-    }, counter, counter, nullptr, 1024 * 1024);
+    }, counter, counter, nullptr, 1024 * 1024, std::chrono::seconds(10));
 
     auto httpListenThread = ListenThread::Create();
-    utils_wrapper::StartHttpRpcServer<EchoServerService>(service, httpListenThread, "0.0.0.0", 80, [](gayrpc::core::ServiceContext context) {
+    gayrpc::utils::StartHttpRpcServer<EchoServerService>(service, httpListenThread, "0.0.0.0", 80, [](gayrpc::core::ServiceContext context) {
         return std::make_shared<MyService>(context);
     }, counter, counter, nullptr, 1024 * 1024);
 

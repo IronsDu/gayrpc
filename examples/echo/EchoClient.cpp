@@ -4,13 +4,13 @@
 #include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
 
-#include "UtilsWrapper.h"
+#include <gayrpc/utils/UtilsWrapper.h>
 
 #include "./pb/echo_service.gayrpc.h"
 
 using namespace brynet;
 using namespace brynet::net;
-using namespace utils_interceptor;
+using namespace gayrpc::utils;
 using namespace dodo::test;
 
 class MyService : public EchoServerService
@@ -87,14 +87,14 @@ int main(int argc, char **argv)
     {
         try
         {
-            utils_wrapper::AsyncCreateRpcClient< EchoServerClient>(server, connector,
+            gayrpc::utils::AsyncCreateRpcClient< EchoServerClient>(server, connector,
                 argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
                 nullptr, nullptr,
                 [=]() -> brynet::net::EventLoop::PTR {
                     return mainLoop;
                 }, [](dodo::test::EchoServerClient::PTR client) {
                     OnConnection(client);
-                }, []() {}, 1024 * 1024);
+                }, []() {}, 1024 * 1024, std::chrono::seconds(10));
         }
         catch (std::runtime_error& e)
         {

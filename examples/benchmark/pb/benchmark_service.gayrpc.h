@@ -14,15 +14,15 @@
 
 #include <google/protobuf/util/json_util.h>
 
-#include "meta.pb.h"
+#include <gayrpc/core/meta.pb.h>
 #include "benchmark_service.pb.h"
 
-#include "GayRpcCore.h"
-#include "GayRpcError.h"
-#include "GayRpcTypeHandler.h"
-#include "GayRpcClient.h"
-#include "GayRpcService.h"
-#include "GayRpcReply.h"
+#include <gayrpc/core/GayRpcType.h>
+#include <gayrpc/core/GayRpcError.h>
+#include <gayrpc/core/GayRpcTypeHandler.h>
+#include <gayrpc/core/GayRpcClient.h>
+#include <gayrpc/core/GayRpcService.h>
+#include <gayrpc/core/GayRpcReply.h>
 
 namespace dodo {
 namespace benchmark {

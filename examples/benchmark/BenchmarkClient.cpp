@@ -8,12 +8,11 @@
 #include <brynet/net/Connector.h>
 #include <brynet/utils/WaitGroup.h>
 
-#include "UtilsWrapper.h"
+#include <gayrpc/utils/UtilsWrapper.h>
 #include "./pb/benchmark_service.gayrpc.h"
 
 using namespace brynet;
 using namespace brynet::net;
-using namespace utils_interceptor;
 using namespace dodo::benchmark;
 
 typedef std::vector<std::chrono::nanoseconds> LATENTY_TYPE;
@@ -23,7 +22,7 @@ class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
     BenchmarkClient(EchoServerClient::PTR client,
-        WaitGroup::PTR wg,
+        brynet::utils::WaitGroup::PTR wg,
         int maxNum,
         LATENCY_PTR latency,
         std::string payload)
@@ -73,7 +72,7 @@ private:
 private:
     const int                                       maxRequestNum;
     const EchoServerClient::PTR                     mClient;
-    const WaitGroup::PTR                            mWg;
+    const utils::WaitGroup::PTR                     mWg;
     const std::string                               mPayload;
 
     int                                             mCurrentNum;
@@ -84,7 +83,7 @@ private:
 std::atomic<int64_t> connectionCounter(0);
 
 static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
-    const WaitGroup::PTR& wg,
+    const utils::WaitGroup::PTR& wg,
     int maxRequestNum,
     LATENCY_PTR latency,
     std::string payload)
@@ -197,7 +196,7 @@ int main(int argc, char **argv)
     auto realyTotalRequestNum = maxRequestNumEveryClient * clientNum;
     auto payload = std::string(std::stoi(argv[5]), 'a');
 
-    auto wg = WaitGroup::Create();
+    auto wg = utils::WaitGroup::Create();
 
     std::vector<LATENCY_PTR> latencyArray;
 
@@ -212,13 +211,13 @@ int main(int argc, char **argv)
             auto latency = std::make_shared<LATENTY_TYPE>();
             latencyArray.push_back(latency);
 
-            utils_wrapper::AsyncCreateRpcClient< EchoServerClient>(server, connector,
+            gayrpc::utils::AsyncCreateRpcClient< EchoServerClient>(server, connector,
                 argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
                 nullptr, nullptr, nullptr, [=](dodo::benchmark::EchoServerClient::PTR client) {
                     onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
                 }, []() {
                     std::cout << "connect failed" << std::endl;
-                }, 1024*1024);
+                }, 1024*1024, std::chrono::seconds(10));
         }
         catch (std::runtime_error& e)
         {

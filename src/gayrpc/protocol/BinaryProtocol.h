@@ -1,16 +1,30 @@
-#ifndef _OP_PACKET_H
-#define _OP_PACKET_H
+#pragma once
 
 #include <string>
 
+#include <gayrpc/core/GayRpcTypeHandler.h>
 #include <brynet/utils/packet.h>
 
 // 实现协议解析和序列化
 
-namespace gayrpc
-{
-    namespace oppacket
+namespace gayrpc { namespace protocol {
+
+    using namespace brynet::utils;
+
+    class binary
     {
+    public:
+        static void send(const gayrpc::core::RpcMeta& meta,
+            const google::protobuf::Message& message,
+            const gayrpc::core::UnaryHandler& next,
+            const std::weak_ptr<brynet::net::DataSocket>& weakSession);
+
+        static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
+            const char* buffer,
+            size_t len,
+            brynet::net::EventLoop::PTR handleRpcEventLoop = nullptr);
+
+    private:
         typedef uint32_t OpCodeType;
         enum OpCode : OpCodeType
         {
@@ -47,10 +61,8 @@ namespace gayrpc
             std::string data;
         };
 
-        typedef std::function<void(const ProtobufPacket&)> ProtobufPacketHandler;
-
-        typedef std::function<bool(const OpPacket&)>
-            OpPacketHandler;
+        using ProtobufPacketHandler = std::function<void(const ProtobufPacket&)>;
+        using OpPacketHandler = std::function<bool(const OpPacket&)>;
 
         // 解析网络消息中的OpPacket
         static size_t parseOpPacket(const char* buffer,
@@ -90,7 +102,6 @@ namespace gayrpc
 
             return processLen;
         }
-
 
         // 解析OpPacket中的protobuf packet
         static bool parseProtobufPacket(const OpPacket& opPacket,
@@ -156,7 +167,88 @@ namespace gayrpc
             bpw.writeBinary(meta);
             bpw.writeBinary(data);
         }
-    }
-}
+    };
+    
+    size_t binary::binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
+        const char* buffer,
+        size_t len,
+        brynet::net::EventLoop::PTR handleRpcEventLoop)
+    {
+        auto opHandle = [rpcHandlerManager, handleRpcEventLoop](const OpPacket& opPacket) {
+            if (opPacket.head.op != OpCode::OpCodeProtobuf)
+            {
+                return false;
+            }
 
-#endif
+            auto pbPacketHandle = [rpcHandlerManager, handleRpcEventLoop](const ProtobufPacket& msg) {
+                gayrpc::core::RpcMeta meta;
+                if (!meta.ParseFromString(msg.meta))
+                {
+                    std::cerr << "parse RpcMeta protobuf failed" << std::endl;
+                    return;
+                }
+
+                if (handleRpcEventLoop != nullptr)
+                {
+                    handleRpcEventLoop->pushAsyncProc([rpcHandlerManager, meta, msg]() {
+                        try
+                        {
+                            rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                        }
+                        catch (const std::runtime_error& e)
+                        {
+                            std::cerr << e.what() << std::endl;
+                        }
+                        catch (...)
+                        {
+                        }
+                    });
+                }
+                else
+                {
+                    try
+                    {
+                        rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                    }
+                    catch (const std::runtime_error& e)
+                    {
+                        std::cerr << e.what() << std::endl;
+                    }
+                    catch (...)
+                    {
+
+                    }
+                }
+            };
+
+            if (!parseProtobufPacket(opPacket, pbPacketHandle))
+            {
+                std::cout << "parse protobuf packet failed" << std::endl;
+                return false;
+            }
+
+            return true;
+        };
+
+        return parseOpPacket(buffer, len, opHandle);
+    }
+
+    void binary::send(const gayrpc::core::RpcMeta& meta,
+        const google::protobuf::Message& message,
+        const gayrpc::core::UnaryHandler& next,
+        const std::weak_ptr<brynet::net::DataSocket>& weakSession)
+    {
+        // 实际的发送
+        AutoMallocPacket<4096> bpw(true, true);
+        serializeProtobufPacket(bpw,
+            meta.SerializeAsString(),
+            message.SerializeAsString());
+
+        auto session = weakSession.lock();
+        if (session != nullptr)
+        {
+            session->send(bpw.getData(), bpw.getPos());
+        }
+        next(meta, message);
+    }
+} }

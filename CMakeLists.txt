@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project(gayrpc)
 
-include_directories("${PROJECT_SOURCE_DIR}/include/")
-include_directories("${PROJECT_SOURCE_DIR}/utils/")
+include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/src/gayrpc/core")
 
 if(UNIX)
 find_library(BRYNET_LIBRARY brynet)
@@ -21,4 +21,3 @@ endif()
 
 add_subdirectory(examples/echo)
 add_subdirectory(examples/benchmark)
-add_subdirectory(examples/raft)

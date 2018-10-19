@@ -1,21 +1,19 @@
-#ifndef _GAY_RPC_UTILS_INTERCEPTOR_H
-#define _GAY_RPC_UTILS_INTERCEPTOR_H
+#pragma once
+
 
 #include <functional>
 #include <memory>
 #include <exception>
 
-#include <google/protobuf/util/json_util.h>
-#include <brynet/net/http/HttpService.h>
-#include <brynet/net/http/HttpFormat.h>
-#include "meta.pb.h"
-#include "GayRpcCore.h"
-#include "GayRpcInterceptor.h"
-#include "UtilsDataHandler.h"
-#include "GayRpcTypeHandler.h"
+#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/GayRpcType.h>
+#include <gayrpc/core/GayRpcInterceptor.h>
+#include <gayrpc/core/GayRpcTypeHandler.h>
+#include <gayrpc/protocol/BinaryProtocol.h>
+#include <gayrpc/protocol/HttpProtocol.h>
 
-namespace utils_interceptor
-{
+namespace gayrpc { namespace utils {
+
     // 一些辅助型拦截器
 
     static auto withProtectedCall()
@@ -38,12 +36,12 @@ namespace utils_interceptor
         };
     }
 
-    static auto withSessionSender(std::weak_ptr<brynet::net::DataSocket> weakSession)
+    static auto withSessionBinarySender(std::weak_ptr<brynet::net::DataSocket> weakSession)
     {
         return [weakSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next) {
-            sender(meta, message, next, weakSession);
+            gayrpc::protocol::binary::send(meta, message, next, weakSession);
         };
     }
 
@@ -58,8 +56,9 @@ namespace utils_interceptor
         {
             handleManager->handleRpcMsg(timeoutMeta, "");
         }
-        catch(...)
-        { }
+        catch (...)
+        {
+        }
     }
 
     // 由eventLoop线程处理超时检测
@@ -87,28 +86,13 @@ namespace utils_interceptor
         };
     }
 
-    static auto withHttpSessionSender(const brynet::net::HttpSession::PTR& httpSession)
+    static auto withHttpSessionSender(const brynet::net::http::HttpSession::PTR& httpSession)
     {
         return [httpSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next) {
-
-            std::string jsonMsg;
-            google::protobuf::util::MessageToJsonString(message, &jsonMsg);
-
-            brynet::net::HttpResponse httpResponse;
-            httpResponse.setStatus(brynet::net::HttpResponse::HTTP_RESPONSE_STATUS::OK);
-            httpResponse.setContentType("application/json");
-            httpResponse.setBody(jsonMsg.c_str());
-
-            auto result = httpResponse.getResult();
-            httpSession->send(result.c_str(), result.size(), nullptr);
-
-            httpSession->postShutdown();
-
-            next(meta, message);
+            gayrpc::protocol::http::send(meta, message, next, httpSession);
         };
     }
-}
 
-#endif
+} }
