@@ -109,13 +109,12 @@ namespace gayrpc { namespace utils {
         session->setHeartBeat(heartBeat);
 
         // 入站拦截器
-        UnaryServerInterceptor inboundInterceptor = withProtectedCall();
+        UnaryServerInterceptor inboundInterceptor = makeInterceptor();
         if (userInboundInterceptor != nullptr) {
             inboundInterceptor = makeInterceptor(inboundInterceptor, userInboundInterceptor);
         }
         // 出站拦截器
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(
-            withProtectedCall(),
             gayrpc::utils::withSessionBinarySender(session));
         if (userOutBoundInterceptor != nullptr) {
             outBoundInterceptor = makeInterceptor(outBoundInterceptor, userOutBoundInterceptor);

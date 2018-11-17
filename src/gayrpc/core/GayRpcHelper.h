@@ -34,21 +34,21 @@ namespace gayrpc { namespace core {
     template<typename Response, typename Hanele>
     inline void    parseResponseWrapper(const Hanele& handle,
         const RpcMeta& meta,
-        const std::string& data,
+        const std::string_view & data,
         const UnaryServerInterceptor& inboundInterceptor)
     {
         Response response;
         switch (meta.encoding())
         {
         case RpcMeta::BINARY:
-            if (!response.ParseFromString(data))
+            if (!response.ParseFromArray(data.data(), data.size()))
             {
                 throw std::runtime_error(std::string("parse binary response failed, type of:") + typeid(Response).name());
             }
             break;
         case RpcMeta::JSON:
         {
-            auto s = JsonStringToMessage(data, &response);
+            auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response);
             if (!s.ok())
             {
                 throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
@@ -79,21 +79,21 @@ namespace gayrpc { namespace core {
     template<typename RequestType>
     inline void parseRequestWrapper(RequestType& request,
         const RpcMeta& meta,
-        const std::string& data,
+        const std::string_view& data,
         const UnaryServerInterceptor& inboundInterceptor,
         const UnaryHandler& handler)
     {
         switch (meta.encoding())
         {
         case RpcMeta::BINARY:
-            if (!request.ParseFromString(data))
+            if (!request.ParseFromArray(data.data(), data.size()))
             {
                 throw std::runtime_error(std::string("parse binary request failed, type of:") + typeid(RequestType).name());
             }
             break;
         case RpcMeta::JSON:
         {
-            auto s = JsonStringToMessage(data, &request);
+            auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request);
             if (!s.ok())
             {
                 throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());

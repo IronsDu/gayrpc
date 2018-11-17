@@ -145,7 +145,7 @@ namespace benchmark {
     private:
 
         static void Echo_stub(const RpcMeta& meta,
-            const std::string& data,
+            const std::string_view& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor)
@@ -168,7 +168,7 @@ namespace benchmark {
         auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
 
         using EchoServerServiceRequestHandler = std::function<void(const RpcMeta&,
-            const std::string& data,
+            const std::string_view& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&)>;
@@ -191,7 +191,7 @@ namespace benchmark {
             serviceHandlerMapById,
             serviceHandlerMapByStr,
             inboundInterceptor,
-            outboundInterceptor](const RpcMeta& meta, const std::string& data) {
+            outboundInterceptor](const RpcMeta& meta, const std::string_view & data) {
             
             if (meta.type() != RpcMeta::REQUEST)
             {

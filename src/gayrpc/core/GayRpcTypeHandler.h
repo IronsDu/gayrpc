@@ -17,7 +17,7 @@ namespace gayrpc { namespace core {
     {
     public:
         using PTR = std::shared_ptr<RpcTypeHandleManager>;
-        using ServiceHandler = std::function<void(const RpcMeta&, const std::string& body)>;
+        using ServiceHandler = std::function<void(const RpcMeta&, const std::string_view& body)>;
         using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
     public:
@@ -45,7 +45,7 @@ namespace gayrpc { namespace core {
 
         virtual ~RpcTypeHandleManager() = default;
 
-        void    handleRpcMsg(const RpcMeta& meta, const std::string& data)
+        void    handleRpcMsg(const RpcMeta& meta, const std::string_view & data)
         {
             ServiceHandler handler;
             {

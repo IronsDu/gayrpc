@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <functional>
 #include <memory>
@@ -63,7 +64,7 @@ namespace gayrpc { namespace core {
                 msgID,
                 RpcMeta_DataEncodingType_BINARY,
                 true);
-            meta.mutable_request_info()->set_timeout(timeout.count());
+            meta.mutable_request_info()->set_timeout(static_cast<uint64_t>(timeout.count()));
 
             mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&) {
             });
@@ -74,7 +75,7 @@ namespace gayrpc { namespace core {
                 assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
 
                 mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
-                    const std::string& data,
+                    const std::string_view & data,
                     const UnaryServerInterceptor& inboundInterceptor) {
                     return parseResponseWrapper<Response>(handle,
                         meta,
@@ -114,7 +115,7 @@ namespace gayrpc { namespace core {
                 assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
 
                 mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
-                    const std::string& data,
+                    const std::string_view & data,
                     const UnaryServerInterceptor& inboundInterceptor) {
                     return parseResponseWrapper<Response>(handle,
                         meta,
@@ -129,7 +130,7 @@ namespace gayrpc { namespace core {
         {
             auto sharedThis = shared_from_this();
             auto responseStub = [sharedThis](const RpcMeta& meta,
-                const std::string& data) {
+                const std::string_view & data) {
                 sharedThis->processRpcResponse(meta, data);
                 return true;
             };
@@ -137,7 +138,7 @@ namespace gayrpc { namespace core {
         }
 
     private:
-        void    processRpcResponse(const RpcMeta& meta, const std::string& data)
+        void    processRpcResponse(const RpcMeta& meta, const std::string_view& data)
         {
             assert(meta.type() == RpcMeta::RESPONSE);
             if (meta.type() != RpcMeta::RESPONSE)
@@ -185,7 +186,7 @@ namespace gayrpc { namespace core {
             std::function<
             void(
                 const RpcMeta&,
-                const std::string& data,
+                const std::string_view& data,
                 const UnaryServerInterceptor&)>;
         using ResponseStubHandleMap = std::unordered_map<uint64_t, ResponseStubHandle>;
         using TimeoutHandleMap = std::unordered_map<uint64_t, TIMEOUT_CALLBACK>;

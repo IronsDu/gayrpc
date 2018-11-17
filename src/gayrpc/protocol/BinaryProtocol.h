@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include <gayrpc/core/GayRpcTypeHandler.h>
 #include <brynet/utils/packet.h>
@@ -48,7 +49,7 @@ namespace gayrpc { namespace protocol {
 
                 auto pbPacketHandle = [rpcHandlerManager, handleRpcEventLoop](const ProtobufPacket& msg) {
                     gayrpc::core::RpcMeta meta;
-                    if (!meta.ParseFromString(msg.meta))
+                    if (!meta.ParseFromArray(msg.meta_view.data(), static_cast<int>(msg.meta_view.size())))
                     {
                         std::cerr << "parse RpcMeta protobuf failed" << std::endl;
                         return;
@@ -56,10 +57,14 @@ namespace gayrpc { namespace protocol {
 
                     if (handleRpcEventLoop != nullptr)
                     {
-                        handleRpcEventLoop->pushAsyncProc([rpcHandlerManager, meta, msg]() {
+                        handleRpcEventLoop->pushAsyncProc([rpcHandlerManager,
+                                                          meta = std::move(meta),
+                                                          cache = std::make_shared<std::string>(msg.data_view.data(),
+                                                                                          msg.data_view.size())
+                                                          ]() {
                             try
                             {
-                                rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                                rpcHandlerManager->handleRpcMsg(meta, std::string_view(cache->data(), cache->size()));
                             }
                             catch (const std::runtime_error& e)
                             {
@@ -74,7 +79,7 @@ namespace gayrpc { namespace protocol {
                     {
                         try
                         {
-                            rpcHandlerManager->handleRpcMsg(meta, msg.data);
+                            rpcHandlerManager->handleRpcMsg(meta, msg.data_view);
                         }
                         catch (const std::runtime_error& e)
                         {
@@ -132,8 +137,18 @@ namespace gayrpc { namespace protocol {
                 uint64_t   data_size;    // 8 bytes
             }head;
 
-            std::string meta;
-            std::string data;
+            std::string_view    meta_view;
+            std::string_view    data_view;
+        };
+
+        struct SerializeProtobufPacket
+        {
+            // header部分
+            struct
+            {
+                uint32_t   meta_size;    // 4 bytes
+                uint64_t   data_size;    // 8 bytes
+            }head;
         };
 
         using ProtobufPacketHandler = std::function<void(const ProtobufPacket&)>;
@@ -205,12 +220,13 @@ namespace gayrpc { namespace protocol {
                 return false;
             }
 
-            protobufPacket.meta = std::string(bpr.getBuffer() + bpr.getPos(),
-                protobufPacket.head.meta_size);
+            protobufPacket.meta_view = std::string_view(bpr.getBuffer() + bpr.getPos(),
+                                                   protobufPacket.head.meta_size);
+
             bpr.addPos(protobufPacket.head.meta_size);
 
-            protobufPacket.data = std::string(bpr.getBuffer() + bpr.getPos(),
-                protobufPacket.head.data_size);
+            protobufPacket.data_view = std::string_view(bpr.getBuffer() + bpr.getPos(),
+                                                        protobufPacket.head.data_size);
             bpr.addPos(protobufPacket.head.data_size);
 
             handler(protobufPacket);
@@ -222,7 +238,7 @@ namespace gayrpc { namespace protocol {
             const std::string& meta,
             const std::string& data)
         {
-            ProtobufPacket protobufPacket;
+            SerializeProtobufPacket protobufPacket;
             protobufPacket.head.meta_size = meta.size();
             protobufPacket.head.data_size = data.size();
 
