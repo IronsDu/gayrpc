@@ -8,7 +8,7 @@
 #include <mutex>
 #include <atomic>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
 #include <gayrpc/core/GayRpcHelper.h>
 

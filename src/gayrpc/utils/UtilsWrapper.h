@@ -9,7 +9,7 @@
 #include <brynet/net/Connector.h>
 #include <brynet/net/http/HttpParser.h>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
@@ -34,7 +34,8 @@ namespace gayrpc { namespace utils {
         ServiceCreator<RpcServiceType> serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
-        const ClaimEventLoopFunctor& claimEventLoopCallback) {
+        const ClaimEventLoopFunctor& claimEventLoopCallback)
+    {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
         httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser &httpParser,
@@ -73,7 +74,8 @@ namespace gayrpc { namespace utils {
         const std::string &ip, int port, ServiceCreator<RpcServiceType> serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
-        const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit) {
+        const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit)
+    {
         listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 brynet::net::http::HttpService::setup(session, [=](const brynet::net::http::HttpSession::PTR &httpSession) {
@@ -94,7 +96,8 @@ namespace gayrpc { namespace utils {
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor& claimEventLoopCallback,
-        std::chrono::milliseconds heartBeat) {
+        std::chrono::milliseconds heartBeat)
+    {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
         session->setDataCallback([=](const char *buffer,
@@ -139,7 +142,8 @@ namespace gayrpc { namespace utils {
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor& claimEventLoopCallback,
         int packetLimit,
-        std::chrono::milliseconds heartBeat) {
+        std::chrono::milliseconds heartBeat)
+    {
         listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 OnBinaryConnectionEnter(session,
@@ -163,7 +167,8 @@ namespace gayrpc { namespace utils {
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor& claimEventLoopCallback,
         const RpcClientCallback<RpcClientType> &callback,
-        std::chrono::milliseconds heartBeat) {
+        std::chrono::milliseconds heartBeat)
+    {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
         session->setDataCallback([=](const char *buffer,
             size_t len) {
@@ -204,7 +209,8 @@ namespace gayrpc { namespace utils {
         const RpcClientCallback<RpcClientType> &callback,
         const brynet::net::AsyncConnector::FAILED_CALLBACK &failedCallback,
         int packetLimit,
-        std::chrono::milliseconds heartBeat) {
+        std::chrono::milliseconds heartBeat)
+    {
         connector->asyncConnect(ip, port, timeout, [=](brynet::net::TcpSocket::PTR socket) {
             auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
                 OnBinaryRpcClient<RpcClientType>(session,
@@ -244,8 +250,8 @@ namespace gayrpc { namespace utils {
             userInboundInterceptor, userOutBoundInterceptor, calcimEventLoopCallback,
             callback,
             [=]() {
-            rpcClientPromise->set_value(nullptr);
-        },
+                rpcClientPromise->set_value(nullptr);
+            },
             packetLimit, heartBeat);
 
         auto future = rpcClientPromise->get_future();

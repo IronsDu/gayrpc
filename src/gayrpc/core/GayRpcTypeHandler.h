@@ -8,7 +8,7 @@
 #include <shared_mutex>
 
 #include <gayrpc/core/GayRpcType.h>
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 
 namespace gayrpc { namespace core {
 

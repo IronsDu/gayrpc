@@ -6,42 +6,33 @@ FILE(GLOB_RECURSE HEADER_LIST
 
 add_executable(echoclient
 EchoClient.cpp
-./pb/echo_service.pb.cc
-../../src/gayrpc/core/gayrpc_option.pb.cc
-../../src/gayrpc/core/meta.pb.cc
-${HEADER_LIST})
+./pb/echo_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(echoclient ws2_32 brynet)
+  target_link_libraries(echoclient gayrpc ws2_32 brynet)
 elseif(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(echoclient PRIVATE pthread brynet ssl crypto protobuf)
+  target_link_libraries(echoclient PRIVATE gayrpc pthread brynet ssl crypto protobuf)
 endif()
 
 add_executable(sync_echoclient
 SyncEchoClient.cpp
-./pb/echo_service.pb.cc
-../../src/gayrpc/core/gayrpc_option.pb.cc
-../../src/gayrpc/core/meta.pb.cc
-${HEADER_LIST})
+./pb/echo_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(sync_echoclient ws2_32 ${BRYNET_LIBRARY})
+  target_link_libraries(sync_echoclient gayrpc ws2_32 ${BRYNET_LIBRARY})
 elseif(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(sync_echoclient PRIVATE pthread brynet ssl crypto protobuf)
+  target_link_libraries(sync_echoclient PRIVATE gayrpc pthread brynet ssl crypto protobuf)
 endif()
 
 add_executable(echoserver
 EchoServer.cpp 
-./pb/echo_service.pb.cc
-../../src/gayrpc/core/gayrpc_option.pb.cc
-../../src/gayrpc/core/meta.pb.cc
-${HEADER_LIST})
+./pb/echo_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(echoserver ws2_32 ${BRYNET_LIBRARY})
+  target_link_libraries(echoserver gayrpc ws2_32 ${BRYNET_LIBRARY})
 elseif(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(echoserver PRIVATE pthread brynet ssl crypto protobuf)
+  target_link_libraries(echoserver PRIVATE gayrpc pthread brynet ssl crypto protobuf)
 endif()

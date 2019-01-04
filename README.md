@@ -1,5 +1,8 @@
+
 # gayrpc
 基于Protobuf协议的跨平台(Linux和Windows)全双工双向(异步)RPC系统,也即通信两端都可以同时作为服务方和客户端,彼此均可请求对方的服务.
+
+Linux:[![Build Status](https://travis-ci.com/IronsDu/gayrpc.svg?branch=master)](https://travis-ci.com/IronsDu/gayrpc)
 
 ## 动机
 1. 目前的RPC系统大多用于互联网行业后端系统，他们之间更像一个单向图，但游戏等行业中很常见两个节点之间互相主动请求数据。
@@ -22,17 +25,17 @@ Windows下可使用 [vcpkg](https://github.com/Microsoft/vcpkg) 进行安装以�
 * [brynet](https://github.com/IronsDu/brynet)
 
 请注意,当使用Windows时,务必使用`vcpkg install brynet --head`安装brynet.</br>
-且务必根据自身系统中的protoc版本对meta.proto和gayrpc_option.proto预先生成代码，请在core_proto 目录里执行: 
+且务必根据自身系统中的protoc版本对gayrpc_meta.proto和gayrpc_option.proto预先生成代码，请在 src目录里执行: 
 ```sh
- protoc --cpp_out=../include meta.proto gayrpc_option.proto
+ protoc --cpp_out=. ./gayrpc/core/gayrpc_meta.proto ./gayrpc/core/gayrpc_option.proto
 ```
 
 ## 代码生成工具
 地址：`https://github.com/IronsDu/protoc-gen-gayrpc`，由[liuhan](https://github.com/liuhan907)编写完成。</br>
 首先将插件程序放到系统 PATH路径下(比如Linux下的/usr/bin)，然后执行代码生成，比如（在具体的服务目录里，比如`gayrpc/examples/echo/pb`）:
 ```sh
- protoc  -I. -I../../../core_proto --cpp_out=. echo_service.proto
- protoc  -I. -I../../../core_proto --gayrpc_out=. echo_service.proto
+ protoc  -I. -I../../../src --cpp_out=. echo_service.proto
+ protoc  -I. -I../../../src --gayrpc_out=. echo_service.proto
 ```
 
 ## Benchmark
@@ -72,6 +75,8 @@ p99:45 ms ,45382276 ns
 `RpcMata`的proto定义如下:
 ```protobuf
 syntax = "proto3";
+
+package gayrpc.core;
 
 message RpcMeta {
     enum Type {
@@ -132,7 +137,7 @@ message EchoResponse {
 
 service EchoServer {
     rpc Echo(EchoRequest) returns(EchoResponse){
-        option (message_id)= 1 ;//设定消息ID,也就是rpc协议中request_info的method
+        option (gayrpc.core.message_id)= 1 ;//设定消息ID,也就是rpc协议中request_info的method
     };
 }
 ```

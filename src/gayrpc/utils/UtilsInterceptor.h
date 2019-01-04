@@ -1,11 +1,10 @@
 #pragma once
 
-
 #include <functional>
 #include <memory>
 #include <exception>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
@@ -91,7 +90,9 @@ namespace gayrpc { namespace utils {
         return [httpSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next) {
-            gayrpc::protocol::http::send(meta, message, next, httpSession);
+            gayrpc::protocol::http::send(meta, message, httpSession);
+            httpSession->postShutdown();
+            next(meta, message);
         };
     }
 

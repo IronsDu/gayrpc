@@ -1,7 +1,8 @@
 syntax = "proto3";
 
 package dodo.test;
-import public "gayrpc_option.proto";
+
+import public "gayrpc/core/gayrpc_option.proto";
 
 message EchoRequest {
 	string message = 1;
@@ -21,9 +22,9 @@ message LoginResponse {
 
 service EchoServer {
     rpc Echo(EchoRequest) returns(EchoResponse) {
-        option (message_id)= 2333;
+        option (gayrpc.core.message_id)= 2333;
     };
     rpc Login(LoginRequest) returns(LoginResponse) {
-        option (message_id)= 3333;
+        option (gayrpc.core.message_id)= 3333;
     };
 }

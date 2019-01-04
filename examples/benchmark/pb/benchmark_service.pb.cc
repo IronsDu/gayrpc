@@ -125,17 +125,17 @@ void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
       "\n\027benchmark_service.proto\022\016dodo.benchmar"
-      "k\032\023gayrpc_option.proto\"\036\n\013EchoRequest\022\017\n"
-      "\007message\030\001 \001(\t\"\037\n\014EchoResponse\022\017\n\007messag"
-      "e\030\001 \001(\t2V\n\nEchoServer\022H\n\004Echo\022\033.dodo.ben"
-      "chmark.EchoRequest\032\034.dodo.benchmark.Echo"
-      "Response\"\005\320\363\030\235\022P\000b\006proto3"
+      "k\032\037gayrpc/core/gayrpc_option.proto\"\036\n\013Ec"
+      "hoRequest\022\017\n\007message\030\001 \001(\t\"\037\n\014EchoRespon"
+      "se\022\017\n\007message\030\001 \001(\t2V\n\nEchoServer\022H\n\004Ech"
+      "o\022\033.dodo.benchmark.EchoRequest\032\034.dodo.be"
+      "nchmark.EchoResponse\"\005\320\363\030\235\022P\000b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 225);
+      descriptor, 237);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "benchmark_service.proto", &protobuf_RegisterTypes);
-  ::protobuf_gayrpc_5foption_2eproto::AddDescriptors();
+  ::protobuf_gayrpc_2fcore_2fgayrpc_5foption_2eproto::AddDescriptors();
 }
 
 void AddDescriptors() {

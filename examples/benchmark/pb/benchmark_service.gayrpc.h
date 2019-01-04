@@ -5,6 +5,7 @@
 #ifndef DODO_BENCHMARK_BENCHMARK_SERVICE_H
 #define DODO_BENCHMARK_BENCHMARK_SERVICE_H
 
+#include <string_view>
 #include <string>
 #include <unordered_map>
 #include <memory>
@@ -14,7 +15,7 @@
 
 #include <google/protobuf/util/json_util.h>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include "benchmark_service.pb.h"
 
 #include <gayrpc/core/GayRpcType.h>
@@ -139,7 +140,7 @@ namespace benchmark {
         static inline bool Install(const EchoServerService::PTR& service);
     private:
         virtual void Echo(const dodo::benchmark::EchoRequest& request, 
-            const EchoReply::PTR& replyObj) = 0;
+            const dodo::benchmark::EchoServerService::EchoReply::PTR& replyObj) = 0;
         
 
     private:
@@ -191,7 +192,7 @@ namespace benchmark {
             serviceHandlerMapById,
             serviceHandlerMapByStr,
             inboundInterceptor,
-            outboundInterceptor](const RpcMeta& meta, const std::string_view & data) {
+            outboundInterceptor](const RpcMeta& meta, const std::string_view& data) {
             
             if (meta.type() != RpcMeta::REQUEST)
             {

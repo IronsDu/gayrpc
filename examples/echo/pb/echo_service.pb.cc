@@ -192,21 +192,21 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\022echo_service.proto\022\tdodo.test\032\023gayrpc_"
-      "option.proto\"\036\n\013EchoRequest\022\017\n\007message\030\001"
-      " \001(\t\"\037\n\014LoginRequest\022\017\n\007message\030\001 \001(\t\"\037\n"
-      "\014EchoResponse\022\017\n\007message\030\001 \001(\t\" \n\rLoginR"
-      "esponse\022\017\n\007message\030\001 \001(\t2\217\001\n\nEchoServer\022"
-      ">\n\004Echo\022\026.dodo.test.EchoRequest\032\027.dodo.t"
-      "est.EchoResponse\"\005\320\363\030\235\022\022A\n\005Login\022\027.dodo."
-      "test.LoginRequest\032\030.dodo.test.LoginRespo"
-      "nse\"\005\320\363\030\205\032P\000b\006proto3"
+      "\n\022echo_service.proto\022\tdodo.test\032\037gayrpc/"
+      "core/gayrpc_option.proto\"\036\n\013EchoRequest\022"
+      "\017\n\007message\030\001 \001(\t\"\037\n\014LoginRequest\022\017\n\007mess"
+      "age\030\001 \001(\t\"\037\n\014EchoResponse\022\017\n\007message\030\001 \001"
+      "(\t\" \n\rLoginResponse\022\017\n\007message\030\001 \001(\t2\217\001\n"
+      "\nEchoServer\022>\n\004Echo\022\026.dodo.test.EchoRequ"
+      "est\032\027.dodo.test.EchoResponse\"\005\320\363\030\235\022\022A\n\005L"
+      "ogin\022\027.dodo.test.LoginRequest\032\030.dodo.tes"
+      "t.LoginResponse\"\005\320\363\030\205\032P\000b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 340);
+      descriptor, 352);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "echo_service.proto", &protobuf_RegisterTypes);
-  ::protobuf_gayrpc_5foption_2eproto::AddDescriptors();
+  ::protobuf_gayrpc_2fcore_2fgayrpc_5foption_2eproto::AddDescriptors();
 }
 
 void AddDescriptors() {

@@ -6,7 +6,7 @@
 #include <functional>
 #include <memory>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 
 namespace gayrpc { namespace core {

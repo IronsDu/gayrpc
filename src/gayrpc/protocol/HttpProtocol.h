@@ -5,7 +5,7 @@
 #include <google/protobuf/util/json_util.h>
 #include <brynet/net/http/HttpService.h>
 #include <brynet/net/http/HttpFormat.h>
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
 
 namespace gayrpc { namespace protocol {
@@ -28,19 +28,20 @@ namespace gayrpc { namespace protocol {
             meta.mutable_request_info()->set_expect_response(true);
             meta.set_encoding(RpcMeta::JSON);
 
-            if (handleRpcEventLoop != nullptr) {
+            if (handleRpcEventLoop != nullptr)
+            {
                 handleRpcEventLoop->pushAsyncProc([=, meta = std::move(meta)]() {
                     rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody());
                 });
             }
-            else {
+            else
+            {
                 rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody());
             }
         }
 
         static void send(const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
             const brynet::net::http::HttpSession::PTR& httpSession)
         {
             std::string jsonMsg;
@@ -53,10 +54,6 @@ namespace gayrpc { namespace protocol {
 
             auto result = httpResponse.getResult();
             httpSession->send(result.c_str(), result.size(), nullptr);
-
-            httpSession->postShutdown();
-
-            next(meta, message);
         }
     };
     

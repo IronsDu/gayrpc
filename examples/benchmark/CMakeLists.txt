@@ -6,28 +6,22 @@ FILE(GLOB_RECURSE HEADER_LIST
 
 add_executable(benchmark_client
 BenchmarkClient.cpp
-./pb/benchmark_service.pb.cc
-../../src/gayrpc/core/gayrpc_option.pb.cc
-../../src/gayrpc/core/meta.pb.cc
-${HEADER_LIST})
+./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_client ws2_32 brynet)
+  target_link_libraries(benchmark_client gayrpc ws2_32 brynet)
 elseif(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(benchmark_client pthread brynet crypto ssl protobuf)
+  target_link_libraries(benchmark_client gayrpc pthread brynet crypto ssl protobuf)
 endif()
 
 add_executable(benchmark_server
 BenchmarkServer.cpp
-./pb/benchmark_service.pb.cc
-../../src/gayrpc/core/gayrpc_option.pb.cc
-../../src/gayrpc/core/meta.pb.cc
-${HEADER_LIST})
+./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_server ws2_32 brynet)
+  target_link_libraries(benchmark_server gayrpc ws2_32 brynet)
 elseif(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(benchmark_server pthread brynet crypto ssl protobuf)
+  target_link_libraries(benchmark_server gayrpc pthread brynet crypto ssl protobuf)
 endif()

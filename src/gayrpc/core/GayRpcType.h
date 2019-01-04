@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 
 namespace gayrpc { namespace core {
 

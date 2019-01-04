@@ -5,7 +5,7 @@
 #include <string>
 
 #include <google/protobuf/util/json_util.h>
-#include <gayrpc/core/meta.pb.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcError.h>
 
@@ -47,14 +47,14 @@ namespace gayrpc { namespace core {
             }
             break;
         case RpcMeta::JSON:
-        {
-            auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response);
-            if (!s.ok())
             {
-                throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
+                auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response);
+                if (!s.ok())
+                {
+                    throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
+                }
             }
             break;
-        }
         default:
             throw std::runtime_error(std::string("response by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(Response).name());
         }
@@ -92,14 +92,14 @@ namespace gayrpc { namespace core {
             }
             break;
         case RpcMeta::JSON:
-        {
-            auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request);
-            if (!s.ok())
             {
-                throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
+                auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request);
+                if (!s.ok())
+                {
+                    throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
+                }
             }
-        }
-        break;
+            break;
         default:
             throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
         }
