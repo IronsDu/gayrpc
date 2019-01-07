@@ -12,35 +12,33 @@ namespace gayrpc { namespace core {
     template<class... Args>
     UnaryServerInterceptor makeInterceptor(Args... args)
     {
-        std::vector<UnaryServerInterceptor> interceptors = { args... };
-
-        if (interceptors.empty())
+        if (sizeof...(Args) == 0)
         {
-            return [](const RpcMeta& meta,
-                const google::protobuf::Message& message,
-                const UnaryHandler& next) {
+            return [](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next) {
                 next(meta, message);
             };
         }
         else
         {
-            auto lastIndex = interceptors.size() - 1;
-            return [interceptors, lastIndex](const RpcMeta& meta,
-                const google::protobuf::Message& message,
-                const UnaryHandler& next) {
-                size_t curI = 0;
-                UnaryHandler magicHandler;
-                magicHandler = [lastIndex, &curI, &interceptors, &next, &magicHandler](const RpcMeta& meta,
-                    const google::protobuf::Message& message) {
-                    if (curI == lastIndex)
+            using InterceptorList = std::vector<UnaryServerInterceptor>;
+            std::shared_ptr<InterceptorList> interceptors = std::make_shared<InterceptorList>(InterceptorList{ args... });
+            auto lastIndex = interceptors->size() - 1;
+
+            return [=](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next) {
+
+                std::shared_ptr<size_t> curIndex = std::make_shared<size_t>(0);
+                std::shared_ptr<UnaryHandler> magicHandler = std::make_shared<UnaryHandler>();
+
+                *magicHandler = [=](const RpcMeta& meta, const google::protobuf::Message& message) {
+                    if (*curIndex == lastIndex)
                     {
                         return next(meta, message);
                     }
-                    curI++;
-                    return interceptors[curI](meta, message, magicHandler);
+                    (*curIndex)++;
+                    return (*interceptors)[*curIndex](meta, message, *magicHandler);
                 };
 
-                return interceptors[0](meta, message, magicHandler);
+                return (*interceptors)[0](meta, message, *magicHandler);
             };
         }
     }
