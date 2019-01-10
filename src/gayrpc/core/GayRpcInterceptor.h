@@ -14,8 +14,8 @@ namespace gayrpc { namespace core {
     {
         if (sizeof...(Args) == 0)
         {
-            return [](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next) {
-                next(meta, message);
+            return [](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType context) {
+                next(meta, message, std::move(context));
             };
         }
         else
@@ -24,21 +24,21 @@ namespace gayrpc { namespace core {
             std::shared_ptr<InterceptorList> interceptors = std::make_shared<InterceptorList>(InterceptorList{ args... });
             auto lastIndex = interceptors->size() - 1;
 
-            return [=](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next) {
+            return [=](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType context) {
 
                 std::shared_ptr<size_t> curIndex = std::make_shared<size_t>(0);
                 std::shared_ptr<UnaryHandler> magicHandler = std::make_shared<UnaryHandler>();
 
-                *magicHandler = [=](const RpcMeta& meta, const google::protobuf::Message& message) {
+                *magicHandler = [=](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
                     if (*curIndex == lastIndex)
                     {
-                        return next(meta, message);
+                        return next(meta, message, std::move(context));
                     }
                     (*curIndex)++;
-                    return (*interceptors)[*curIndex](meta, message, *magicHandler);
+                    return (*interceptors)[*curIndex](meta, message, *magicHandler, std::move(context));
                 };
 
-                return (*interceptors)[0](meta, message, *magicHandler);
+                return (*interceptors)[0](meta, message, *magicHandler, std::move(context));
             };
         }
     }

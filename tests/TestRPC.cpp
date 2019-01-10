@@ -9,6 +9,8 @@ const std::string world("world");
 
 TEST_CASE("rpc are computed", "[rpc]")
 {
+    using namespace gayrpc::core;
+
     class MyService : public dodo::test::EchoServerService
     {
     public:
@@ -18,16 +20,18 @@ TEST_CASE("rpc are computed", "[rpc]")
         {}
 
         virtual void Echo(const dodo::test::EchoRequest& request,
-            const dodo::test::EchoServerService::EchoReply::PTR& replyObj)
+            const dodo::test::EchoServerService::EchoReply::PTR& replyObj,
+            InterceptorContextType context)
         {
             receivedString = request.message();
             dodo::test::EchoResponse response;
             response.set_message(world);
-            replyObj->reply(response);
+            replyObj->reply(response, std::move(context));
         }
 
         virtual void Login(const dodo::test::LoginRequest& request,
-            const dodo::test::EchoServerService::LoginReply::PTR& replyObj)
+            const dodo::test::EchoServerService::LoginReply::PTR& replyObj,
+            InterceptorContextType context)
         {
 
         }
@@ -48,17 +52,19 @@ TEST_CASE("rpc are computed", "[rpc]")
     auto client = dodo::test::EchoServerClient::Create(rpcHandlerManager,
         [&](const gayrpc::core::RpcMeta& meta,
         const google::protobuf::Message& message,
-        const gayrpc::core::UnaryHandler& next)
+        const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context)
         {
-            return next(meta, message);
+            return next(meta, message, std::move(context));
         },
         [&](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next)
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context)
         {
             requestMeta = meta;
             requestBody = message.SerializeAsString();
-            return next(meta, message);
+            return next(meta, message, std::move(context));
         });
 
     dodo::test::EchoRequest request;
@@ -73,25 +79,28 @@ TEST_CASE("rpc are computed", "[rpc]")
     gayrpc::core::ServiceContext serviceContext(rpcHandlerManager,
         [&](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next)
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context)
         {
-            return next(meta, message);
+            return next(meta, message, std::move(context));
         },
         [&](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next)
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context)
         {
             responseMeta = meta;
             responseBody = message.SerializeAsString();
-            return next(meta, message);
+            return next(meta, message, std::move(context));
         });
     auto service = std::make_shared<MyService>(serviceContext);
     dodo::test::EchoServerService::Install(service);
 
-    rpcHandlerManager->handleRpcMsg(requestMeta, requestBody);
+    InterceptorContextType context;
+    rpcHandlerManager->handleRpcMsg(requestMeta, requestBody, std::move(context));
     REQUIRE(service->receivedString == hello);
 
-    rpcHandlerManager->handleRpcMsg(responseMeta, responseBody);
+    rpcHandlerManager->handleRpcMsg(responseMeta, responseBody, std::move(context));
     REQUIRE(expectedResponse == world);
 
     return;

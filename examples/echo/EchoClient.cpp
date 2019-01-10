@@ -23,20 +23,22 @@ public:
     }
 
     void Echo(const EchoRequest& request,
-        const EchoReply::PTR& replyObj) override
+        const EchoReply::PTR& replyObj,
+        InterceptorContextType context) override
     {
         EchoResponse response;
         response.set_message("world");
 
-        replyObj->reply(response);
+        replyObj->reply(response, std::move(context));
     }
 
     void Login(const LoginRequest& request,
-        const LoginReply::PTR& replyObj) override
+        const LoginReply::PTR& replyObj,
+        InterceptorContextType context) override
     {
         LoginResponse response;
         response.set_message(request.message());
-        replyObj->reply(response);
+        replyObj->reply(response, std::move(context));
     }
 
 private:

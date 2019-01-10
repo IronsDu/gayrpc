@@ -12,6 +12,7 @@
 
 namespace gayrpc { namespace protocol {
 
+    using namespace gayrpc::core;
     using namespace brynet::utils;
 
     class binary
@@ -19,7 +20,6 @@ namespace gayrpc { namespace protocol {
     public:
         static void send(const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
             const std::weak_ptr<brynet::net::DataSocket>& weakSession)
         {
             // 实际的发送
@@ -33,7 +33,6 @@ namespace gayrpc { namespace protocol {
             {
                 session->send(bpw.getData(), bpw.getPos());
             }
-            next(meta, message);
         }
 
         static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
@@ -64,7 +63,8 @@ namespace gayrpc { namespace protocol {
                                                           ]() {
                             try
                             {
-                                rpcHandlerManager->handleRpcMsg(meta, std::string_view(cache->data(), cache->size()));
+                                InterceptorContextType context;
+                                rpcHandlerManager->handleRpcMsg(meta, std::string_view(cache->data(), cache->size()), std::move(context));
                             }
                             catch (const std::runtime_error& e)
                             {
@@ -79,7 +79,8 @@ namespace gayrpc { namespace protocol {
                     {
                         try
                         {
-                            rpcHandlerManager->handleRpcMsg(meta, msg.data_view);
+                            InterceptorContextType context;
+                            rpcHandlerManager->handleRpcMsg(meta, msg.data_view, std::move(context));
                         }
                         catch (const std::runtime_error& e)
                         {

@@ -26,19 +26,20 @@ public:
     {}
 
     void Echo(const EchoRequest& request, 
-        const EchoReply::PTR& replyObj) override
+        const EchoReply::PTR& replyObj,
+        InterceptorContextType context) override
     {
         EchoResponse response;
         response.set_message(request.message());
 
-        replyObj->reply(response);
+        replyObj->reply(response, std::move(context));
     }
 };
 
-static void counter(const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next)
+static void counter(const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType context)
 {
     count++;
-    next(meta, message);
+    next(meta, message, std::move(context));
 }
 
 int main(int argc, char **argv)

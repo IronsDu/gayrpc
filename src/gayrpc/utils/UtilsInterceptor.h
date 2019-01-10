@@ -13,16 +13,19 @@
 
 namespace gayrpc { namespace utils {
 
+    using namespace gayrpc::core;
+
     // 一些辅助型拦截器
 
     static auto withProtectedCall()
     {
         return [](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next) {
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context) {
             try
             {
-                next(meta, message);
+                next(meta, message, std::move(context));
             }
             catch (const std::exception& e)
             {
@@ -39,8 +42,10 @@ namespace gayrpc { namespace utils {
     {
         return [weakSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next) {
-            gayrpc::protocol::binary::send(meta, message, next, weakSession);
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context) {
+            gayrpc::protocol::binary::send(meta, message, weakSession);
+            next(meta, message, std::move(context));
         };
     }
 
@@ -53,7 +58,8 @@ namespace gayrpc { namespace utils {
         timeoutMeta.mutable_response_info()->set_sequence_id(seq_id);
         try
         {
-            handleManager->handleRpcMsg(timeoutMeta, "");
+            InterceptorContextType context;
+            handleManager->handleRpcMsg(timeoutMeta, "", std::move(context));
         }
         catch (...)
         {
@@ -66,7 +72,8 @@ namespace gayrpc { namespace utils {
     {
         return [eventLoop, handleManager](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next) {
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context) {
 
             if (meta.request_info().timeout() > 0)
             {
@@ -81,7 +88,7 @@ namespace gayrpc { namespace utils {
                 });
             }
 
-            next(meta, message);
+            next(meta, message, std::move(context));
         };
     }
 
@@ -89,10 +96,11 @@ namespace gayrpc { namespace utils {
     {
         return [httpSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next) {
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context) {
             gayrpc::protocol::http::send(meta, message, httpSession);
             httpSession->postShutdown();
-            next(meta, message);
+            next(meta, message, std::move(context));
         };
     }
 

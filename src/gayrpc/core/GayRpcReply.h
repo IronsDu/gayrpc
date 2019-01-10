@@ -24,7 +24,7 @@ namespace gayrpc { namespace core {
         virtual ~BaseReply() = default;
 
     protected:
-        void    reply(const google::protobuf::Message& response)
+        void    reply(const google::protobuf::Message& response, InterceptorContextType context)
         {
             if (mReplyFlag.test_and_set())
             {
@@ -43,12 +43,15 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_failed(false);
             meta.mutable_response_info()->set_timeout(false);
 
-            mOutboundInterceptor(meta, response, [](const RpcMeta&, const google::protobuf::Message&) {
-            });
+            mOutboundInterceptor(meta, 
+                response, 
+                [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+                }, 
+                std::move(context));
         }
 
         template<typename Response>
-        void    error(int32_t errorCode, const std::string& reason)
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context)
         {
             if (mReplyFlag.test_and_set())
             {
@@ -71,8 +74,11 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_timeout(false);
 
             Response response;
-            mOutboundInterceptor(meta, response, [](const RpcMeta&, const google::protobuf::Message&) {
-            });
+            mOutboundInterceptor(meta, 
+                response, 
+                [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+                }, 
+                std::move(context));
         }
 
     private:
@@ -94,14 +100,14 @@ namespace gayrpc { namespace core {
         {
         }
 
-        void    reply(const T& response)
+        void    reply(const T& response, InterceptorContextType context)
         {
-            BaseReply::reply(response);
+            BaseReply::reply(response, std::move(context));
         }
 
-        void    error(int32_t errorCode, const std::string& reason)
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context)
         {
-            BaseReply::error<T>(errorCode, reason);
+            BaseReply::error<T>(errorCode, reason, std::move(context));
         }
     };
 

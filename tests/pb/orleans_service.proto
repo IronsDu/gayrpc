@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package dodo.test;
+
+import public "gayrpc/core/gayrpc_option.proto";
+import public "gayrpc/core/gayrpc_meta.proto";
+
+message OrleansRequest {
+    string grain_type = 1;
+    string grain_name = 2;
+	gayrpc.core.RpcMeta meta = 3;
+    string body = 4;
+}
+
+message OrleansResponse {
+    gayrpc.core.RpcMeta meta = 1;
+	string body = 2;
+}
+
+service OrleansService {
+    rpc Request(OrleansRequest) returns(OrleansResponse) {
+        option (gayrpc.core.message_id)= 2333;
+    };
+}

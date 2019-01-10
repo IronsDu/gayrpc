@@ -31,12 +31,14 @@ namespace gayrpc { namespace protocol {
             if (handleRpcEventLoop != nullptr)
             {
                 handleRpcEventLoop->pushAsyncProc([=, meta = std::move(meta)]() {
-                    rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody());
+                    InterceptorContextType context;
+                    rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
                 });
             }
             else
             {
-                rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody());
+                InterceptorContextType context;
+                rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
             }
         }
 

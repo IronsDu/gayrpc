@@ -179,9 +179,11 @@ namespace test {
         static inline bool Install(const EchoServerService::PTR& service);
     private:
         virtual void Echo(const dodo::test::EchoRequest& request, 
-            const dodo::test::EchoServerService::EchoReply::PTR& replyObj) = 0;
+            const dodo::test::EchoServerService::EchoReply::PTR& replyObj,
+            InterceptorContextType) = 0;
         virtual void Login(const dodo::test::LoginRequest& request, 
-            const dodo::test::EchoServerService::LoginReply::PTR& replyObj) = 0;
+            const dodo::test::EchoServerService::LoginReply::PTR& replyObj,
+            InterceptorContextType) = 0;
         
 
     private:
@@ -190,29 +192,31 @@ namespace test {
             const std::string_view& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor)
+            const UnaryServerInterceptor& outboundInterceptor,
+            InterceptorContextType context)
         {
             dodo::test::EchoRequest request;
             parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
                 outboundInterceptor,
-                &request](const RpcMeta& meta, const google::protobuf::Message& message) {
+                &request](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-                service->Echo(request, replyObject);
-            });
+                service->Echo(request, replyObject, std::move(context));
+            }, context);
         }
         static void Login_stub(const RpcMeta& meta,
             const std::string_view& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor)
+            const UnaryServerInterceptor& outboundInterceptor,
+            InterceptorContextType context)
         {
             dodo::test::LoginRequest request;
             parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
                 outboundInterceptor,
-                &request](const RpcMeta& meta, const google::protobuf::Message& message) {
+                &request](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
                 auto replyObject = std::make_shared<LoginReply>(meta, outboundInterceptor);
-                service->Login(request, replyObject);
-            });
+                service->Login(request, replyObject, std::move(context));
+            }, context);
         }
         
     };
@@ -227,7 +231,8 @@ namespace test {
             const std::string_view& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
-            const UnaryServerInterceptor&)>;
+            const UnaryServerInterceptor&,
+            InterceptorContextType context)>;
 
         using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
         using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
@@ -249,7 +254,7 @@ namespace test {
             serviceHandlerMapById,
             serviceHandlerMapByStr,
             inboundInterceptor,
-            outboundInterceptor](const RpcMeta& meta, const std::string_view& data) {
+            outboundInterceptor](const RpcMeta& meta, const std::string_view& data, InterceptorContextType context) {
             
             if (meta.type() != RpcMeta::REQUEST)
             {
@@ -281,7 +286,8 @@ namespace test {
                 data,
                 service,
                 inboundInterceptor,
-                outboundInterceptor);
+                outboundInterceptor,
+                std::move(context));
         };
 
         return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));

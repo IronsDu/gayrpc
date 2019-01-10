@@ -35,7 +35,8 @@ namespace gayrpc { namespace core {
     inline void    parseResponseWrapper(const Hanele& handle,
         const RpcMeta& meta,
         const std::string_view & data,
-        const UnaryServerInterceptor& inboundInterceptor)
+        const UnaryServerInterceptor& inboundInterceptor,
+        InterceptorContextType context)
     {
         Response response;
         switch (meta.encoding())
@@ -66,13 +67,13 @@ namespace gayrpc { namespace core {
                 meta.response_info().error_code(),
                 meta.response_info().reason());
         }
-
         inboundInterceptor(
             meta,
             response,
-            [&response, &error, &handle](const RpcMeta&, const google::protobuf::Message&) {
+            [&response, &error, &handle](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+                //TODO:: std::move(context)
             handle(response, error);
-        });
+        }, std::move(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数
@@ -81,7 +82,8 @@ namespace gayrpc { namespace core {
         const RpcMeta& meta,
         const std::string_view& data,
         const UnaryServerInterceptor& inboundInterceptor,
-        const UnaryHandler& handler)
+        const UnaryHandler& handler,
+        InterceptorContextType context)
     {
         switch (meta.encoding())
         {
@@ -104,7 +106,7 @@ namespace gayrpc { namespace core {
             throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
         }
 
-        inboundInterceptor(meta, request, handler);
+        inboundInterceptor(meta, request, handler, std::move(context));
     }
 
 } }

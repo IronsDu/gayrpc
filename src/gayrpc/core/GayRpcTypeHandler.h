@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <shared_mutex>
+#include <any>
 
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/gayrpc_meta.pb.h>
@@ -17,7 +18,7 @@ namespace gayrpc { namespace core {
     {
     public:
         using PTR = std::shared_ptr<RpcTypeHandleManager>;
-        using ServiceHandler = std::function<void(const RpcMeta&, const std::string_view& body)>;
+        using ServiceHandler = std::function<void(const RpcMeta&, const std::string_view& body, InterceptorContextType)>;
         using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
     public:
@@ -45,7 +46,7 @@ namespace gayrpc { namespace core {
 
         virtual ~RpcTypeHandleManager() = default;
 
-        void    handleRpcMsg(const RpcMeta& meta, const std::string_view & data)
+        void    handleRpcMsg(const RpcMeta& meta, const std::string_view & data, InterceptorContextType context)
         {
             ServiceHandler handler;
             {
@@ -64,7 +65,7 @@ namespace gayrpc { namespace core {
                 handler = (*serviceIt).second;
             }
 
-            handler(meta, data);
+            handler(meta, data, context);
         }
 
     private:

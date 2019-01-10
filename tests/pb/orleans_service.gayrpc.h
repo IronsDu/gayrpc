@@ -2,8 +2,8 @@
 // Coding by github.com/liuhan907
 // DO NOT EDIT!!!
 
-#ifndef DODO_BENCHMARK_BENCHMARK_SERVICE_H
-#define DODO_BENCHMARK_BENCHMARK_SERVICE_H
+#ifndef DODO_TEST_ORLEANS_SERVICE_H
+#define DODO_TEST_ORLEANS_SERVICE_H
 
 #include <string_view>
 #include <string>
@@ -16,7 +16,7 @@
 #include <google/protobuf/util/json_util.h>
 
 #include <gayrpc/core/gayrpc_meta.pb.h>
-#include "benchmark_service.pb.h"
+#include "orleans_service.pb.h"
 
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcError.h>
@@ -26,65 +26,65 @@
 #include <gayrpc/core/GayRpcReply.h>
 
 namespace dodo {
-namespace benchmark {
+namespace test {
 
     using namespace gayrpc::core;
     using namespace google::protobuf::util;
     
-    enum class benchmark_service_ServiceID:uint32_t
+    enum class orleans_service_ServiceID:uint32_t
     {
-        EchoServer,
+        OrleansService,
         
     };
 
     
-    enum class EchoServerMsgID:uint64_t
+    enum class OrleansServiceMsgID:uint64_t
     {
-        Echo = 2333,
+        Request = 2333,
         
     };
 
-    class EchoServerClient : public BaseClient
+    class OrleansServiceClient : public BaseClient
     {
     public:
-        using PTR = std::shared_ptr<EchoServerClient>;
-        using WeakPtr = std::weak_ptr<EchoServerClient>;
+        using PTR = std::shared_ptr<OrleansServiceClient>;
+        using WeakPtr = std::weak_ptr<OrleansServiceClient>;
 
-        using EchoHandle = std::function<void(const dodo::benchmark::EchoResponse&, const gayrpc::core::RpcError&)>;
+        using RequestHandle = std::function<void(const dodo::test::OrleansResponse&, const gayrpc::core::RpcError&)>;
         
 
     public:
-        void Echo(const dodo::benchmark::EchoRequest& request,
-            const EchoHandle& handle = nullptr)
+        void Request(const dodo::test::OrleansRequest& request,
+            const RequestHandle& handle = nullptr)
         {
-            call<dodo::benchmark::EchoResponse>(request, 
-                static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Echo), 
+            call<dodo::test::OrleansResponse>(request, 
+                static_cast<uint32_t>(orleans_service_ServiceID::OrleansService), 
+                static_cast<uint64_t>(OrleansServiceMsgID::Request), 
                 handle);
         }
         
-        void Echo(const dodo::benchmark::EchoRequest& request,
-            const EchoHandle& handle,
+        void Request(const dodo::test::OrleansRequest& request,
+            const RequestHandle& handle,
             std::chrono::seconds timeout, 
             BaseClient::TIMEOUT_CALLBACK timeoutCallback)
         {
-            call<dodo::benchmark::EchoResponse>(request, 
-                static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Echo), 
+            call<dodo::test::OrleansResponse>(request, 
+                static_cast<uint32_t>(orleans_service_ServiceID::OrleansService), 
+                static_cast<uint64_t>(OrleansServiceMsgID::Request), 
                 handle,
                 timeout,
                 std::move(timeoutCallback));
         }
         
 
-        dodo::benchmark::EchoResponse SyncEcho(
-            const dodo::benchmark::EchoRequest& request,
+        dodo::test::OrleansResponse SyncRequest(
+            const dodo::test::OrleansRequest& request,
             gayrpc::core::RpcError& error)
         {
             auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
+            auto responsePromise = std::make_shared<std::promise<dodo::test::OrleansResponse>>();
 
-            Echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
+            Request(request, [responsePromise, errorPromise](const dodo::test::OrleansResponse& response,
                 const gayrpc::core::RpcError& error) {
                 errorPromise->set_value(error);
                 responsePromise->set_value(response);
@@ -100,18 +100,18 @@ namespace benchmark {
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor)
         {
-            struct make_shared_enabler : public EchoServerClient
+            struct make_shared_enabler : public OrleansServiceClient
             {
             public:
                 make_shared_enabler(const RpcTypeHandleManager::PTR& rpcHandlerManager,
                     const UnaryServerInterceptor& inboundInterceptor,
                     const UnaryServerInterceptor& outboundInterceptor)
                     : 
-                    EchoServerClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor) {}
+                    OrleansServiceClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor) {}
             };
 
             auto client = PTR(new make_shared_enabler(rpcHandlerManager, inboundInterceptor, outboundInterceptor));
-            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
+            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(orleans_service_ServiceID::OrleansService));
 
             return client;
         }
@@ -120,75 +120,75 @@ namespace benchmark {
         using BaseClient::BaseClient;
     };
 
-    class EchoServerService : public BaseService
+    class OrleansServiceService : public BaseService
     {
     public:
-        using PTR = std::shared_ptr<EchoServerService>;
-        using WeakPtr = std::weak_ptr<EchoServerService>;
+        using PTR = std::shared_ptr<OrleansServiceService>;
+        using WeakPtr = std::weak_ptr<OrleansServiceService>;
 
-        using EchoReply = TemplateReply<dodo::benchmark::EchoResponse>;
+        using RequestReply = TemplateReply<dodo::test::OrleansResponse>;
         
 
         using BaseService::BaseService;
 
-        virtual ~EchoServerService()
+        virtual ~OrleansServiceService()
         {
         }
 
         virtual void onClose() {}
 
-        static inline bool Install(const EchoServerService::PTR& service);
+        static inline bool Install(const OrleansServiceService::PTR& service);
     private:
-        virtual void Echo(const dodo::benchmark::EchoRequest& request, 
-            const dodo::benchmark::EchoServerService::EchoReply::PTR& replyObj,
+        virtual void Request(const dodo::test::OrleansRequest& request, 
+            const dodo::test::OrleansServiceService::RequestReply::PTR& replyObj,
             InterceptorContextType context) = 0;
         
 
     private:
 
-        static void Echo_stub(const RpcMeta& meta,
+        static void Request_stub(const RpcMeta& meta,
             const std::string_view& data,
-            const EchoServerService::PTR& service,
+            const OrleansServiceService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor,
             InterceptorContextType context)
         {
-            dodo::benchmark::EchoRequest request;
+            dodo::test::OrleansRequest request;
             parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
                 outboundInterceptor,
                 &request](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
-                auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-                service->Echo(request, replyObject, std::move(context));
-            }, std::move(context));
+                auto replyObject = std::make_shared<RequestReply>(meta, outboundInterceptor);
+                service->Request(request, replyObject, std::move(context));
+            }, context);
         }
         
     };
 
-    inline bool EchoServerService::Install(const EchoServerService::PTR& service)
+    inline bool OrleansServiceService::Install(const OrleansServiceService::PTR& service)
     {
         auto rpcTypeHandleManager = service->getServiceContext().getTypeHandleManager();
         auto inboundInterceptor = service->getServiceContext().getInInterceptor();
         auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
 
-        using EchoServerServiceRequestHandler = std::function<void(const RpcMeta&,
+        using OrleansServiceServiceRequestHandler = std::function<void(const RpcMeta&,
             const std::string_view& data,
-            const EchoServerService::PTR&,
+            const OrleansServiceService::PTR&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&,
             InterceptorContextType)>;
 
-        using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
-        using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
+        using OrleansServiceServiceHandlerMapById = std::unordered_map<uint64_t, OrleansServiceServiceRequestHandler>;
+        using OrleansServiceServiceHandlerMapByStr = std::unordered_map<std::string, OrleansServiceServiceRequestHandler>;
 
         // TODO::static unordered map
-        auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
-        auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
+        auto serviceHandlerMapById = std::make_shared<OrleansServiceServiceHandlerMapById>();
+        auto serviceHandlerMapByStr = std::make_shared<OrleansServiceServiceHandlerMapByStr>();
 
-        const std::string namespaceStr = "dodo.benchmark.";
+        const std::string namespaceStr = "dodo.test.";
 
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
+        (*serviceHandlerMapById)[static_cast<uint64_t>(OrleansServiceMsgID::Request)] = OrleansServiceService::Request_stub;
         
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Echo"] = EchoServerService::Echo_stub;
+        (*serviceHandlerMapByStr)[namespaceStr+"OrleansService.Request"] = OrleansServiceService::Request_stub;
         
 
         auto requestStub = [service,
@@ -202,7 +202,7 @@ namespace benchmark {
                 throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
             }
             
-            EchoServerServiceRequestHandler handler;
+            OrleansServiceServiceRequestHandler handler;
 
             if (!meta.request_info().strmethod().empty())
             {
@@ -228,10 +228,10 @@ namespace benchmark {
                 service,
                 inboundInterceptor,
                 outboundInterceptor,
-                std::move(context));
+                context);
         };
 
-        return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
+        return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(orleans_service_ServiceID::OrleansService));
     }
     
 }
