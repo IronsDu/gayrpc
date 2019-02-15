@@ -5,7 +5,7 @@
 
 #include <gayrpc/core/GayRpcTypeHandler.h>
 #include <brynet/utils/packet.h>
-#include <brynet/net/DataSocket.h>
+#include <brynet/net/TcpConnection.h>
 #include <brynet/net/EventLoop.h>
 
 // 实现协议解析和序列化
@@ -20,7 +20,7 @@ namespace gayrpc { namespace protocol {
     public:
         static void send(const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const std::weak_ptr<brynet::net::DataSocket>& weakSession)
+            const std::weak_ptr<brynet::net::TcpConnection>& weakSession)
         {
             // 实际的发送
             AutoMallocPacket<4096> bpw(true, true);
@@ -38,7 +38,7 @@ namespace gayrpc { namespace protocol {
         static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
             const char* buffer,
             size_t len,
-            brynet::net::EventLoop::PTR handleRpcEventLoop = nullptr)
+            brynet::net::EventLoop::Ptr handleRpcEventLoop = nullptr)
         {
             auto opHandle = [rpcHandlerManager, handleRpcEventLoop](const OpPacket& opPacket) {
                 if (opPacket.head.op != OpCode::OpCodeProtobuf)
@@ -56,7 +56,7 @@ namespace gayrpc { namespace protocol {
 
                     if (handleRpcEventLoop != nullptr)
                     {
-                        handleRpcEventLoop->pushAsyncProc([rpcHandlerManager,
+                        handleRpcEventLoop->pushAsyncFunctor([rpcHandlerManager,
                                                           meta = std::move(meta),
                                                           cache = std::make_shared<std::string>(msg.data_view.data(),
                                                                                           msg.data_view.size())

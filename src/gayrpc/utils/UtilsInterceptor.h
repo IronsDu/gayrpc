@@ -38,7 +38,7 @@ namespace gayrpc { namespace utils {
         };
     }
 
-    static auto withSessionBinarySender(std::weak_ptr<brynet::net::DataSocket> weakSession)
+    static auto withSessionBinarySender(std::weak_ptr<brynet::net::TcpConnection> weakSession)
     {
         return [weakSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
@@ -67,7 +67,7 @@ namespace gayrpc { namespace utils {
     }
 
     // 由eventLoop线程处理超时检测
-    static auto withTimeoutCheck(const brynet::net::EventLoop::PTR& eventLoop,
+    static auto withTimeoutCheck(const brynet::net::EventLoop::Ptr& eventLoop,
         const gayrpc::core::RpcTypeHandleManager::PTR& handleManager)
     {
         return [eventLoop, handleManager](const gayrpc::core::RpcMeta& meta,
@@ -80,7 +80,7 @@ namespace gayrpc { namespace utils {
                 auto seqID = meta.request_info().sequence_id();
                 auto timeoutSecond = meta.request_info().timeout();
 
-                eventLoop->pushAsyncProc([eventLoop, seqID, timeoutSecond, handleManager]() {
+                eventLoop->pushAsyncFunctor([eventLoop, seqID, timeoutSecond, handleManager]() {
                     eventLoop->getTimerMgr()->addTimer(std::chrono::seconds(timeoutSecond),
                         [handleManager, seqID]() {
                         causeTimeout(handleManager, seqID);
@@ -92,7 +92,7 @@ namespace gayrpc { namespace utils {
         };
     }
 
-    static auto withHttpSessionSender(const brynet::net::http::HttpSession::PTR& httpSession)
+    static auto withHttpSessionSender(const brynet::net::http::HttpSession::Ptr& httpSession)
     {
         return [httpSession](const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,

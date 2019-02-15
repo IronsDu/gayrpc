@@ -92,7 +92,7 @@ int main(int argc, char **argv)
             gayrpc::utils::AsyncCreateRpcClient< EchoServerClient>(server, connector,
                 argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
                 nullptr, nullptr,
-                [=]() -> brynet::net::EventLoop::PTR {
+                [=]() -> brynet::net::EventLoop::Ptr {
                     return mainLoop;
                 }, [](dodo::test::EchoServerClient::PTR client) {
                     OnConnection(client);

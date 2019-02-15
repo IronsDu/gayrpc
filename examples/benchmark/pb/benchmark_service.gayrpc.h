@@ -79,19 +79,26 @@ namespace benchmark {
 
         dodo::benchmark::EchoResponse SyncEcho(
             const dodo::benchmark::EchoRequest& request,
-            gayrpc::core::RpcError& error)
+            gayrpc::core::RpcError& error,
+            std::chrono::seconds timeout)
         {
             auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePromise = std::make_shared<std::promise<dodo::benchmark::EchoResponse>>();
+            auto responsePointer = std::make_shared<dodo::benchmark::EchoResponse>();
 
-            Echo(request, [responsePromise, errorPromise](const dodo::benchmark::EchoResponse& response,
+            Echo(request, [responsePointer, errorPromise](const dodo::benchmark::EchoResponse& response,
                 const gayrpc::core::RpcError& error) {
+                *responsePointer = response;
                 errorPromise->set_value(error);
-                responsePromise->set_value(response);
             });
 
-            error = errorPromise->get_future().get();
-            return responsePromise->get_future().get();
+            auto errorFuture = errorPromise->get_future();
+            if (errorFuture.wait_for(timeout) != std::future_status::ready)
+            {
+                throw std::runtime_error("timeout");
+            }
+
+            error = errorFuture.get();
+            return *responsePointer;
         }
         
 
@@ -116,6 +123,11 @@ namespace benchmark {
             return client;
         }
 
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::benchmark::EchoServer";
+        }
+
     private:
         using BaseClient::BaseClient;
     };
@@ -138,10 +150,15 @@ namespace benchmark {
         virtual void onClose() {}
 
         static inline bool Install(const EchoServerService::PTR& service);
+
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::benchmark::EchoServer";
+        }
     private:
         virtual void Echo(const dodo::benchmark::EchoRequest& request, 
             const dodo::benchmark::EchoServerService::EchoReply::PTR& replyObj,
-            InterceptorContextType context) = 0;
+            InterceptorContextType) = 0;
         
 
     private:
@@ -159,7 +176,7 @@ namespace benchmark {
                 &request](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
                 auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
                 service->Echo(request, replyObject, std::move(context));
-            }, std::move(context));
+            }, context);
         }
         
     };
@@ -175,7 +192,7 @@ namespace benchmark {
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&,
-            InterceptorContextType)>;
+            InterceptorContextType context)>;
 
         using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
         using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;

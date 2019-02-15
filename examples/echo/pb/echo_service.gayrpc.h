@@ -101,35 +101,49 @@ namespace test {
 
         dodo::test::EchoResponse SyncEcho(
             const dodo::test::EchoRequest& request,
-            gayrpc::core::RpcError& error)
+            gayrpc::core::RpcError& error,
+            std::chrono::seconds timeout)
         {
             auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePromise = std::make_shared<std::promise<dodo::test::EchoResponse>>();
+            auto responsePointer = std::make_shared<dodo::test::EchoResponse>();
 
-            Echo(request, [responsePromise, errorPromise](const dodo::test::EchoResponse& response,
+            Echo(request, [responsePointer, errorPromise](const dodo::test::EchoResponse& response,
                 const gayrpc::core::RpcError& error) {
+                *responsePointer = response;
                 errorPromise->set_value(error);
-                responsePromise->set_value(response);
             });
 
-            error = errorPromise->get_future().get();
-            return responsePromise->get_future().get();
+            auto errorFuture = errorPromise->get_future();
+            if (errorFuture.wait_for(timeout) != std::future_status::ready)
+            {
+                throw std::runtime_error("timeout");
+            }
+
+            error = errorFuture.get();
+            return *responsePointer;
         }
         dodo::test::LoginResponse SyncLogin(
             const dodo::test::LoginRequest& request,
-            gayrpc::core::RpcError& error)
+            gayrpc::core::RpcError& error,
+            std::chrono::seconds timeout)
         {
             auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePromise = std::make_shared<std::promise<dodo::test::LoginResponse>>();
+            auto responsePointer = std::make_shared<dodo::test::LoginResponse>();
 
-            Login(request, [responsePromise, errorPromise](const dodo::test::LoginResponse& response,
+            Login(request, [responsePointer, errorPromise](const dodo::test::LoginResponse& response,
                 const gayrpc::core::RpcError& error) {
+                *responsePointer = response;
                 errorPromise->set_value(error);
-                responsePromise->set_value(response);
             });
 
-            error = errorPromise->get_future().get();
-            return responsePromise->get_future().get();
+            auto errorFuture = errorPromise->get_future();
+            if (errorFuture.wait_for(timeout) != std::future_status::ready)
+            {
+                throw std::runtime_error("timeout");
+            }
+
+            error = errorFuture.get();
+            return *responsePointer;
         }
         
 
@@ -152,6 +166,11 @@ namespace test {
             client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
 
             return client;
+        }
+
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::test::EchoServer";
         }
 
     private:
@@ -177,6 +196,11 @@ namespace test {
         virtual void onClose() {}
 
         static inline bool Install(const EchoServerService::PTR& service);
+
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::test::EchoServer";
+        }
     private:
         virtual void Echo(const dodo::test::EchoRequest& request, 
             const dodo::test::EchoServerService::EchoReply::PTR& replyObj,

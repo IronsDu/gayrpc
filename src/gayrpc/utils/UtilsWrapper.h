@@ -24,13 +24,13 @@ namespace gayrpc { namespace utils {
     template<typename RpcServiceType>
     using ServiceCreator = std::function<std::shared_ptr<RpcServiceType>(ServiceContext)>;
 
-    using ClaimEventLoopFunctor = std::function<brynet::net::EventLoop::PTR()>;
+    using ClaimEventLoopFunctor = std::function<brynet::net::EventLoop::Ptr()>;
 
     template<typename RpcClientType>
     using RpcClientCallback = std::function<void(std::shared_ptr<RpcClientType>)>;
 
     template<typename RpcServiceType>
-    static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::PTR &httpSession,
+    static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
         ServiceCreator<RpcServiceType> serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
@@ -39,9 +39,9 @@ namespace gayrpc { namespace utils {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
         httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser &httpParser,
-            const brynet::net::http::HttpSession::PTR &session) {
+            const brynet::net::http::HttpSession::Ptr &session) {
 
-            brynet::net::EventLoop::PTR handleEventLoop;
+            brynet::net::EventLoop::Ptr handleEventLoop;
             if (claimEventLoopCallback != nullptr)
             {
                 handleEventLoop = claimEventLoopCallback();
@@ -69,29 +69,29 @@ namespace gayrpc { namespace utils {
     }
 
     template<typename RpcServiceType>
-    static void StartHttpRpcServer(const brynet::net::TcpService::PTR &service,
-        const brynet::net::ListenThread::PTR &listenThread,
+    static void StartHttpRpcServer(const brynet::net::TcpService::Ptr& service,
+        const brynet::net::ListenThread::Ptr& listenThread,
         const std::string &ip, int port, ServiceCreator<RpcServiceType> serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor &claimEventLoopCallback, int packetLimit)
     {
-        listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
-            auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
-                brynet::net::http::HttpService::setup(session, [=](const brynet::net::http::HttpSession::PTR &httpSession) {
+        listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::Ptr socket) {
+            auto enterCallback = [=](const brynet::net::TcpConnection::Ptr &session) {
+                brynet::net::http::HttpService::setup(session, [=](const brynet::net::http::HttpSession::Ptr &httpSession) {
                     OnHTTPConnectionEnter(httpSession, serverCreator, userInboundInterceptor, userOutBoundInterceptor,
                         claimEventLoopCallback);
                 });
             };
-            socket->SocketNodelay();
-            service->addDataSocket(std::move(socket),
+            socket->setNodelay();
+            service->addTcpConnection(std::move(socket),
                 brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
                 brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         });
     }
 
     template<typename RpcServiceType>
-    static void OnBinaryConnectionEnter(const brynet::net::DataSocket::PTR &session,
+    static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& session,
         const ServiceCreator<RpcServiceType> &serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
@@ -103,7 +103,7 @@ namespace gayrpc { namespace utils {
         session->setDataCallback([=](const char *buffer,
             size_t len) {
             // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
-            brynet::net::EventLoop::PTR handleEventLoop;
+            brynet::net::EventLoop::Ptr handleEventLoop;
             if (claimEventLoopCallback != nullptr) {
                 handleEventLoop = claimEventLoopCallback();
             }
@@ -126,7 +126,7 @@ namespace gayrpc { namespace utils {
         ServiceContext serviceContext(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
         auto service = serverCreator(serviceContext);
 
-        session->setDisConnectCallback([=](const brynet::net::DataSocket::PTR &session) {
+        session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr &session) {
             service->onClose();
         });
 
@@ -134,8 +134,8 @@ namespace gayrpc { namespace utils {
     }
 
     template<typename RpcServiceType>
-    static void StartBinaryRpcServer(const brynet::net::TcpService::PTR &service,
-        const brynet::net::ListenThread::PTR &listenThread,
+    static void StartBinaryRpcServer(const brynet::net::TcpService::Ptr &service,
+        const brynet::net::ListenThread::Ptr &listenThread,
         const std::string &ip, int port,
         const ServiceCreator<RpcServiceType> &serverCreator,
         const UnaryServerInterceptor& userInboundInterceptor,
@@ -144,8 +144,8 @@ namespace gayrpc { namespace utils {
         int packetLimit,
         std::chrono::milliseconds heartBeat)
     {
-        listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::PTR socket) {
-            auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
+        listenThread->startListen(false, ip, port, [=](brynet::net::TcpSocket::Ptr socket) {
+            auto enterCallback = [=](const brynet::net::TcpConnection::Ptr &session) {
                 OnBinaryConnectionEnter(session,
                     serverCreator,
                     userInboundInterceptor,
@@ -154,15 +154,15 @@ namespace gayrpc { namespace utils {
                     heartBeat);
             };
 
-            socket->SocketNodelay();
-            service->addDataSocket(std::move(socket),
+            socket->setNodelay();
+            service->addTcpConnection(std::move(socket),
                 brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
                 brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         });
     }
 
     template<typename RpcClientType>
-    static void OnBinaryRpcClient(const brynet::net::DataSocket::PTR &session,
+    static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr &session,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor& claimEventLoopCallback,
@@ -172,7 +172,7 @@ namespace gayrpc { namespace utils {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
         session->setDataCallback([=](const char *buffer,
             size_t len) {
-            brynet::net::EventLoop::PTR handleEventLoop;
+            brynet::net::EventLoop::Ptr handleEventLoop;
             if (claimEventLoopCallback != nullptr) {
                 handleEventLoop = claimEventLoopCallback();
             }
@@ -200,19 +200,19 @@ namespace gayrpc { namespace utils {
     }
 
     template<typename RpcClientType>
-    static void AsyncCreateRpcClient(const brynet::net::TcpService::PTR &service,
-        const brynet::net::AsyncConnector::PTR &connector, const std::string &ip,
+    static void AsyncCreateRpcClient(const brynet::net::TcpService::Ptr &service,
+        const brynet::net::AsyncConnector::Ptr &connector, const std::string &ip,
         int port, std::chrono::milliseconds timeout,
         const UnaryServerInterceptor& userInboundInterceptor,
         const UnaryServerInterceptor& userOutBoundInterceptor,
         const ClaimEventLoopFunctor& claimEventLoopCallback,
-        const RpcClientCallback<RpcClientType> &callback,
-        const brynet::net::AsyncConnector::FAILED_CALLBACK &failedCallback,
+        const RpcClientCallback<RpcClientType>& callback,
+        const brynet::net::AsyncConnector::FailedCallback& failedCallback,
         int packetLimit,
         std::chrono::milliseconds heartBeat)
     {
-        connector->asyncConnect(ip, port, timeout, [=](brynet::net::TcpSocket::PTR socket) {
-            auto enterCallback = [=](const brynet::net::DataSocket::PTR &session) {
+        connector->asyncConnect(ip, port, timeout, [=](brynet::net::TcpSocket::Ptr socket) {
+            auto enterCallback = [=](const brynet::net::TcpConnection::Ptr &session) {
                 OnBinaryRpcClient<RpcClientType>(session,
                     userInboundInterceptor,
                     userOutBoundInterceptor,
@@ -221,16 +221,16 @@ namespace gayrpc { namespace utils {
                     heartBeat);
             };
 
-            socket->SocketNodelay();
-            service->addDataSocket(std::move(socket),
+            socket->setNodelay();
+            service->addTcpConnection(std::move(socket),
                 brynet::net::TcpService::AddSocketOption::WithEnterCallback(enterCallback),
                 brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(packetLimit));
         }, failedCallback);
     }
 
     template<typename RpcClientType>
-    static std::shared_ptr<RpcClientType> SyncCreateRpcClient(const brynet::net::TcpService::PTR& service,
-        brynet::net::AsyncConnector::PTR connector,
+    static std::shared_ptr<RpcClientType> SyncCreateRpcClient(const brynet::net::TcpService::Ptr& service,
+        brynet::net::AsyncConnector::Ptr connector,
         const std::string& ip,
         int port,
         std::chrono::milliseconds timeout,

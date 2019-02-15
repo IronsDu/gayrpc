@@ -18,9 +18,9 @@ const int ServicePort = 9999;
 const std::string hello("hello");
 const std::string world("world");
 
-const brynet::net::EventLoop::PTR mainLoop = std::make_shared<brynet::net::EventLoop>();
-const brynet::net::TcpService::PTR tcpService = brynet::net::TcpService::Create();
-const brynet::net::AsyncConnector::PTR connector = brynet::net::AsyncConnector::Create();
+const brynet::net::EventLoop::Ptr mainLoop = std::make_shared<brynet::net::EventLoop>();
+const brynet::net::TcpService::Ptr tcpService = brynet::net::TcpService::Create();
+const brynet::net::AsyncConnector::Ptr connector = brynet::net::AsyncConnector::Create();
 
 using OrleanAddr = std::pair<std::string, int>;
 std::map<OrleanAddr, dodo::test::OrleansServiceClient::PTR> orleans;

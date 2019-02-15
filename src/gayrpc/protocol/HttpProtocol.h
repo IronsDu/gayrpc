@@ -17,9 +17,9 @@ namespace gayrpc { namespace protocol {
     {
     public:
         static void handleHttpPacket(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
-            const brynet::net::http::HTTPParser &httpParser,
-            const brynet::net::http::HttpSession::PTR &session,
-            brynet::net::EventLoop::PTR handleRpcEventLoop)
+            const brynet::net::http::HTTPParser& httpParser,
+            const brynet::net::http::HttpSession::Ptr& session,
+            brynet::net::EventLoop::Ptr handleRpcEventLoop)
         {
             (void)session;
             RpcMeta meta;
@@ -30,7 +30,7 @@ namespace gayrpc { namespace protocol {
 
             if (handleRpcEventLoop != nullptr)
             {
-                handleRpcEventLoop->pushAsyncProc([=, meta = std::move(meta)]() {
+                handleRpcEventLoop->pushAsyncFunctor([=, meta = std::move(meta)]() {
                     InterceptorContextType context;
                     rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
                 });
@@ -44,7 +44,7 @@ namespace gayrpc { namespace protocol {
 
         static void send(const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
-            const brynet::net::http::HttpSession::PTR& httpSession)
+            const brynet::net::http::HttpSession::Ptr& httpSession)
         {
             std::string jsonMsg;
             google::protobuf::util::MessageToJsonString(message, &jsonMsg);

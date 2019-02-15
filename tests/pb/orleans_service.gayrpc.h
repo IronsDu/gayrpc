@@ -79,19 +79,26 @@ namespace test {
 
         dodo::test::OrleansResponse SyncRequest(
             const dodo::test::OrleansRequest& request,
-            gayrpc::core::RpcError& error)
+            gayrpc::core::RpcError& error,
+            std::chrono::seconds timeout)
         {
             auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePromise = std::make_shared<std::promise<dodo::test::OrleansResponse>>();
+            auto responsePointer = std::make_shared<dodo::test::OrleansResponse>();
 
-            Request(request, [responsePromise, errorPromise](const dodo::test::OrleansResponse& response,
+            Request(request, [responsePointer, errorPromise](const dodo::test::OrleansResponse& response,
                 const gayrpc::core::RpcError& error) {
+                *responsePointer = response;
                 errorPromise->set_value(error);
-                responsePromise->set_value(response);
             });
 
-            error = errorPromise->get_future().get();
-            return responsePromise->get_future().get();
+            auto errorFuture = errorPromise->get_future();
+            if (errorFuture.wait_for(timeout) != std::future_status::ready)
+            {
+                throw std::runtime_error("timeout");
+            }
+
+            error = errorFuture.get();
+            return *responsePointer;
         }
         
 
@@ -116,6 +123,11 @@ namespace test {
             return client;
         }
 
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::test::OrleansService";
+        }
+
     private:
         using BaseClient::BaseClient;
     };
@@ -138,10 +150,15 @@ namespace test {
         virtual void onClose() {}
 
         static inline bool Install(const OrleansServiceService::PTR& service);
+
+        static  std::string GetServiceTypeName()
+        {
+            return "dodo::test::OrleansService";
+        }
     private:
         virtual void Request(const dodo::test::OrleansRequest& request, 
             const dodo::test::OrleansServiceService::RequestReply::PTR& replyObj,
-            InterceptorContextType context) = 0;
+            InterceptorContextType) = 0;
         
 
     private:
@@ -175,7 +192,7 @@ namespace test {
             const OrleansServiceService::PTR&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&,
-            InterceptorContextType)>;
+            InterceptorContextType context)>;
 
         using OrleansServiceServiceHandlerMapById = std::unordered_map<uint64_t, OrleansServiceServiceRequestHandler>;
         using OrleansServiceServiceHandlerMapByStr = std::unordered_map<std::string, OrleansServiceServiceRequestHandler>;
@@ -228,7 +245,7 @@ namespace test {
                 service,
                 inboundInterceptor,
                 outboundInterceptor,
-                context);
+                std::move(context));
         };
 
         return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(orleans_service_ServiceID::OrleansService));

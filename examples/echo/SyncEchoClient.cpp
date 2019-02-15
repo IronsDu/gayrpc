@@ -11,7 +11,7 @@ using namespace brynet;
 using namespace brynet::net;
 using namespace dodo::test;
 
-static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
+static EchoServerClient::PTR createEchoClient(const TcpConnection::Ptr& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
     session->setDataCallback([rpcHandlerManager](const char* buffer,
@@ -23,7 +23,7 @@ static EchoServerClient::PTR createEchoClient(const DataSocket::PTR& session)
     auto inboundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<DataSocket>(session)),
+    auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<TcpConnection>(session)),
         gayrpc::utils::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
         // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
-        auto response = client->SyncEcho(request, error);
+        auto response = client->SyncEcho(request, error, std::chrono::seconds(10));
 
         std::cout << "echo result:" << error.failed() << std::endl;
         std::cout << "echo message:" << response.message() << std::endl;
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
         LoginRequest request;
         request.set_message("sync login test");
 
-        auto response = client->SyncLogin(request, error);
+        auto response = client->SyncLogin(request, error, std::chrono::seconds(10));
 
         std::cout << "login result:" << error.failed() << std::endl;
         std::cout << "login message:" << response.message() << std::endl;

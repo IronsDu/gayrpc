@@ -6,6 +6,8 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 if(UNIX)
     find_library(BRYNET_LIBRARY brynet)
     find_library(PROTOBUF_LIBRARY protobuf)
+elseif(WIN32)
+    find_package(protobuf CONFIG REQUIRED)
 endif()
 
 if(WIN32)
