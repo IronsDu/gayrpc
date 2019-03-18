@@ -41,11 +41,14 @@ int main(int argc, char **argv)
 
     auto service = TcpService::Create();
     service->startWorkerThread(1);
-    auto session = brynet::net::SyncConnectSession(argv[1], 
-        atoi(argv[2]), 
-        std::chrono::seconds(10),
-        service,
-        {brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024*1024)});
+    auto session = brynet::net::SyncConnectSession(service,
+        {
+            AsyncConnector::ConnectOptions::WithAddr(argv[1], atoi(argv[2])),
+            AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)),
+        },
+        {
+            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)
+        });
     auto client = createEchoClient(session);
 
     {

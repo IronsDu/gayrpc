@@ -2,7 +2,7 @@
 # gayrpc
 基于Protobuf协议的跨平台(Linux和Windows)全双工双向(异步)RPC系统,也即通信两端都可以同时作为服务方和客户端,彼此均可请求对方的服务.
 
-Linux:[![Build Status](https://travis-ci.com/IronsDu/gayrpc.svg?branch=master)](https://travis-ci.com/IronsDu/gayrpc)
+Windows : [![Build status](https://ci.appveyor.com/api/projects/status/acq1dvwfmv7iwpsn/branch/master?svg=true)](https://ci.appveyor.com/project/IronsDu/gayrpc/branch/master) Linux:[![Build Status](https://travis-ci.com/IronsDu/gayrpc.svg?branch=master)](https://travis-ci.com/IronsDu/gayrpc)
 
 ## 动机
 1. 目前的RPC系统大多用于互联网行业后端系统，他们之间更像一个单向图，但游戏等行业中很常见两个节点之间互相主动请求数据。

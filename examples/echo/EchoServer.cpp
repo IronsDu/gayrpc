@@ -12,6 +12,7 @@ using namespace brynet;
 using namespace brynet::net;
 using namespace gayrpc::core;
 using namespace dodo::test;
+using namespace gayrpc::utils;
 
 std::atomic<int64_t> count(0);
 
@@ -75,15 +76,40 @@ int main(int argc, char **argv)
     auto service = TcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
-    auto binaryListenThread = ListenThread::Create();
-    gayrpc::utils::StartBinaryRpcServer<EchoServerService>(service, binaryListenThread, "0.0.0.0", std::stoi(argv[1]), [](gayrpc::core::ServiceContext context) {
-        return std::make_shared<MyService>(context);
-    }, counter, counter, nullptr, 1024 * 1024, std::chrono::seconds(10));
+    auto binaryServiceConfig = gayrpc::utils::WrapTcpRpc<EchoServerService>(
+        service,
+        [](gayrpc::core::ServiceContext context) {
+            return std::make_shared<MyService>(context);
+        },
+        {
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            })
+        },
+        {
+            RpcConfig::WithInboundInterceptor(counter),
+            RpcConfig::WithOutboundInterceptor(counter),
+        });
+    auto binaryListenThread = ListenThread::Create(false, "0.0.0.0", std::stoi(argv[1]), binaryServiceConfig);
+    binaryListenThread->startListen();
 
-    auto httpListenThread = ListenThread::Create();
-    gayrpc::utils::StartHttpRpcServer<EchoServerService>(service, httpListenThread, "0.0.0.0", 80, [](gayrpc::core::ServiceContext context) {
-        return std::make_shared<MyService>(context);
-    }, counter, counter, nullptr, 1024 * 1024);
+    auto httpServiceConfig = gayrpc::utils::WrapHttpRpc<EchoServerService>(service,
+        [](gayrpc::core::ServiceContext context) {
+            return std::make_shared<MyService>(context);
+        },
+        {
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            }),
+        },
+        {
+            RpcConfig::WithInboundInterceptor(counter),
+            RpcConfig::WithOutboundInterceptor(counter)
+        });
+    auto httpListenThread = ListenThread::Create(false, "0.0.0.0", 80, httpServiceConfig);
+    httpListenThread->startListen();
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);

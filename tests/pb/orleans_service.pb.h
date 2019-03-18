@@ -178,7 +178,7 @@ class OrleansRequest : public ::google::protobuf::Message /* @@protoc_insertion_
   ::std::string* release_grain_name();
   void set_allocated_grain_name(::std::string* grain_name);
 
-  // string body = 4;
+  // bytes body = 4;
   void clear_body();
   static const int kBodyFieldNumber = 4;
   const ::std::string& body() const;
@@ -187,7 +187,7 @@ class OrleansRequest : public ::google::protobuf::Message /* @@protoc_insertion_
   void set_body(::std::string&& value);
   #endif
   void set_body(const char* value);
-  void set_body(const char* value, size_t size);
+  void set_body(const void* value, size_t size);
   ::std::string* mutable_body();
   ::std::string* release_body();
   void set_allocated_body(::std::string* body);
@@ -297,7 +297,7 @@ class OrleansResponse : public ::google::protobuf::Message /* @@protoc_insertion
 
   // accessors -------------------------------------------------------
 
-  // string body = 2;
+  // bytes body = 2;
   void clear_body();
   static const int kBodyFieldNumber = 2;
   const ::std::string& body() const;
@@ -306,7 +306,7 @@ class OrleansResponse : public ::google::protobuf::Message /* @@protoc_insertion
   void set_body(::std::string&& value);
   #endif
   void set_body(const char* value);
-  void set_body(const char* value, size_t size);
+  void set_body(const void* value, size_t size);
   ::std::string* mutable_body();
   ::std::string* release_body();
   void set_allocated_body(::std::string* body);
@@ -491,7 +491,7 @@ inline void OrleansRequest::set_allocated_meta(::gayrpc::core::RpcMeta* meta) {
   // @@protoc_insertion_point(field_set_allocated:dodo.test.OrleansRequest.meta)
 }
 
-// string body = 4;
+// bytes body = 4;
 inline void OrleansRequest::clear_body() {
   body_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -518,7 +518,7 @@ inline void OrleansRequest::set_body(const char* value) {
   body_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:dodo.test.OrleansRequest.body)
 }
-inline void OrleansRequest::set_body(const char* value, size_t size) {
+inline void OrleansRequest::set_body(const void* value, size_t size) {
   
   body_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
@@ -592,7 +592,7 @@ inline void OrleansResponse::set_allocated_meta(::gayrpc::core::RpcMeta* meta) {
   // @@protoc_insertion_point(field_set_allocated:dodo.test.OrleansResponse.meta)
 }
 
-// string body = 2;
+// bytes body = 2;
 inline void OrleansResponse::clear_body() {
   body_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
@@ -619,7 +619,7 @@ inline void OrleansResponse::set_body(const char* value) {
   body_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:dodo.test.OrleansResponse.body)
 }
-inline void OrleansResponse::set_body(const char* value, size_t size) {
+inline void OrleansResponse::set_body(const void* value, size_t size) {
   
   body_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));

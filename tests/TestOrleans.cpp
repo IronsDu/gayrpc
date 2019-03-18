@@ -6,6 +6,7 @@
 #include <brynet/net/Connector.h>
 #include <brynet/net/TCPService.h>
 #include <gayrpc/utils/UtilsWrapper.h>
+#include <brynet/net/TcpConnection.h>
 
 #include "./pb/echo_service.gayrpc.h"
 #include "./pb/orleans_service.gayrpc.h"
@@ -13,7 +14,7 @@
 const std::string OrleansReplyObjKey = "reply";
 const std::string EchoServiceGrainTypeName("echo_service");
 const std::string ServiceIP("127.0.0.1");
-const int ServicePort = 9999;
+const int ServicePort = 8888;
 
 const std::string hello("hello");
 const std::string world("world");
@@ -30,7 +31,9 @@ std::map<std::string, gayrpc::core::RpcTypeHandleManager::PTR> grains;
 using GrainTypeName = std::string;
 std::map <GrainTypeName, std::function<gayrpc::core::RpcTypeHandleManager::PTR (std::string)>> grainCreator;
 
+using namespace brynet::net;
 using namespace gayrpc::core;
+using namespace gayrpc::utils;
 
 // 节点通信服务
 class MyOrleansGrainService : public dodo::test::OrleansServiceService
@@ -80,15 +83,27 @@ void OrleansConnectionCreatedCallback(OrleanAddr addr, OrleansCreatedCallback ca
     if (orleans == nullptr)
     {
         // 如果当前没有到节点的链接则异步创建
-        gayrpc::utils::AsyncCreateRpcClient<dodo::test::OrleansServiceClient>(
+        AsyncCreateRpcClient<dodo::test::OrleansServiceClient>(
             tcpService,
             connector,
-            addr.first, addr.second, std::chrono::seconds(10),
-            nullptr, nullptr,
-            nullptr, [=](dodo::test::OrleansServiceClient::PTR client) {
+            {
+                    AsyncConnector::ConnectOptions::WithAddr(addr.first, addr.second),
+                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)),
+                    AsyncConnector::ConnectOptions::WithFailedCallback([]() {
+                        std::cout << "failed" << std::endl;
+                    }),
+            },
+            {
+                TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+                TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                    session->setHeartBeat(std::chrono::seconds(10));
+                })
+            },
+            {},
+            [=](dodo::test::OrleansServiceClient::PTR client) {
                 // RPC对象创建成功则执行回调
                 callback(client);
-            }, []() {}, 1024 * 1024, std::chrono::seconds(10));
+            });
     }
     else
     {
@@ -211,11 +226,19 @@ TEST_CASE("orleans are computed", "[orleans]")
     tcpService->startWorkerThread(1);
     connector->startWorkerThread();
 
-    auto binaryListenThread = brynet::net::ListenThread::Create();
-    gayrpc::utils::StartBinaryRpcServer<MyOrleansGrainService>(tcpService, binaryListenThread,
-        ServiceIP, ServicePort, [](gayrpc::core::ServiceContext context) {
+    auto config = gayrpc::utils::WrapTcpRpc<MyOrleansGrainService>(tcpService,
+        [](gayrpc::core::ServiceContext context) {
             return std::make_shared<MyOrleansGrainService>(context);
-        }, nullptr, nullptr, nullptr, 1024 * 1024, std::chrono::seconds(10));
+        }, 
+        {
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            TcpService::AddSocketOption::AddEnterCallback([](const brynet::net::TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            }),
+        },
+        {});
+    auto binaryListenThread = brynet::net::ListenThread::Create(false, ServiceIP, ServicePort, config);
+    binaryListenThread->startListen();
 
     RegisterGrainCreator<MyEchoService>(EchoServiceGrainTypeName);
 

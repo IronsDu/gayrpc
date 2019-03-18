@@ -53,10 +53,22 @@ int main(int argc, char **argv)
     auto service = TcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
-    auto binaryListenThread = ListenThread::Create();
-    gayrpc::utils::StartBinaryRpcServer<EchoServerService>(service, binaryListenThread, "0.0.0.0", std::stoi(argv[1]), [](gayrpc::core::ServiceContext context) {
-        return std::make_shared<MyService>(context);
-    }, counter, counter, nullptr, 1024 * 1024, std::chrono::seconds(10));
+    auto config = gayrpc::utils::WrapTcpRpc<EchoServerService>(service,
+        [](gayrpc::core::ServiceContext context) {
+            return std::make_shared<MyService>(context);
+        }, 
+        {
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            }),
+        },
+        {
+            RpcConfig::WithInboundInterceptor(counter),
+            RpcConfig::WithOutboundInterceptor(counter),
+        });
+    auto binaryListenThread = brynet::net::ListenThread::Create(false, "0.0.0.0", std::stoi(argv[1]), config);
+    binaryListenThread->startListen();
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);

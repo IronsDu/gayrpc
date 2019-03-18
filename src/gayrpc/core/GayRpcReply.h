@@ -100,12 +100,12 @@ namespace gayrpc { namespace core {
         {
         }
 
-        void    reply(const T& response, InterceptorContextType context)
+        void    reply(const T& response, InterceptorContextType context = InterceptorContextType())
         {
             BaseReply::reply(response, std::move(context));
         }
 
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context)
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context = InterceptorContextType())
         {
             BaseReply::error<T>(errorCode, reason, std::move(context));
         }

@@ -135,8 +135,8 @@ void AddDescriptorsImpl() {
       "/gayrpc_meta.proto\"j\n\016OrleansRequest\022\022\n\n"
       "grain_type\030\001 \001(\t\022\022\n\ngrain_name\030\002 \001(\t\022\"\n\004"
       "meta\030\003 \001(\0132\024.gayrpc.core.RpcMeta\022\014\n\004body"
-      "\030\004 \001(\t\"C\n\017OrleansResponse\022\"\n\004meta\030\001 \001(\0132"
-      "\024.gayrpc.core.RpcMeta\022\014\n\004body\030\002 \001(\t2Y\n\016O"
+      "\030\004 \001(\014\"C\n\017OrleansResponse\022\"\n\004meta\030\001 \001(\0132"
+      "\024.gayrpc.core.RpcMeta\022\014\n\004body\030\002 \001(\0142Y\n\016O"
       "rleansService\022G\n\007Request\022\031.dodo.test.Orl"
       "eansRequest\032\032.dodo.test.OrleansResponse\""
       "\005\320\363\030\235\022P\000P\001b\006proto3"
@@ -328,16 +328,12 @@ bool OrleansRequest::MergePartialFromCodedStream(
         break;
       }
 
-      // string body = 4;
+      // bytes body = 4;
       case 4: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_body()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->body().data(), static_cast<int>(this->body().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "dodo.test.OrleansRequest.body"));
         } else {
           goto handle_unusual;
         }
@@ -396,13 +392,9 @@ void OrleansRequest::SerializeWithCachedSizes(
       3, *this->meta_, output);
   }
 
-  // string body = 4;
+  // bytes body = 4;
   if (this->body().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->body().data(), static_cast<int>(this->body().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "dodo.test.OrleansRequest.body");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
       4, this->body(), output);
   }
 
@@ -449,14 +441,10 @@ void OrleansRequest::SerializeWithCachedSizes(
         3, *this->meta_, deterministic, target);
   }
 
-  // string body = 4;
+  // bytes body = 4;
   if (this->body().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->body().data(), static_cast<int>(this->body().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "dodo.test.OrleansRequest.body");
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         4, this->body(), target);
   }
 
@@ -491,10 +479,10 @@ size_t OrleansRequest::ByteSizeLong() const {
         this->grain_name());
   }
 
-  // string body = 4;
+  // bytes body = 4;
   if (this->body().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
         this->body());
   }
 
@@ -706,16 +694,12 @@ bool OrleansResponse::MergePartialFromCodedStream(
         break;
       }
 
-      // string body = 2;
+      // bytes body = 2;
       case 2: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
             static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
                 input, this->mutable_body()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->body().data(), static_cast<int>(this->body().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "dodo.test.OrleansResponse.body"));
         } else {
           goto handle_unusual;
         }
@@ -754,13 +738,9 @@ void OrleansResponse::SerializeWithCachedSizes(
       1, *this->meta_, output);
   }
 
-  // string body = 2;
+  // bytes body = 2;
   if (this->body().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->body().data(), static_cast<int>(this->body().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "dodo.test.OrleansResponse.body");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
       2, this->body(), output);
   }
 
@@ -785,14 +765,10 @@ void OrleansResponse::SerializeWithCachedSizes(
         1, *this->meta_, deterministic, target);
   }
 
-  // string body = 2;
+  // bytes body = 2;
   if (this->body().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->body().data(), static_cast<int>(this->body().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "dodo.test.OrleansResponse.body");
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         2, this->body(), target);
   }
 
@@ -813,10 +789,10 @@ size_t OrleansResponse::ByteSizeLong() const {
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
         (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
   }
-  // string body = 2;
+  // bytes body = 2;
   if (this->body().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
+      ::google::protobuf::internal::WireFormatLite::BytesSize(
         this->body());
   }
 

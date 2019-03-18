@@ -9,7 +9,10 @@ BenchmarkClient.cpp
 ./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_client gayrpc ws2_32 brynet)
+  target_link_libraries(benchmark_client gayrpc ws2_32)
+  if(DEFINED ENV{APPVEYOR_CI})
+    target_link_libraries(benchmark_client protobuf::libprotobuf ${BRYNET_LIBRARY})
+  endif()
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_client gayrpc pthread brynet crypto ssl protobuf)
@@ -20,7 +23,10 @@ BenchmarkServer.cpp
 ./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_server gayrpc ws2_32 brynet)
+  target_link_libraries(benchmark_server gayrpc ws2_32)
+  if(DEFINED ENV{APPVEYOR_CI})
+    target_link_libraries(benchmark_server protobuf::libprotobuf ${BRYNET_LIBRARY})
+  endif()
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_server gayrpc pthread brynet crypto ssl protobuf)

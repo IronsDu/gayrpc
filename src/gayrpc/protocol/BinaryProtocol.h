@@ -56,7 +56,7 @@ namespace gayrpc { namespace protocol {
 
                     if (handleRpcEventLoop != nullptr)
                     {
-                        handleRpcEventLoop->pushAsyncFunctor([rpcHandlerManager,
+                        handleRpcEventLoop->runAsyncFunctor([rpcHandlerManager,
                                                           meta = std::move(meta),
                                                           cache = std::make_shared<std::string>(msg.data_view.data(),
                                                                                           msg.data_view.size())

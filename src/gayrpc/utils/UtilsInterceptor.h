@@ -80,12 +80,10 @@ namespace gayrpc { namespace utils {
                 auto seqID = meta.request_info().sequence_id();
                 auto timeoutSecond = meta.request_info().timeout();
 
-                eventLoop->pushAsyncFunctor([eventLoop, seqID, timeoutSecond, handleManager]() {
-                    eventLoop->getTimerMgr()->addTimer(std::chrono::seconds(timeoutSecond),
-                        [handleManager, seqID]() {
+                eventLoop->runAfter(std::chrono::seconds(timeoutSecond),
+                    [seqID, handleManager]() {
                         causeTimeout(handleManager, seqID);
                     });
-                });
             }
 
             next(meta, message, std::move(context));

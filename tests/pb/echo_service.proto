@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package dodo.test;
+
+import public "gayrpc/core/gayrpc_option.proto";
+
+message EchoRequest {
+	string message = 1;
+}
+
+message LoginRequest {
+	string message = 1;
+}
+
+message EchoResponse {
+	string message = 1;
+}
+
+message LoginResponse {
+	string message = 1;
+}
+
+service EchoServer {
+    rpc Echo(EchoRequest) returns(EchoResponse) {
+        option (gayrpc.core.message_id)= 2333;
+    };
+    rpc Login(LoginRequest) returns(LoginResponse) {
+        option (gayrpc.core.message_id)= 3333;
+    };
+}

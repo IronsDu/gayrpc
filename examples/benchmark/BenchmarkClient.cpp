@@ -211,13 +211,22 @@ int main(int argc, char **argv)
             auto latency = std::make_shared<LATENTY_TYPE>();
             latencyArray.push_back(latency);
 
-            gayrpc::utils::AsyncCreateRpcClient< EchoServerClient>(server, connector,
-                argv[1], std::stoi(argv[2]), std::chrono::seconds(10),
-                nullptr, nullptr, nullptr, [=](dodo::benchmark::EchoServerClient::PTR client) {
+            gayrpc::utils::AsyncCreateRpcClient<EchoServerClient>(server,
+                connector,
+                {
+                    AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
+                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)),
+                },
+                {
+                    TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+                    TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                        session->setHeartBeat(std::chrono::seconds(10));
+                    })
+                }, 
+                {},
+                [=](dodo::benchmark::EchoServerClient::PTR client) {
                     onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
-                }, []() {
-                    std::cout << "connect failed" << std::endl;
-                }, 1024*1024, std::chrono::seconds(10));
+                });
         }
         catch (std::runtime_error& e)
         {
