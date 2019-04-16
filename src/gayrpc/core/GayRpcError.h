@@ -13,7 +13,8 @@ namespace gayrpc { namespace core {
     public:
         RpcError()
             :
-            mFailed(false)
+            mFailed(false),
+            mErrorCode(0)
         {}
 
         RpcError(bool failed,

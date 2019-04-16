@@ -18,6 +18,12 @@ namespace gayrpc { namespace protocol {
     class binary
     {
     public:
+        typedef uint32_t OpCodeType;
+        enum OpCode : OpCodeType
+        {
+            OpCodeProtobuf = 1,
+        };
+
         static void send(const gayrpc::core::RpcMeta& meta,
             const google::protobuf::Message& message,
             const std::weak_ptr<brynet::net::TcpConnection>& weakSession)
@@ -105,12 +111,32 @@ namespace gayrpc { namespace protocol {
             return parseOpPacket(buffer, len, opHandle);
         }
 
-    private:
-        typedef uint32_t OpCodeType;
-        enum OpCode : OpCodeType
+        static void serializeProtobufPacket(BasePacketWriter& bpw,
+            const std::string& meta,
+            const std::string& data)
         {
-            OpCodeProtobuf = 1,
-        };
+            SerializeProtobufPacket protobufPacket;
+            protobufPacket.head.meta_size = meta.size();
+            protobufPacket.head.data_size = data.size();
+
+            OpPacket opPacket;
+            opPacket.head.op = OpCodeProtobuf;
+            opPacket.head.data_len = sizeof(protobufPacket.head.meta_size) +
+                sizeof(protobufPacket.head.data_size) +
+                protobufPacket.head.meta_size +
+                protobufPacket.head.data_size;
+
+            bpw.writeUINT64(opPacket.head.data_len);
+            bpw.writeUINT32(opPacket.head.op);
+
+            bpw.writeUINT32(protobufPacket.head.meta_size);
+            bpw.writeUINT64(protobufPacket.head.data_size);
+
+            bpw.writeBinary(meta);
+            bpw.writeBinary(data);
+        }
+
+    private:
 
         // 基于[len, op] 的消息包格式
         struct OpPacket
@@ -233,31 +259,6 @@ namespace gayrpc { namespace protocol {
             handler(protobufPacket);
 
             return true;
-        }
-
-        static void serializeProtobufPacket(BasePacketWriter& bpw,
-            const std::string& meta,
-            const std::string& data)
-        {
-            SerializeProtobufPacket protobufPacket;
-            protobufPacket.head.meta_size = meta.size();
-            protobufPacket.head.data_size = data.size();
-
-            OpPacket opPacket;
-            opPacket.head.op = OpCodeProtobuf;
-            opPacket.head.data_len = sizeof(protobufPacket.head.meta_size) +
-                sizeof(protobufPacket.head.data_size) +
-                protobufPacket.head.meta_size +
-                protobufPacket.head.data_size;
-
-            bpw.writeUINT64(opPacket.head.data_len);
-            bpw.writeUINT32(opPacket.head.op);
-
-            bpw.writeUINT32(protobufPacket.head.meta_size);
-            bpw.writeUINT64(protobufPacket.head.data_size);
-
-            bpw.writeBinary(meta);
-            bpw.writeBinary(data);
         }
     };
     
