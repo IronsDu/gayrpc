@@ -9,38 +9,56 @@
 
 namespace gayrpc { namespace core {
 
+
     template<class... Args>
     UnaryServerInterceptor makeInterceptor(Args... args)
     {
-        if (sizeof...(Args) == 0)
-        {
-            return [](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType context) {
-                next(meta, message, std::move(context));
-            };
-        }
-        else
-        {
-            using InterceptorList = std::vector<UnaryServerInterceptor>;
-            std::shared_ptr<InterceptorList> interceptors = std::make_shared<InterceptorList>(InterceptorList{ args... });
-            auto lastIndex = interceptors->size() - 1;
+        return [=](const RpcMeta& meta,
+            const google::protobuf::Message& message,
+            const UnaryHandler& tail,
+            InterceptorContextType context) {
 
-            return [=](const RpcMeta& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType context) {
-
-                std::shared_ptr<size_t> curIndex = std::make_shared<size_t>(0);
-                std::shared_ptr<UnaryHandler> magicHandler = std::make_shared<UnaryHandler>();
-
-                *magicHandler = [=](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
-                    if (*curIndex == lastIndex)
+                class WrapNextInterceptor final
+                {
+                public:
+                    WrapNextInterceptor(std::vector<UnaryServerInterceptor> interceptors,
+                        UnaryHandler tail) noexcept
+                        :
+                        mCurIndex(0),
+                        mInterceptors(std::move(interceptors)),
+                        mTail(std::move(tail))
                     {
-                        return next(meta, message, std::move(context));
                     }
-                    (*curIndex)++;
-                    return (*interceptors)[*curIndex](meta, message, *magicHandler, std::move(context));
+
+                    void operator () (const RpcMeta& meta,
+                        const google::protobuf::Message& message,
+                        InterceptorContextType context)
+                    {
+                        if (mInterceptors.size() == mCurIndex)
+                        {
+                            return mTail(meta, message, std::move(context));
+                        }
+                        else
+                        {
+                            mCurIndex++;
+                            mInterceptors[mCurIndex - 1](meta, message, *this, std::move(context));
+                        }
+                    }
+
+                    size_t  curIndex() const
+                    {
+                        return mCurIndex;
+                    }
+
+                private:
+                    size_t  mCurIndex;
+                    const std::vector<UnaryServerInterceptor> mInterceptors;
+                    const UnaryHandler    mTail;
                 };
 
-                return (*interceptors)[0](meta, message, *magicHandler, std::move(context));
-            };
-        }
+                WrapNextInterceptor next({ args... }, tail);
+                return next(meta, message, std::move(context));
+        };
     }
 
 } }
