@@ -66,27 +66,27 @@ namespace gayrpc { namespace core {
                 true);
             meta.mutable_request_info()->set_timeout(static_cast<uint64_t>(timeout.count()));
 
-            InterceptorContextType context;
-            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
-            }, std::move(context));
-
             {
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
                 assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
                 assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
 
-                mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
+                mStubHandleMap[sequenceID] = [handle](const RpcMeta & meta,
                     const std::string_view & data,
-                    const UnaryServerInterceptor& inboundInterceptor,
+                    const UnaryServerInterceptor & inboundInterceptor,
                     InterceptorContextType context) {
-                    return parseResponseWrapper<Response>(handle,
-                        meta,
-                        data,
-                        inboundInterceptor,
-                        std::move(context));
+                        return parseResponseWrapper<Response>(handle,
+                            meta,
+                            data,
+                            inboundInterceptor,
+                            std::move(context));
                 };
                 mTimeoutHandleMap[sequenceID] = std::move(timeoutCallback);
             }
+
+            InterceptorContextType context;
+            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+            }, std::move(context));
         }
 
         template<typename Response, typename Request, typename Handle>
@@ -105,30 +105,26 @@ namespace gayrpc { namespace core {
                 expectResponse);
             meta.mutable_request_info()->set_timeout(0);
 
-            InterceptorContextType context;
-            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
-            }, std::move(context));
-
-            if (!expectResponse)
-            {
-                return;
-            }
-
+            if (expectResponse)
             {
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
                 assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
 
-                mStubHandleMap[sequenceID] = [handle](const RpcMeta& meta,
+                mStubHandleMap[sequenceID] = [handle](const RpcMeta & meta,
                     const std::string_view & data,
-                    const UnaryServerInterceptor& inboundInterceptor,
+                    const UnaryServerInterceptor & inboundInterceptor,
                     InterceptorContextType context) {
-                    return parseResponseWrapper<Response>(handle,
-                        meta,
-                        data,
-                        inboundInterceptor,
-                        std::move(context));
+                        return parseResponseWrapper<Response>(handle,
+                            meta,
+                            data,
+                            inboundInterceptor,
+                            std::move(context));
                 };
             }
+
+            InterceptorContextType context;
+            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+            }, std::move(context));
         }
 
         void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::PTR& rpcTypeHandleManager,
