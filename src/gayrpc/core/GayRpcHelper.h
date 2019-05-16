@@ -70,10 +70,10 @@ namespace gayrpc { namespace core {
         inboundInterceptor(
             meta,
             response,
-            [&response, &error, &handle](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
-                //TODO:: std::move(context)
-            handle(response, error);
-        }, std::move(context));
+            [=](const RpcMeta&, const google::protobuf::Message& msg, InterceptorContextType context) {
+                handle(response, error);
+            }, 
+            std::move(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数

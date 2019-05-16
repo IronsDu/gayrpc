@@ -28,75 +28,43 @@ namespace gayrpc { namespace protocol {
             const google::protobuf::Message& message,
             const std::weak_ptr<brynet::net::TcpConnection>& weakSession)
         {
-            // 实际的发送
-            AutoMallocPacket<4096> bpw(true, true);
-            serializeProtobufPacket(bpw,
-                meta.SerializeAsString(),
-                message.SerializeAsString());
-
             auto session = weakSession.lock();
             if (session != nullptr)
             {
-                session->send(bpw.getData(), bpw.getPos());
+                std::shared_ptr<google::protobuf::Message> msg;
+                msg.reset(message.New());
+                msg->CopyFrom(message);
+                session->getEventLoop()->runAsyncFunctor([meta, msg, session]() {
+                        // 实际的发送
+                        AutoMallocPacket<4096> bpw(true, true);
+                        serializeProtobufPacket(bpw,
+                            meta.SerializeAsString(),
+                            msg->SerializeAsString());
+
+                        session->send(bpw.getData(), bpw.getPos());
+                    });
             }
         }
 
         static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
             const char* buffer,
-            size_t len,
-            brynet::net::EventLoop::Ptr handleRpcEventLoop = nullptr)
+            size_t len)
         {
-            auto opHandle = [rpcHandlerManager, handleRpcEventLoop](const OpPacket& opPacket) {
+            auto opHandle = [rpcHandlerManager](const OpPacket& opPacket) {
                 if (opPacket.head.op != OpCode::OpCodeProtobuf)
                 {
                     return false;
                 }
 
-                auto pbPacketHandle = [rpcHandlerManager, handleRpcEventLoop](const ProtobufPacket& msg) {
+                auto pbPacketHandle = [rpcHandlerManager](const ProtobufPacket& msg) {
                     gayrpc::core::RpcMeta meta;
                     if (!meta.ParseFromArray(msg.meta_view.data(), static_cast<int>(msg.meta_view.size())))
                     {
                         std::cerr << "parse RpcMeta protobuf failed" << std::endl;
                         return;
                     }
-
-                    if (handleRpcEventLoop != nullptr)
-                    {
-                        handleRpcEventLoop->runAsyncFunctor([rpcHandlerManager,
-                                                          meta = std::move(meta),
-                                                          cache = std::make_shared<std::string>(msg.data_view.data(),
-                                                                                          msg.data_view.size())
-                                                          ]() {
-                            try
-                            {
-                                InterceptorContextType context;
-                                rpcHandlerManager->handleRpcMsg(meta, std::string_view(cache->data(), cache->size()), std::move(context));
-                            }
-                            catch (const std::runtime_error& e)
-                            {
-                                std::cerr << e.what() << std::endl;
-                            }
-                            catch (...)
-                            {
-                            }
-                        });
-                    }
-                    else
-                    {
-                        try
-                        {
-                            InterceptorContextType context;
-                            rpcHandlerManager->handleRpcMsg(meta, msg.data_view, std::move(context));
-                        }
-                        catch (const std::runtime_error& e)
-                        {
-                            std::cerr << e.what() << std::endl;
-                        }
-                        catch (...)
-                        {
-
-                        }
-                    }
+                    InterceptorContextType context;
+                    rpcHandlerManager->handleRpcMsg(meta, msg.data_view, std::move(context));
                 };
 
                 if (!parseProtobufPacket(opPacket, pbPacketHandle))

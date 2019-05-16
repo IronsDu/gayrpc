@@ -17,6 +17,23 @@ namespace gayrpc { namespace utils {
 
     // 一些辅助型拦截器
 
+    static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
+    {
+        return [=](const gayrpc::core::RpcMeta& meta,
+            const google::protobuf::Message& message,
+            const gayrpc::core::UnaryHandler& next,
+            InterceptorContextType context) {
+
+                std::shared_ptr<google::protobuf::Message> msg;
+                msg.reset(message.New());
+                msg->CopyFrom(message);
+
+                eventLoop->runAsyncFunctor([=]() {
+                        next(meta, *msg, std::move(context));
+                    });
+        };
+    }
+
     static auto withProtectedCall()
     {
         return [](const gayrpc::core::RpcMeta& meta,

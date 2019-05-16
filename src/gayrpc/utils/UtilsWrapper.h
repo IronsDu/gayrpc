@@ -45,17 +45,9 @@ namespace gayrpc { namespace utils {
             };
         }
 
-        static AddRpcConfigFunc WithClaimEventLoopCallback(ClaimEventLoopFunctor claimEventLoopCallback)
-        {
-            return [=](RpcConfig& config) {
-                config.claimEventLoopCallback = claimEventLoopCallback;
-            };
-        }
-
     public:
         UnaryServerInterceptor      userInBoundInterceptor;
         UnaryServerInterceptor      userOutBoundInterceptor;
-        ClaimEventLoopFunctor       claimEventLoopCallback;
     };
 
     template<typename RpcClientType>
@@ -70,14 +62,7 @@ namespace gayrpc { namespace utils {
 
         httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser &httpParser,
             const brynet::net::http::HttpSession::Ptr &session) {
-
-            brynet::net::EventLoop::Ptr handleEventLoop;
-            if (config.claimEventLoopCallback != nullptr)
-            {
-                handleEventLoop = config.claimEventLoopCallback();
-            }
-
-            gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session, handleEventLoop);
+            gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
         });
 
         // 入站拦截器
@@ -108,11 +93,7 @@ namespace gayrpc { namespace utils {
         session->setDataCallback([=](const char *buffer,
             size_t len) {
             // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
-            brynet::net::EventLoop::Ptr handleEventLoop;
-            if (config.claimEventLoopCallback != nullptr) {
-                handleEventLoop = config.claimEventLoopCallback();
-            }
-            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len, handleEventLoop);
+            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
         });
 
         // 入站拦截器
@@ -192,11 +173,7 @@ namespace gayrpc { namespace utils {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
         session->setDataCallback([=](const char *buffer,
             size_t len) {
-            brynet::net::EventLoop::Ptr handleEventLoop;
-            if (config.claimEventLoopCallback != nullptr) {
-                handleEventLoop = config.claimEventLoopCallback();
-            }
-            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len, handleEventLoop);
+            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
         });
 
         // 入站拦截器

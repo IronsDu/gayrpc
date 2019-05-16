@@ -18,8 +18,7 @@ namespace gayrpc { namespace protocol {
     public:
         static void handleHttpPacket(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
             const brynet::net::http::HTTPParser& httpParser,
-            const brynet::net::http::HttpSession::Ptr& session,
-            brynet::net::EventLoop::Ptr handleRpcEventLoop)
+            const brynet::net::http::HttpSession::Ptr& session)
         {
             (void)session;
             RpcMeta meta;
@@ -28,18 +27,8 @@ namespace gayrpc { namespace protocol {
             meta.mutable_request_info()->set_expect_response(true);
             meta.set_encoding(RpcMeta::JSON);
 
-            if (handleRpcEventLoop != nullptr)
-            {
-                handleRpcEventLoop->runAsyncFunctor([=, meta = std::move(meta)]() {
-                    InterceptorContextType context;
-                    rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
-                });
-            }
-            else
-            {
-                InterceptorContextType context;
-                rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
-            }
+            InterceptorContextType context;
+            rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
         }
 
         static void send(const gayrpc::core::RpcMeta& meta,
