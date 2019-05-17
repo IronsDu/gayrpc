@@ -44,52 +44,56 @@ public:
 private:
 };
 
-static void OnConnection(dodo::test::EchoServerClient::PTR client)
+static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
+{
+    // 发送RPC请求
+    EchoRequest request;
+    request.set_message("hello");
+    client->Echo(request, [client](const EchoResponse & response,
+        const gayrpc::core::RpcError & error) {
+            if (error.failed())
+            {
+                std::cout << "reason" << error.reason() << std::endl;
+                return;
+            }
+            sendEchoRequest(client);
+        });
+}
+
+static void OnConnection(dodo::test::EchoServerClient::PTR client, size_t batchNum)
 {
     gayrpc::core::ServiceContext context(client->getTypeHandleManager(), client->getInInterceptor(), client->getOutInterceptor());
     auto service = std::make_shared< MyService>(context);
     dodo::test::EchoServerService::Install(service);
 
-    // 发送RPC请求
-    EchoRequest request;
-    request.set_message("hello");
-
-    client->Echo(request, [](const EchoResponse& response,
-        const gayrpc::core::RpcError& error) {
-        if (error.failed())
-        {
-            std::cout << "reason" << error.reason() << std::endl;
-            return;
-        }
-        //std::cout << "recv reply, data:" << response.message() << std::endl;
-    }, std::chrono::seconds(3),
-        []() {
-        std::cout << "timeout" << std::endl;
-    });
+    for (size_t i = 0; i < batchNum; i++)
+    {
+        sendEchoRequest(client);
+    }
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 4)
+    if (argc != 6)
     {
-        fprintf(stderr, "Usage: <host> <port> <num>\n");
+        fprintf(stderr, "Usage: <host> <port> <client num> <thread num> <batch num>\n");
         exit(-1);
     }
 
-    auto server = TcpService::Create();
-    server->startWorkerThread(std::thread::hardware_concurrency());
+    auto service = TcpService::Create();
+    service->startWorkerThread(std::atoi(argv[4]));
 
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
-    auto num = std::atoi(argv[3]);
+    auto clientNum = std::atoi(argv[3]);
+    size_t batchNum = std::atoi(argv[5]);
 
     auto mainLoop = std::make_shared<brynet::net::EventLoop>();
-
-    for (int i = 0; i < num; i++)
+    for (int i = 0; i < clientNum; i++)
     {
         try
         {
-            gayrpc::utils::AsyncCreateRpcClient<EchoServerClient>(server,
+            gayrpc::utils::AsyncCreateRpcClient<EchoServerClient>(service,
                 connector,
                 {
                     AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
@@ -97,17 +101,15 @@ int main(int argc, char **argv)
                 },
                 {
                     brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                    brynet::net::TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                    brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
                         session->setHeartBeat(std::chrono::seconds(10));
                     }),
                 }, 
                 {
-                    gayrpc::utils::RpcConfig::WithClaimEventLoopCallback([=]() -> brynet::net::EventLoop::Ptr {
-                        return mainLoop;
-                    })
+                    gayrpc::utils::RpcConfig::WithInboundInterceptor(gayrpc::utils::withEventLoop(mainLoop))
                 },
-                [](dodo::test::EchoServerClient::PTR client) {
-                    OnConnection(client);
+                [=](dodo::test::EchoServerClient::PTR client) {
+                    OnConnection(client, batchNum);
                 });
         }
         catch (std::runtime_error& e)
@@ -118,7 +120,7 @@ int main(int argc, char **argv)
 
     while (true)
     {
-        mainLoop->loop(1);
+        mainLoop->loop(1000);
     }
 
     return 0;

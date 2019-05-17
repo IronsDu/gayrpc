@@ -64,7 +64,6 @@ int main(int argc, char **argv)
             }),
         },
         {
-            RpcConfig::WithInboundInterceptor(counter),
             RpcConfig::WithOutboundInterceptor(counter),
         });
     auto binaryListenThread = brynet::net::ListenThread::Create(false, "0.0.0.0", std::stoi(argv[1]), config);

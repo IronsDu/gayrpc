@@ -7,12 +7,38 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <queue>
 
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
 #include <gayrpc/core/GayRpcHelper.h>
 
 namespace gayrpc { namespace core {
+
+    class WaitResponseTimer final
+    {
+    public:
+        WaitResponseTimer(uint64_t seqID, std::chrono::nanoseconds lastTime)
+            :
+            mEndTime(std::chrono::steady_clock::now() + lastTime),
+            mSeqID(seqID)
+        {
+        }
+
+        const std::chrono::steady_clock::time_point& getEndTime() const
+        {
+            return mEndTime;
+        }
+
+        uint64_t    getSeqID() const
+        {
+            return mSeqID;
+        }
+
+    private:
+        std::chrono::steady_clock::time_point   mEndTime;
+        uint64_t                                mSeqID;
+    };
 
     class BaseClient : public std::enable_shared_from_this<BaseClient>
     {
@@ -34,6 +60,35 @@ namespace gayrpc { namespace core {
         const UnaryServerInterceptor&       getOutInterceptor() const
         {
             return mOutboundInterceptor;
+        }
+
+        void    checkTimeout()
+        {
+            std::vector< TIMEOUT_CALLBACK>  callbacks;
+            {
+                std::lock_guard<std::mutex> lck(mStubMapGruad);
+                const auto now = std::chrono::steady_clock::now();
+                while (!mWaitResponseTimerQueue.empty())
+                {
+                    const auto& head = mWaitResponseTimerQueue.top();
+                    if (head.getEndTime() > now)
+                    {
+                        break;
+                    }
+                    auto it = mTimeoutHandleMap.find(head.getSeqID());
+                    if (it != mTimeoutHandleMap.end())
+                    {
+                        callbacks.push_back((*it).second);
+                        mTimeoutHandleMap.erase(head.getSeqID());
+                        mStubHandleMap.erase(head.getSeqID());
+                    }
+                    mWaitResponseTimerQueue.pop();
+                }
+            }
+            for (auto& callback : callbacks)
+            {
+                callback();
+            }
         }
 
     protected:
@@ -67,11 +122,8 @@ namespace gayrpc { namespace core {
             meta.mutable_request_info()->set_timeout(static_cast<uint64_t>(timeout.count()));
 
             {
-                std::lock_guard<std::mutex> lck(mStubMapGruad);
-                assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
-                assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
-
-                mStubHandleMap[sequenceID] = [handle](const RpcMeta & meta,
+                WaitResponseTimer waitTimer(sequenceID, timeout);
+                auto callback = [handle](const RpcMeta & meta,
                     const std::string_view & data,
                     const UnaryServerInterceptor & inboundInterceptor,
                     InterceptorContextType context) {
@@ -81,7 +133,14 @@ namespace gayrpc { namespace core {
                             inboundInterceptor,
                             std::move(context));
                 };
+
+                std::lock_guard<std::mutex> lck(mStubMapGruad);
+                assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
+                assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
+
+                mStubHandleMap[sequenceID] = std::move(callback);
                 mTimeoutHandleMap[sequenceID] = std::move(timeoutCallback);
+                mWaitResponseTimerQueue.push(waitTimer);
             }
 
             InterceptorContextType context;
@@ -149,13 +208,15 @@ namespace gayrpc { namespace core {
                 throw std::runtime_error("type :" + std::to_string(meta.type()) + " not Response");
             }
 
+            //TODO::remove it's mWaitResponseTimerQueue
+            const auto sequenceID = meta.response_info().sequence_id();
             if (meta.response_info().timeout())
             {
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
 
-                mStubHandleMap.erase(meta.response_info().sequence_id());
+                mStubHandleMap.erase(sequenceID);
 
-                auto it = mTimeoutHandleMap.find(meta.response_info().sequence_id());
+                auto it = mTimeoutHandleMap.find(sequenceID);
                 if (it == mTimeoutHandleMap.end())
                 {
                     return;
@@ -170,13 +231,13 @@ namespace gayrpc { namespace core {
             {
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
 
-                mTimeoutHandleMap.erase(meta.response_info().sequence_id());
+                mTimeoutHandleMap.erase(sequenceID);
 
-                auto it = mStubHandleMap.find(meta.response_info().sequence_id());
+                auto it = mStubHandleMap.find(sequenceID);
                 if (it == mStubHandleMap.end())
                 {
                     throw std::runtime_error("not found response seq id:" +
-                        std::to_string(meta.response_info().sequence_id()));
+                        std::to_string(sequenceID));
                 }
                 handle = (*it).second;
                 mStubHandleMap.erase(it);
@@ -203,6 +264,18 @@ namespace gayrpc { namespace core {
         std::mutex                          mStubMapGruad;
         ResponseStubHandleMap               mStubHandleMap;
         TimeoutHandleMap                    mTimeoutHandleMap;
+
+
+        class CompareWaitResponseTimer
+        {
+        public:
+            bool operator() (const WaitResponseTimer& left, const WaitResponseTimer& right) const
+            {
+                return left.getEndTime() > right.getEndTime();
+            }
+        };
+
+        std::priority_queue<WaitResponseTimer, std::vector<WaitResponseTimer>, CompareWaitResponseTimer>  mWaitResponseTimerQueue;
     };
 
 } }

@@ -92,7 +92,7 @@ namespace gayrpc { namespace utils {
             const gayrpc::core::UnaryHandler& next,
             InterceptorContextType context) {
 
-            if (meta.request_info().timeout() > 0)
+            if (meta.has_request_info() && meta.request_info().timeout() > 0)
             {
                 auto seqID = meta.request_info().sequence_id();
                 auto timeoutSecond = meta.request_info().timeout();

@@ -34,16 +34,6 @@ public:
         response.set_message("world");
 
         replyObj->reply(response, std::move(context));
-
-        if (mClient != nullptr)
-        {
-            // 演示双向RPC(调用对端服务)
-            EchoRequest r;
-            r.set_message("hello");
-            mClient->Echo(r, [](const EchoResponse& response, const gayrpc::core::RpcError& err) {
-                err.failed();
-            });
-        }
     }
 
     void Login(const LoginRequest& request,
@@ -67,14 +57,14 @@ static void counter(const RpcMeta& meta, const google::protobuf::Message& messag
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
+    if (argc != 3)
     {
-        fprintf(stderr, "Usage: <listen port>\n");
+        fprintf(stderr, "Usage: <listen port> <thread num>\n");
         exit(-1);
     }
 
     auto service = TcpService::Create();
-    service->startWorkerThread(std::thread::hardware_concurrency());
+    service->startWorkerThread(std::atoi(argv[2]));
 
     auto binaryServiceConfig = gayrpc::utils::WrapTcpRpc<EchoServerService>(
         service,
@@ -88,7 +78,6 @@ int main(int argc, char **argv)
             })
         },
         {
-            RpcConfig::WithInboundInterceptor(counter),
             RpcConfig::WithOutboundInterceptor(counter),
         });
     auto binaryListenThread = ListenThread::Create(false, "0.0.0.0", std::stoi(argv[1]), binaryServiceConfig);
