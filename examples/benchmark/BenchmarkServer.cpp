@@ -46,28 +46,31 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
     {
-        fprintf(stderr, "Usage: <listen port>\n");
+        fprintf(stderr, "Usage: <listen port> <thread num>\n");
         exit(-1);
     }
 
     auto service = TcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
-    auto config = gayrpc::utils::WrapTcpRpc<EchoServerService>(service,
-        [](gayrpc::core::ServiceContext context) {
-            return std::make_shared<MyService>(context);
-        }, 
-        {
-            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+    auto serviceBuild = ServiceBuilder<EchoServerService>::Make();
+    serviceBuild->buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+            buildInterceptors.addInterceptor(counter);
+        })
+        ->buildSocketOptions([](BuildSocketOptions buildSocketOption) {
+            buildSocketOption.addOption(TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
+            buildSocketOption.addOption(TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr & session) {
                 session->setHeartBeat(std::chrono::seconds(10));
-            }),
-        },
-        {
-            RpcConfig::WithOutboundInterceptor(counter),
-        });
-    auto binaryListenThread = brynet::net::ListenThread::Create(false, "0.0.0.0", std::stoi(argv[1]), config);
-    binaryListenThread->startListen();
+            }));
+        })
+        ->configureService(service)
+        ->configureCreator([](gayrpc::core::ServiceContext context) {
+            return std::make_shared<MyService>(context);
+        })
+        ->configureListen([=](BuildListenConfig listenConfig) {
+            listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
+        })
+        ->asyncRun();
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);
