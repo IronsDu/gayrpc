@@ -24,47 +24,6 @@ namespace gayrpc { namespace utils {
 
     template<typename RpcServiceType>
     using ServiceCreator = std::function<std::shared_ptr<RpcServiceType>(ServiceContext)>;
-    using ClaimEventLoopFunctor = std::function<brynet::net::EventLoop::Ptr()>;
-
-    struct RpcConfig final
-    {
-        using AddRpcConfigFunc = std::function<void(RpcConfig& config)>;
-
-    public:
-        static AddRpcConfigFunc WithInboundInterceptor(UnaryServerInterceptor userInBoundInterceptor)
-        {
-            return [=](RpcConfig& config) {
-                if (config.userInBoundInterceptor)
-                {
-                    config.userInBoundInterceptor = gayrpc::utils::makeInterceptor(config.userInBoundInterceptor, 
-                        userInBoundInterceptor);
-                }
-                else
-                {
-                    config.userInBoundInterceptor = userInBoundInterceptor;
-                }
-            };
-        }
-
-        static AddRpcConfigFunc WithOutboundInterceptor(UnaryServerInterceptor userOutBoundInterceptor)
-        {
-            return [=](RpcConfig& config) {
-                if (config.userOutBoundInterceptor)
-                {
-                    config.userOutBoundInterceptor = gayrpc::utils::makeInterceptor(config.userOutBoundInterceptor, 
-                        userOutBoundInterceptor);
-                }
-                else
-                {
-                    config.userOutBoundInterceptor = userOutBoundInterceptor;
-                }
-            };
-        }
-
-    public:
-        UnaryServerInterceptor      userInBoundInterceptor;
-        UnaryServerInterceptor      userOutBoundInterceptor;
-    };
 
     template<typename RpcClientType>
     using RpcClientCallback = std::function<void(std::shared_ptr<RpcClientType>)>;
@@ -105,35 +64,6 @@ namespace gayrpc { namespace utils {
         bool        mIsIpV6;
     };
 
-    template<typename RpcServiceType>
-    static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
-        const ServiceCreator<RpcServiceType>& serverCreator,
-        const RpcConfig& config)
-    {
-        auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
-
-        httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser &httpParser,
-            const brynet::net::http::HttpSession::Ptr &session) {
-            gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
-        });
-
-        // 入站拦截器
-        UnaryServerInterceptor inboundInterceptor = withProtectedCall();
-        if (config.userInBoundInterceptor != nullptr) {
-            inboundInterceptor = makeInterceptor(inboundInterceptor, config.userInBoundInterceptor);
-        }
-        // 出站拦截器
-        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(
-            withProtectedCall(),
-            withHttpSessionSender(httpSession));
-        if (config.userOutBoundInterceptor != nullptr) {
-            outBoundInterceptor = makeInterceptor(outBoundInterceptor, config.userOutBoundInterceptor);
-        }
-
-        ServiceContext serviceContext(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
-        auto service = serverCreator(serviceContext);
-        RpcServiceType::Install(service);
-    }
 
     template<typename RpcServiceType>
     static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& session,
@@ -201,6 +131,22 @@ namespace gayrpc { namespace utils {
         std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>* mOptions;
     };
 
+    class BuildConnectOptions
+    {
+    public:
+        BuildConnectOptions(std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc>* options)
+        {
+            mOptions = options;
+        }
+
+        void    addOption(AsyncConnector::ConnectOptions::ConnectOptionFunc option)
+        {
+            mOptions->push_back(option);
+        }
+    private:
+        std::vector < AsyncConnector::ConnectOptions::ConnectOptionFunc>* mOptions;
+    };
+
     class BuildListenConfig
     {
     public:
@@ -217,13 +163,15 @@ namespace gayrpc { namespace utils {
         ListenConfig* mConfig;
     };
 
+    using InterceptorBuilder = std::function<void(BuildInterceptor)>;
+    using SocketOptionsSet = std::function<void(BuildSocketOptions)>;
+    using ConnectOptionSet = std::function<void(BuildConnectOptions)>;
+
     template<typename RpcServiceType>
     class ServiceBuilder : public std::enable_shared_from_this<ServiceBuilder<RpcServiceType>>
     {
     public:
         using Ptr = std::shared_ptr<ServiceBuilder<RpcServiceType>>;
-        using InterceptorBuilder = std::function<void(BuildInterceptor)>;
-        using SocketOptionsSet = std::function<void(BuildSocketOptions)>;
         using ListenOptionsSet = std::function<void(BuildListenConfig)>;
 
         static Ptr Make()
@@ -284,6 +232,11 @@ namespace gayrpc { namespace utils {
 
         void    asyncRun()
         {
+            if (mService == nullptr)
+            {
+                throw std::runtime_error("service is null");
+            }
+
             mSocketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
                 [creator = mCreator,
                 inboundInterceptors = mInboundInterceptors,
@@ -333,69 +286,10 @@ namespace gayrpc { namespace utils {
         ListenThread::Ptr                       mListenThread;
     };
 
-    template<typename RpcServiceType>
-    static auto WrapTcpRpc(const brynet::net::TcpService::Ptr &service,
-        const ServiceCreator<RpcServiceType>& serverCreator,
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc> socketOptions,
-        const std::vector<RpcConfig::AddRpcConfigFunc>& configSettings)
-    {
-        RpcConfig config;
-        for (const auto& setting : configSettings)
-        {
-            setting(config);
-        }
-        std::vector<UnaryServerInterceptor>  userInBoundInterceptors;
-        std::vector<UnaryServerInterceptor>  userOutBoundInterceptors;
-        if (config.userInBoundInterceptor != nullptr)
-        {
-            userInBoundInterceptors = { config.userInBoundInterceptor };
-        }
-        if (config.userOutBoundInterceptor != nullptr)
-        {
-            userOutBoundInterceptors = { config.userOutBoundInterceptor };
-        }
-        socketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
-            [=](const brynet::net::TcpConnection::Ptr &session) {
-                OnBinaryConnectionEnter(session, 
-                    serverCreator, 
-                    userInBoundInterceptors,
-                    userOutBoundInterceptors);
-            }));
-
-        return [=](brynet::net::TcpSocket::Ptr socket) {
-            service->addTcpConnection(std::move(socket), socketOptions);
-        };
-    }
-
-    template<typename RpcServiceType>
-    static auto WrapHttpRpc(
-        const brynet::net::TcpService::Ptr& service,
-        const ServiceCreator<RpcServiceType>& serverCreator,
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc> socketOptions,
-        const std::vector<RpcConfig::AddRpcConfigFunc>& configSettings)
-    {
-        RpcConfig config;
-        for (const auto& setting : configSettings)
-        {
-            setting(config);
-        }
-
-        socketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
-            [=](const brynet::net::TcpConnection::Ptr &session) {
-                brynet::net::http::HttpService::setup(session, 
-                    [=](const brynet::net::http::HttpSession::Ptr &httpSession) {
-                        OnHTTPConnectionEnter(httpSession, serverCreator, config);
-                });
-            }));
-
-        return [=](brynet::net::TcpSocket::Ptr socket) {
-            service->addTcpConnection(std::move(socket), socketOptions);
-        };
-    }
-
     template<typename RpcClientType>
     static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr &session,
-        const RpcConfig& config,
+        std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
+        std::vector<UnaryServerInterceptor>  userOutBoundInterceptor,
         const RpcClientCallback<RpcClientType> &callback)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
@@ -405,72 +299,129 @@ namespace gayrpc { namespace utils {
         });
 
         // 入站拦截器
-        UnaryServerInterceptor inboundInterceptor = withProtectedCall();
-        if (config.userInBoundInterceptor != nullptr) {
-            inboundInterceptor = makeInterceptor(inboundInterceptor, config.userInBoundInterceptor);
+        UnaryServerInterceptor inboundInterceptor = makeInterceptor();
+        if (!userInBoundInterceptor.empty()) {
+            inboundInterceptor = makeInterceptor(userInBoundInterceptor);
         }
         // 出站拦截器
-        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(
-            withProtectedCall(),
-            gayrpc::utils::withSessionBinarySender(session),
-            withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
-        if (config.userOutBoundInterceptor != nullptr) {
-            outBoundInterceptor = makeInterceptor(outBoundInterceptor, config.userOutBoundInterceptor);
-        }
+        userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
+        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
         // 注册RPC客户端
         auto client = RpcClientType::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
         callback(client);
     }
 
-    template<typename RpcClientType>
-    static void AsyncCreateRpcClient(const TcpService::Ptr& service,
-        const AsyncConnector::Ptr &connector,
-        std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc> connectOptions,
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc> socketOptions,
-        const std::vector<RpcConfig::AddRpcConfigFunc>& configSettings, 
-        const RpcClientCallback<RpcClientType>& callback)
+    class ClientBuilder : public std::enable_shared_from_this<ClientBuilder>
     {
-        auto enterCallback = [=](brynet::net::TcpSocket::Ptr socket) mutable {
-            RpcConfig config;
-            for (const auto& setting : configSettings)
-            {
-                setting(config);
-            }
+    public:
+        using Ptr = std::shared_ptr<ClientBuilder>;
 
-            auto enterCallback = [=](const brynet::net::TcpConnection::Ptr &session) {
-                OnBinaryRpcClient<RpcClientType>(session, config, callback);
+        static Ptr Make()
+        {
+            struct make_shared_enabler : public ClientBuilder
+            {
+                make_shared_enabler()
+                    :
+                    ClientBuilder()
+                {}
             };
 
-            socket->setNodelay();
-            socketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(enterCallback));
-            service->addTcpConnection(std::move(socket), socketOptions);
-        };
-        connectOptions.push_back(AsyncConnector::ConnectOptions::WithCompletedCallback(enterCallback));
+            return std::make_shared<make_shared_enabler>();
+        }
 
-        connector->asyncConnect(connectOptions);
-    }
+        auto buildInboundInterceptor(InterceptorBuilder builder)
+        {
+            buildInterceptor(builder, mInboundInterceptors);
+            return this;
+        }
 
-    template<typename RpcClientType>
-    static std::shared_ptr<RpcClientType> SyncCreateRpcClient(const brynet::net::TcpService::Ptr& service,
-        brynet::net::AsyncConnector::Ptr connector,
-        std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc> connectOptions,
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc> socketOptions,
-        const std::vector<RpcConfig::AddRpcConfigFunc>& configSettings)
-    {
-        auto rpcClientPromise = std::make_shared<std::promise<std::shared_ptr<RpcClientType>>>();
+        auto buildOutboundInterceptor(InterceptorBuilder builder)
+        {
+            buildInterceptor(builder, mOutboundInterceptors);
+            return this;
+        }
 
-        RpcClientCallback<RpcClientType> callback = [=](std::shared_ptr<RpcClientType> rpcClient) {
-            rpcClientPromise->set_value(rpcClient);
-        };
+        auto buildSocketOptions(SocketOptionsSet builder)
+        {
+            BuildSocketOptions buildSocketOption(&mSocketOptions);
+            builder(buildSocketOption);
+            return this;
+        }
 
-        AsyncCreateRpcClient<RpcClientType>(service, connector, 
-            connectOptions,
-            socketOptions,
-            configSettings,
-            callback);
+        auto buildConnectOptions(ConnectOptionSet builder)
+        {
+            mConnectOptions.clear();
+            BuildConnectOptions buildConnectOption(&mConnectOptions);
+            builder(buildConnectOption);
+            return this;
+        }
 
-        return rpcClientPromise->get_future().get();
-    }
+        auto configureService(brynet::net::TcpService::Ptr service)
+        {
+            mService = service;
+            return this;
+        }
+
+        auto configureConnector(brynet::net::AsyncConnector::Ptr connector)
+        {
+            mConnector = connector;
+            return this;
+        }
+
+        template<typename RpcClientType>
+        void    asyncConnect(const RpcClientCallback<RpcClientType>& callback)
+        {
+            if (mService == nullptr)
+            {
+                throw std::runtime_error("service is null");
+            }
+            if (mConnector == nullptr)
+            {
+                throw std::runtime_error("connector is null");
+            }
+
+            auto enterCallback = [
+                inboundInterceptors = mInboundInterceptors,
+                outboundInterceptors = mOutboundInterceptors,
+                socketOptions = mSocketOptions,
+                callback,
+                service = mService]
+                (brynet::net::TcpSocket::Ptr socket) mutable {
+
+                auto enterCallback = [=]
+                    (const brynet::net::TcpConnection::Ptr &session) {
+                    OnBinaryRpcClient<RpcClientType>(session, 
+                        inboundInterceptors, 
+                        outboundInterceptors, 
+                        callback);
+                };
+
+                socket->setNodelay();
+                socketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(enterCallback));
+                service->addTcpConnection(std::move(socket), socketOptions);
+            };
+            mConnectOptions.push_back(AsyncConnector::ConnectOptions::WithCompletedCallback(enterCallback));
+            mConnector->asyncConnect(mConnectOptions);
+        }
+
+    protected:
+        ClientBuilder() = default;
+        virtual ~ClientBuilder() = default;
+
+        void buildInterceptor(InterceptorBuilder builder, std::vector< UnaryServerInterceptor>& result)
+        {
+            BuildInterceptor buildInterceptor(&result);
+            builder(buildInterceptor);
+        }
+
+    private:
+        brynet::net::TcpService::Ptr            mService;
+        brynet::net::AsyncConnector::Ptr        mConnector;
+        std::vector< UnaryServerInterceptor>    mInboundInterceptors;
+        std::vector< UnaryServerInterceptor>    mOutboundInterceptors;
+        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>   mSocketOptions;
+        std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc>  mConnectOptions;
+    };
 
 } }

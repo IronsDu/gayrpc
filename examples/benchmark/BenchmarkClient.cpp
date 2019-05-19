@@ -14,6 +14,7 @@
 using namespace brynet;
 using namespace brynet::net;
 using namespace dodo::benchmark;
+using namespace gayrpc::utils;
 
 typedef std::vector<std::chrono::nanoseconds> LATENTY_TYPE;
 typedef std::shared_ptr<LATENTY_TYPE> LATENCY_PTR;
@@ -202,6 +203,20 @@ int main(int argc, char **argv)
 
     auto startTime = std::chrono::steady_clock::now();
 
+    auto b = ClientBuilder::Make();
+    b->buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+        })
+        ->buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
+        })
+        ->buildSocketOptions([](BuildSocketOptions config) {
+            config.addOption(brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
+            config.addOption(brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            }));
+        })
+        ->configureConnector(connector)
+        ->configureService(server);
+
     for (int i = 0; i < clientNum; i++)
     {
         wg->add();
@@ -211,21 +226,12 @@ int main(int argc, char **argv)
             auto latency = std::make_shared<LATENTY_TYPE>();
             latencyArray.push_back(latency);
 
-            gayrpc::utils::AsyncCreateRpcClient<EchoServerClient>(server,
-                connector,
-                {
-                    AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
-                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)),
-                },
-                {
-                    TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                    TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
-                        session->setHeartBeat(std::chrono::seconds(10));
-                    })
-                }, 
-                {},
-                [=](dodo::benchmark::EchoServerClient::PTR client) {
-                    onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
+            b->buildConnectOptions([=](BuildConnectOptions options) {
+                    options.addOption(AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])));
+                    options.addOption(AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)));
+                })
+                ->asyncConnect<EchoServerClient>([=](EchoServerClient::PTR client) {
+                        onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
                 });
         }
         catch (std::runtime_error& e)

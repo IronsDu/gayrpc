@@ -25,20 +25,3 @@ elseif(UNIX)
 endif()
 
 add_test(TestRPC test_rpc)
-
-add_executable(test_orleans 
-./pb/echo_service.pb.cc 
-./pb/orleans_service.pb.cc 
-TestOrleans.cpp)
-
-if(WIN32)
-  target_link_libraries(test_orleans gayrpc ws2_32)
-  if(DEFINED ENV{APPVEYOR_CI})
-    target_link_libraries(test_orleans protobuf::libprotobuf ${BRYNET_LIBRARY})
-  endif()
-elseif(UNIX)
-  find_package(Threads REQUIRED)
-  target_link_libraries(test_orleans PRIVATE gayrpc pthread ${BRYNET_LIBRARY} ssl crypto protobuf)
-endif()
-
-add_test(TestOrleans test_orleans)
