@@ -98,6 +98,34 @@ namespace gayrpc { namespace utils {
         RpcServiceType::Install(service);
     }
 
+    template<typename RpcServiceType>
+    static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
+        const ServiceCreator<RpcServiceType>& serverCreator,
+        std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
+        std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
+    {
+        auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
+
+        httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser & httpParser,
+            const brynet::net::http::HttpSession::Ptr & session) {
+                gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
+            });
+
+        // 入站拦截器
+        UnaryServerInterceptor inboundInterceptor = makeInterceptor();
+        if (!userInBoundInterceptor.empty()) {
+            inboundInterceptor = makeInterceptor(userInBoundInterceptor);
+        }
+        // 出站拦截器	
+        userOutBoundInterceptor.push_back(withProtectedCall());
+        userOutBoundInterceptor.push_back(withHttpSessionSender(httpSession));
+        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
+
+        ServiceContext serviceContext(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
+        auto service = serverCreator(serviceContext);
+        RpcServiceType::Install(service);
+    }
+
     class BuildInterceptor
     {
     public:
@@ -163,6 +191,49 @@ namespace gayrpc { namespace utils {
         ListenConfig* mConfig;
     };
 
+    enum class TransportType
+    {
+        Binary,
+        HTTP,
+    };
+    class TransportTypeConfig
+    {
+    public:
+        TransportTypeConfig(TransportType type)
+            :
+            mType(type)
+        {}
+
+        void    setType(TransportType type)
+        {
+            mType = type;
+        }
+
+        auto    getType() const
+        {
+            return mType;
+        }
+
+    private:
+        TransportType   mType;
+    };
+
+    class BuildTransportType
+    {
+    public:
+        BuildTransportType(TransportTypeConfig* config)
+            :
+            mConfig(config)
+        {}
+
+        void    setType(TransportType type)
+        {
+            mConfig->setType(type);
+        }
+    private:
+        TransportTypeConfig* mConfig;
+    };
+
     using InterceptorBuilder = std::function<void(BuildInterceptor)>;
     using SocketOptionsSet = std::function<void(BuildSocketOptions)>;
     using ConnectOptionSet = std::function<void(BuildConnectOptions)>;
@@ -173,6 +244,7 @@ namespace gayrpc { namespace utils {
     public:
         using Ptr = std::shared_ptr<ServiceBuilder<RpcServiceType>>;
         using ListenOptionsSet = std::function<void(BuildListenConfig)>;
+        using BuildTransportTypeSet = std::function<void(BuildTransportType)>;
 
         static Ptr Make()
         {
@@ -192,41 +264,48 @@ namespace gayrpc { namespace utils {
             stop();
         }
 
-        ServiceBuilder* buildInboundInterceptor(InterceptorBuilder builder)
+        auto buildInboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
             return this;
         }
 
-        ServiceBuilder* buildOutboundInterceptor(InterceptorBuilder builder)
+        auto buildOutboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
             return this;
         }
 
-        ServiceBuilder* buildSocketOptions(SocketOptionsSet builder)
+        auto buildSocketOptions(SocketOptionsSet builder)
         {
             BuildSocketOptions buildSocketOption(&mSocketOptions);
             builder(buildSocketOption);
             return this;
         }
 
-        ServiceBuilder* configureService(brynet::net::TcpService::Ptr service)
+        auto configureService(brynet::net::TcpService::Ptr service)
         {
             mService = service;
             return this;
         }
 
-        ServiceBuilder* configureCreator(ServiceCreator<RpcServiceType> creator)
+        auto configureCreator(ServiceCreator<RpcServiceType> creator)
         {
             mCreator = creator;
             return this;
         }
 
-        ServiceBuilder* configureListen(ListenOptionsSet builder)
+        auto configureListen(ListenOptionsSet builder)
         {
             BuildListenConfig buildConfig(&mListenConfig);
             builder(buildConfig);
+            return this;
+        }
+
+        auto    configureTransportType(BuildTransportTypeSet builder)
+        {
+            BuildTransportType buildTransportType(&mTransportTypeConfig);
+            builder(buildTransportType);
             return this;
         }
 
@@ -240,11 +319,29 @@ namespace gayrpc { namespace utils {
             mSocketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
                 [creator = mCreator,
                 inboundInterceptors = mInboundInterceptors,
-                outboundInterceptors = mOutboundInterceptors](const brynet::net::TcpConnection::Ptr & session) {
-                    OnBinaryConnectionEnter(session, 
-                        creator,
-                        inboundInterceptors,
-                        outboundInterceptors);
+                outboundInterceptors = mOutboundInterceptors,
+                transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr & session) {
+                    switch (transportType)
+                    {
+                    case TransportType::Binary:
+                        OnBinaryConnectionEnter(session,
+                            creator,
+                            inboundInterceptors,
+                            outboundInterceptors);
+                        break;
+                    case TransportType::HTTP:
+                        brynet::net::http::HttpService::setup(session,
+                            [=](const brynet::net::http::HttpSession::Ptr & httpSession) {
+                                OnHTTPConnectionEnter(httpSession, 
+                                    creator, 
+                                    inboundInterceptors,
+                                    outboundInterceptors);
+                            });
+                        break;
+                    default:
+                        throw std::runtime_error(std::string("not support transport type:") + std::to_string(static_cast<int>(transportType)));
+                        break;
+                    }
                 }));
 
             mListenThread = ListenThread::Create(mListenConfig.useIpV6(), 
@@ -267,6 +364,8 @@ namespace gayrpc { namespace utils {
 
     protected:
         ServiceBuilder()
+            :
+            mTransportTypeConfig(TransportType::Binary)
         {}
 
     private:
@@ -284,6 +383,7 @@ namespace gayrpc { namespace utils {
         ServiceCreator<RpcServiceType>          mCreator;
         ListenConfig                            mListenConfig;
         ListenThread::Ptr                       mListenThread;
+        TransportTypeConfig                     mTransportTypeConfig;
     };
 
     template<typename RpcClientType>
