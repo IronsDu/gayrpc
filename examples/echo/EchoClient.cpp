@@ -90,29 +90,29 @@ int main(int argc, char **argv)
 
     auto mainLoop = std::make_shared<brynet::net::EventLoop>();
     
-    auto b = ClientBuilder::Make();
-    b->buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+    auto b = ClientBuilder();
+    b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
-        ->buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
+        .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
-        ->buildSocketOptions([](BuildSocketOptions config) {
-                config.addOption(brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
-                config.addOption(brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
-                    session->setHeartBeat(std::chrono::seconds(10));
-            }));
+        .configureConnectionOptions({
+            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            })
         })
-        ->configureConnector(connector)
-        ->configureService(service);
+        .configureConnector(connector)
+        .configureService(service);
 
     for (int i = 0; i < clientNum; i++)
     {
         try
         {
-            b->buildConnectOptions([=](BuildConnectOptions options) {
-                    options.addOption(AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])));
-                    options.addOption(AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)));
+            b.configureConnectOptions({
+                    AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
+                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10))
                 })
-                ->asyncConnect<EchoServerClient>([=](dodo::test::EchoServerClient::PTR client) {
+                .asyncConnect<EchoServerClient>([=](dodo::test::EchoServerClient::PTR client) {
                     OnConnection(client, batchNum);
                 });
 
