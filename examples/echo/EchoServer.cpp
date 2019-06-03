@@ -71,26 +71,27 @@ int main(int argc, char **argv)
     auto service = TcpService::Create();
     service->startWorkerThread(std::atoi(argv[2]));
 
-    auto serviceBuild = ServiceBuilder<EchoServerService>::Make();
-    serviceBuild->buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
+    auto serviceBuild = ServiceBuilder<EchoServerService>();
+    serviceBuild.buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             buildInterceptors.addInterceptor(counter);
         })
-        ->buildSocketOptions([](BuildSocketOptions buildSocketOption) {
-            buildSocketOption.addOption(
-                TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
-            buildSocketOption.addOption(
-                TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr & session) {
-                    session->setHeartBeat(std::chrono::seconds(10));
-            }));
+        .configureConnectionOptions({
+            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+                session->setHeartBeat(std::chrono::seconds(10));
+            })
         })
-        ->configureService(service)
-        ->configureCreator([](gayrpc::core::ServiceContext context) {
+        .configureService(service)
+        .configureCreator([](gayrpc::core::ServiceContext context) {
             return std::make_shared<MyService>(context);
         })
-        ->configureListen([=](BuildListenConfig listenConfig) {
+        .configureListen([=](wrapper::BuildListenConfig listenConfig) {
             listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
         })
-        ->asyncRun();
+        .configureTransportType([](BuildTransportType buildTransportType) {
+            buildTransportType.setType(TransportType::Binary);
+        })
+        .asyncRun();
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);

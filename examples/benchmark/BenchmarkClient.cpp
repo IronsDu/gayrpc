@@ -203,19 +203,19 @@ int main(int argc, char **argv)
 
     auto startTime = std::chrono::steady_clock::now();
 
-    auto b = ClientBuilder::Make();
-    b->buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+    auto b = ClientBuilder();
+    b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
         })
-        ->buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
+        .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
         })
-        ->buildSocketOptions([](BuildSocketOptions config) {
-            config.addOption(brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024));
-            config.addOption(brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+        .configureConnectionOptions({
+            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
                 session->setHeartBeat(std::chrono::seconds(10));
-            }));
+            })
         })
-        ->configureConnector(connector)
-        ->configureService(server);
+        .configureConnector(connector)
+        .configureService(server);
 
     for (int i = 0; i < clientNum; i++)
     {
@@ -226,11 +226,11 @@ int main(int argc, char **argv)
             auto latency = std::make_shared<LATENTY_TYPE>();
             latencyArray.push_back(latency);
 
-            b->buildConnectOptions([=](BuildConnectOptions options) {
-                    options.addOption(AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])));
-                    options.addOption(AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)));
+            b.configureConnectOptions({
+                AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
+                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10))
                 })
-                ->asyncConnect<EchoServerClient>([=](EchoServerClient::PTR client) {
+                .asyncConnect<EchoServerClient>([=](EchoServerClient::PTR client) {
                         onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
                 });
         }

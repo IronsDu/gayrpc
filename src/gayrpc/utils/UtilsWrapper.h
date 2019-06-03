@@ -8,6 +8,7 @@
 #include <brynet/net/http/HttpService.h>
 #include <brynet/net/Connector.h>
 #include <brynet/net/http/HttpParser.h>
+#include <brynet/net/Wrapper.h>
 
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
@@ -27,43 +28,6 @@ namespace gayrpc { namespace utils {
 
     template<typename RpcClientType>
     using RpcClientCallback = std::function<void(std::shared_ptr<RpcClientType>)>;
-
-    class ListenConfig
-    {
-    public:
-        ListenConfig()
-        {
-            mIsIpV6 = false;
-        }
-
-        void        setAddr(bool ipV6, std::string ip, int port)
-        {
-            mIsIpV6 = ipV6;
-            mListenAddr = ip;
-            mPort = port;
-        }
-
-        std::string ip() const
-        {
-            return mListenAddr;
-        }
-
-        int         port() const
-        {
-            return mPort;
-        }
-
-        bool        useIpV6() const
-        {
-            return mIsIpV6;
-        }
-
-    private:
-        std::string mListenAddr;
-        int         mPort;
-        bool        mIsIpV6;
-    };
-
 
     template<typename RpcServiceType>
     static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& session,
@@ -126,10 +90,10 @@ namespace gayrpc { namespace utils {
         RpcServiceType::Install(service);
     }
 
-    class BuildInterceptor
+    class BuildInterceptor final
     {
     public:
-        BuildInterceptor(std::vector< UnaryServerInterceptor>* nterceptors)
+        BuildInterceptor(std::vector<UnaryServerInterceptor>* nterceptors)
         {
             mInterceptors = nterceptors;
         }
@@ -140,55 +104,7 @@ namespace gayrpc { namespace utils {
         }
 
     private:
-        std::vector< UnaryServerInterceptor>*    mInterceptors;
-    };
-
-    class BuildSocketOptions
-    {
-    public:
-        BuildSocketOptions(std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>* options)
-        {
-            mOptions = options;
-        }
-
-        void    addOption(TcpService::AddSocketOption::AddSocketOptionFunc option)
-        {
-            mOptions->push_back(option);
-        }
-    private:
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>* mOptions;
-    };
-
-    class BuildConnectOptions
-    {
-    public:
-        BuildConnectOptions(std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc>* options)
-        {
-            mOptions = options;
-        }
-
-        void    addOption(AsyncConnector::ConnectOptions::ConnectOptionFunc option)
-        {
-            mOptions->push_back(option);
-        }
-    private:
-        std::vector < AsyncConnector::ConnectOptions::ConnectOptionFunc>* mOptions;
-    };
-
-    class BuildListenConfig
-    {
-    public:
-        BuildListenConfig(ListenConfig* config)
-        {
-            mConfig = config;
-        }
-
-        void        setAddr(bool ipV6, std::string ip, int port)
-        {
-            mConfig->setAddr(ipV6, ip, port);
-        }
-    private:
-        ListenConfig* mConfig;
+        std::vector<UnaryServerInterceptor>*    mInterceptors;
     };
 
     enum class TransportType
@@ -196,7 +112,8 @@ namespace gayrpc { namespace utils {
         Binary,
         HTTP,
     };
-    class TransportTypeConfig
+
+    class TransportTypeConfig final
     {
     public:
         TransportTypeConfig(TransportType type)
@@ -218,7 +135,7 @@ namespace gayrpc { namespace utils {
         TransportType   mType;
     };
 
-    class BuildTransportType
+    class BuildTransportType final
     {
     public:
         BuildTransportType(TransportTypeConfig* config)
@@ -230,93 +147,54 @@ namespace gayrpc { namespace utils {
         {
             mConfig->setType(type);
         }
+
     private:
         TransportTypeConfig* mConfig;
     };
 
     using InterceptorBuilder = std::function<void(BuildInterceptor)>;
-    using SocketOptionsSet = std::function<void(BuildSocketOptions)>;
-    using ConnectOptionSet = std::function<void(BuildConnectOptions)>;
 
     template<typename RpcServiceType>
-    class ServiceBuilder : public std::enable_shared_from_this<ServiceBuilder<RpcServiceType>>
+    class ServiceBuilder : public wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>
     {
     public:
         using Ptr = std::shared_ptr<ServiceBuilder<RpcServiceType>>;
-        using ListenOptionsSet = std::function<void(BuildListenConfig)>;
         using BuildTransportTypeSet = std::function<void(BuildTransportType)>;
 
-        static Ptr Make()
-        {
-            struct make_shared_enabler : public ServiceBuilder<RpcServiceType>
-            {
-                make_shared_enabler()
-                    :
-                    ServiceBuilder()
-                {}
-            };
+        ServiceBuilder()
+            :
+            mTransportTypeConfig(TransportType::Binary)
+        {}
 
-            return std::make_shared<make_shared_enabler>();
-        }
-
-        virtual ~ServiceBuilder()
-        {
-            stop();
-        }
-
-        auto buildInboundInterceptor(InterceptorBuilder builder)
+        ServiceBuilder<RpcServiceType>& buildInboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
-            return this;
+            return *this;
         }
 
-        auto buildOutboundInterceptor(InterceptorBuilder builder)
+        ServiceBuilder<RpcServiceType>& buildOutboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
-            return this;
+            return *this;
         }
 
-        auto buildSocketOptions(SocketOptionsSet builder)
-        {
-            BuildSocketOptions buildSocketOption(&mSocketOptions);
-            builder(buildSocketOption);
-            return this;
-        }
-
-        auto configureService(brynet::net::TcpService::Ptr service)
-        {
-            mService = service;
-            return this;
-        }
-
-        auto configureCreator(ServiceCreator<RpcServiceType> creator)
+        ServiceBuilder<RpcServiceType>& configureCreator(ServiceCreator<RpcServiceType> creator)
         {
             mCreator = creator;
-            return this;
+            return *this;
         }
 
-        auto configureListen(ListenOptionsSet builder)
-        {
-            BuildListenConfig buildConfig(&mListenConfig);
-            builder(buildConfig);
-            return this;
-        }
-
-        auto    configureTransportType(BuildTransportTypeSet builder)
+        ServiceBuilder<RpcServiceType>&    configureTransportType(BuildTransportTypeSet builder)
         {
             BuildTransportType buildTransportType(&mTransportTypeConfig);
             builder(buildTransportType);
-            return this;
+            return *this;
         }
 
         void    asyncRun()
         {
-            if (mService == nullptr)
-            {
-                throw std::runtime_error("service is null");
-            }
-
-            mSocketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
+            auto connectionOptions = wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>::getConnectionOptions();
+            connectionOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
                 [creator = mCreator,
                 inboundInterceptors = mInboundInterceptors,
                 outboundInterceptors = mOutboundInterceptors,
@@ -339,50 +217,27 @@ namespace gayrpc { namespace utils {
                             });
                         break;
                     default:
-                        throw std::runtime_error(std::string("not support transport type:") + std::to_string(static_cast<int>(transportType)));
+                        throw std::runtime_error(
+                            std::string("not support transport type:") 
+                            + std::to_string(static_cast<int>(transportType)));
                         break;
                     }
                 }));
 
-            mListenThread = ListenThread::Create(mListenConfig.useIpV6(), 
-                mListenConfig.ip(), 
-                mListenConfig.port(), 
-                [service = mService,
-                socketOptions = mSocketOptions](brynet::net::TcpSocket::Ptr socket) {
-                    service->addTcpConnection(std::move(socket), socketOptions);
-                });
-            mListenThread->startListen();
+            wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>::asyncRun(connectionOptions);
         }
-
-        void    stop()
-        {
-            if (mListenThread)
-            {
-                mListenThread->stopListen();
-            }
-        }
-
-    protected:
-        ServiceBuilder()
-            :
-            mTransportTypeConfig(TransportType::Binary)
-        {}
 
     private:
-        void buildInterceptor(InterceptorBuilder builder, std::vector< UnaryServerInterceptor>& result)
+        void buildInterceptor(InterceptorBuilder builder, std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);
         }
 
     private:
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>   mSocketOptions;
-        std::vector< UnaryServerInterceptor>    mInboundInterceptors;
-        std::vector< UnaryServerInterceptor>    mOutboundInterceptors;
-        brynet::net::TcpService::Ptr            mService;
+        std::vector<UnaryServerInterceptor>     mInboundInterceptors;
+        std::vector<UnaryServerInterceptor>     mOutboundInterceptors;
         ServiceCreator<RpcServiceType>          mCreator;
-        ListenConfig                            mListenConfig;
-        ListenThread::Ptr                       mListenThread;
         TransportTypeConfig                     mTransportTypeConfig;
     };
 
@@ -412,116 +267,51 @@ namespace gayrpc { namespace utils {
         callback(client);
     }
 
-    class ClientBuilder : public std::enable_shared_from_this<ClientBuilder>
+    class ClientBuilder : public wrapper::BaseConnectionBuilder<ClientBuilder>
     {
     public:
-        using Ptr = std::shared_ptr<ClientBuilder>;
-
-        static Ptr Make()
-        {
-            struct make_shared_enabler : public ClientBuilder
-            {
-                make_shared_enabler()
-                    :
-                    ClientBuilder()
-                {}
-            };
-
-            return std::make_shared<make_shared_enabler>();
-        }
-
-        auto buildInboundInterceptor(InterceptorBuilder builder)
+        ClientBuilder& buildInboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
-            return this;
+            return *this;
         }
 
-        auto buildOutboundInterceptor(InterceptorBuilder builder)
+        ClientBuilder& buildOutboundInterceptor(InterceptorBuilder builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
-            return this;
-        }
-
-        auto buildSocketOptions(SocketOptionsSet builder)
-        {
-            BuildSocketOptions buildSocketOption(&mSocketOptions);
-            builder(buildSocketOption);
-            return this;
-        }
-
-        auto buildConnectOptions(ConnectOptionSet builder)
-        {
-            mConnectOptions.clear();
-            BuildConnectOptions buildConnectOption(&mConnectOptions);
-            builder(buildConnectOption);
-            return this;
-        }
-
-        auto configureService(brynet::net::TcpService::Ptr service)
-        {
-            mService = service;
-            return this;
-        }
-
-        auto configureConnector(brynet::net::AsyncConnector::Ptr connector)
-        {
-            mConnector = connector;
-            return this;
+            return *this;
         }
 
         template<typename RpcClientType>
         void    asyncConnect(const RpcClientCallback<RpcClientType>& callback)
         {
-            if (mService == nullptr)
-            {
-                throw std::runtime_error("service is null");
-            }
-            if (mConnector == nullptr)
-            {
-                throw std::runtime_error("connector is null");
-            }
-
-            auto enterCallback = [
-                inboundInterceptors = mInboundInterceptors,
-                outboundInterceptors = mOutboundInterceptors,
-                socketOptions = mSocketOptions,
-                callback,
-                service = mService]
-                (brynet::net::TcpSocket::Ptr socket) mutable {
-
-                auto enterCallback = [=]
-                    (const brynet::net::TcpConnection::Ptr &session) {
-                    OnBinaryRpcClient<RpcClientType>(session, 
-                        inboundInterceptors, 
-                        outboundInterceptors, 
-                        callback);
-                };
-
-                socket->setNodelay();
-                socketOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(enterCallback));
-                service->addTcpConnection(std::move(socket), socketOptions);
+            auto inboundInterceptors = mInboundInterceptors;
+            auto outboundInterceptors = mOutboundInterceptors;
+            auto enterCallback = [=] (const brynet::net::TcpConnection::Ptr& session) {
+                OnBinaryRpcClient<RpcClientType>(session,
+                    inboundInterceptors,
+                    outboundInterceptors,
+                    callback);
             };
-            mConnectOptions.push_back(AsyncConnector::ConnectOptions::WithCompletedCallback(enterCallback));
-            mConnector->asyncConnect(mConnectOptions);
+
+            auto connectionOptions = wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectionOptions();
+            connectionOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(enterCallback));
+
+            wrapper::BaseConnectionBuilder<ClientBuilder>::asyncConnect(
+                wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectOptions(), 
+                connectionOptions);
         }
 
     protected:
-        ClientBuilder() = default;
-        virtual ~ClientBuilder() = default;
-
-        void buildInterceptor(InterceptorBuilder builder, std::vector< UnaryServerInterceptor>& result)
+        void buildInterceptor(InterceptorBuilder builder, std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);
         }
 
     private:
-        brynet::net::TcpService::Ptr            mService;
-        brynet::net::AsyncConnector::Ptr        mConnector;
-        std::vector< UnaryServerInterceptor>    mInboundInterceptors;
-        std::vector< UnaryServerInterceptor>    mOutboundInterceptors;
-        std::vector<TcpService::AddSocketOption::AddSocketOptionFunc>   mSocketOptions;
-        std::vector<AsyncConnector::ConnectOptions::ConnectOptionFunc>  mConnectOptions;
+        std::vector<UnaryServerInterceptor>     mInboundInterceptors;
+        std::vector<UnaryServerInterceptor>     mOutboundInterceptors;
     };
 
 } }
