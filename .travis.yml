@@ -13,13 +13,12 @@ matrix:
         apt:
           sources: *all_sources
           packages: ['g++-7']
+        #sonarcloud
+        sonarcloud:
+          organization: "ironsdu-github"
+          token: 
+            secure: "ERLGZgDTS7RJzW8P24XZJc3GfKEyU07tnFzMd9aEeEfaHPh6eZRV2roYboxNBHgislEyUY3fxKS7mR41Gq7OxbADTrg2pHDSMr2lxgqe3LxknJRe5GJt4Fpxchvm/4yAKyjbvanRtVickWWWNUwW3Fl6yqWB94Wwbi44SVQ706r6PLr7mmCq8150Qd9ZFb6OQOvURmU0ljrYmPAU7O4OHoJpaIk3mloBAWiz1ujvdAJNTkoS7lJ5UG40b0A44G33aWUhS8qu3U0MOVQ0dkZKVTsbNSqJfKN7/aPMkXZ7or7vak3Tb29Gy4CKnbNzjCahw6EYDfGV0sCssw1z5+cgELq3onoqY0UwQppEiUrCUQ4u+IKEnu5nsPriPd0Xvw0hBJmOFpeXj8CpnqoPOWJ2PwOBjDG1EXeCSjpL3qUXjvABjXVHWSgCmZficjSkCvK6QIz+oXLjCdyXaaMKRDR0ASsSFiUgyU41pns+6SWsDPQj8ELnxrbU2elxaUIpgkAUuLTqntFgDnYweI9nlQGR/MWEZpcdI2FGnThKrQ+msU04dEnnuTPxEoLIJxRYQfsdz6vgst0sbgPtSfTutxRyi3xaxoTUniB2D1k6SCyMtmI+jQKD0CO7p6NjNKOk6EtvACSMwiKR3G1A3WyZQYMD3jEI6B6dnrqPnDRFWDy365c="
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-
-    - os: linux
-      compiler: gcc
-      addons: *gcc7
-      env: 
         - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
 
 install:
@@ -38,6 +37,8 @@ before_script:
   - eval "${MATRIX_EVAL}"
 
 script:
-  - make
+  # make
+  - build-wrapper-linux-x86-64 --out-dir bw-output make
+  - sonar-scanner -Dsonar.login=26e777709cab5558e0b5a842eb1c095cc4479a86 -X
   - cd tests
   - ctest -V
