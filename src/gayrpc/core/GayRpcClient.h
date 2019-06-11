@@ -92,13 +92,13 @@ namespace gayrpc { namespace core {
         }
 
     protected:
-        BaseClient(RpcTypeHandleManager::PTR rpcHandlerManager,
-            UnaryServerInterceptor inboundInterceptor,
-            UnaryServerInterceptor outboundInterceptor)
+        BaseClient(const RpcTypeHandleManager::PTR& rpcHandlerManager,
+            const UnaryServerInterceptor& inboundInterceptor,
+            const UnaryServerInterceptor& outboundInterceptor)
             :
-            mTypeHandleManager(std::move(rpcHandlerManager)),
-            mInboundInterceptor(std::move(inboundInterceptor)),
-            mOutboundInterceptor(std::move(outboundInterceptor)),
+            mTypeHandleManager(rpcHandlerManager),
+            mInboundInterceptor(inboundInterceptor),
+            mOutboundInterceptor(outboundInterceptor),
             mSequenceID(0)
         {}
 
@@ -110,7 +110,7 @@ namespace gayrpc { namespace core {
             ServiceFunctionMsgIDType msgID,
             const Handle& handle,
             std::chrono::seconds timeout,
-            TIMEOUT_CALLBACK timeoutCallback)
+            TIMEOUT_CALLBACK&& timeoutCallback)
         {
             const auto sequenceID = mSequenceID++;
 
@@ -123,15 +123,15 @@ namespace gayrpc { namespace core {
 
             {
                 WaitResponseTimer waitTimer(sequenceID, timeout);
-                auto callback = [handle](const RpcMeta & meta,
+                auto callback = [handle](RpcMeta && meta,
                     const std::string_view & data,
                     const UnaryServerInterceptor & inboundInterceptor,
-                    InterceptorContextType context) {
+                    InterceptorContextType&& context) {
                         return parseResponseWrapper<Response>(handle,
-                            meta,
+                            std::move(meta),
                             data,
                             inboundInterceptor,
-                            std::move(context));
+                            std::forward<InterceptorContextType>(context));
                 };
 
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
@@ -139,12 +139,12 @@ namespace gayrpc { namespace core {
                 assert(mTimeoutHandleMap.find(sequenceID) == mTimeoutHandleMap.end());
 
                 mStubHandleMap[sequenceID] = std::move(callback);
-                mTimeoutHandleMap[sequenceID] = std::move(timeoutCallback);
+                mTimeoutHandleMap[sequenceID] = std::forward<TIMEOUT_CALLBACK>(timeoutCallback);
                 mWaitResponseTimerQueue.push(waitTimer);
             }
 
             InterceptorContextType context;
-            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+            mOutboundInterceptor(std::move(meta), request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
             }, std::move(context));
         }
 
@@ -169,38 +169,38 @@ namespace gayrpc { namespace core {
                 std::lock_guard<std::mutex> lck(mStubMapGruad);
                 assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
 
-                mStubHandleMap[sequenceID] = [handle](const RpcMeta & meta,
+                mStubHandleMap[sequenceID] = [handle](RpcMeta && meta,
                     const std::string_view & data,
                     const UnaryServerInterceptor & inboundInterceptor,
-                    InterceptorContextType context) {
+                    InterceptorContextType&& context) {
                         return parseResponseWrapper<Response>(handle,
-                            meta,
+                            std::move(meta),
                             data,
                             inboundInterceptor,
-                            std::move(context));
+                            std::forward<InterceptorContextType>(context));
                 };
             }
 
             InterceptorContextType context;
-            mOutboundInterceptor(meta, request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
-            }, std::move(context));
+            mOutboundInterceptor(std::move(meta), request, [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+            }, std::forward<InterceptorContextType>(context));
         }
 
         void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::PTR& rpcTypeHandleManager,
             ServiceIDType serviceID)
         {
             auto sharedThis = shared_from_this();
-            auto responseStub = [sharedThis](const RpcMeta& meta,
+            auto responseStub = [sharedThis](RpcMeta&& meta,
                 const std::string_view & data,
-                InterceptorContextType context) {
-                sharedThis->processRpcResponse(meta, data, std::move(context));
+                InterceptorContextType&& context) {
+                sharedThis->processRpcResponse(std::move(meta), data, std::forward<InterceptorContextType>(context));
                 return true;
             };
             rpcTypeHandleManager->registerTypeHandle(RpcMeta::RESPONSE, responseStub, serviceID);
         }
 
     private:
-        void    processRpcResponse(const RpcMeta& meta, const std::string_view& data, InterceptorContextType context)
+        void    processRpcResponse(RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context)
         {
             assert(meta.type() == RpcMeta::RESPONSE);
             if (meta.type() != RpcMeta::RESPONSE)
@@ -242,17 +242,17 @@ namespace gayrpc { namespace core {
                 handle = (*it).second;
                 mStubHandleMap.erase(it);
             }
-            handle(meta, data, mInboundInterceptor, std::move(context));
+            handle(std::move(meta), data, mInboundInterceptor, std::forward<InterceptorContextType>(context));
         }
 
     private:
         using ResponseStubHandle =
             std::function<
             void(
-                const RpcMeta&,
+                RpcMeta&&,
                 const std::string_view& data,
                 const UnaryServerInterceptor&,
-                InterceptorContextType context)>;
+                InterceptorContextType&& context)>;
         using ResponseStubHandleMap = std::unordered_map<uint64_t, ResponseStubHandle>;
         using TimeoutHandleMap = std::unordered_map<uint64_t, TIMEOUT_CALLBACK>;
 

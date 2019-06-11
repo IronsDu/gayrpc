@@ -28,7 +28,7 @@ namespace gayrpc { namespace protocol {
             meta.set_encoding(RpcMeta::JSON);
 
             InterceptorContextType context;
-            rpcHandlerManager->handleRpcMsg(meta, httpParser.getBody(), std::move(context));
+            rpcHandlerManager->handleRpcMsg(std::move(meta), httpParser.getBody(), std::move(context));
         }
 
         static void send(const gayrpc::core::RpcMeta& meta,

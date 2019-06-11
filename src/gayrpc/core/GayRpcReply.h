@@ -14,17 +14,17 @@ namespace gayrpc { namespace core {
     class BaseReply
     {
     public:
-        BaseReply(RpcMeta meta, UnaryServerInterceptor outboundInterceptor)
+        BaseReply(RpcMeta&& meta, UnaryServerInterceptor&& outboundInterceptor)
             :
-            mRequestMeta(std::move(meta)),
-            mOutboundInterceptor(std::move(outboundInterceptor))
+            mRequestMeta(std::forward<RpcMeta>(meta)),
+            mOutboundInterceptor(std::forward<UnaryServerInterceptor>(outboundInterceptor))
         {
         }
 
         virtual ~BaseReply() = default;
 
     protected:
-        void    reply(const google::protobuf::Message& response, InterceptorContextType context)
+        void    reply(const google::protobuf::Message& response, InterceptorContextType&& context)
         {
             if (mReplyFlag.test_and_set())
             {
@@ -43,15 +43,15 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_failed(false);
             meta.mutable_response_info()->set_timeout(false);
 
-            mOutboundInterceptor(meta, 
+            mOutboundInterceptor(std::move(meta), 
                 response, 
-                [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 }, 
-                std::move(context));
+                std::forward<InterceptorContextType>(context));
         }
 
         template<typename Response>
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context)
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context)
         {
             if (mReplyFlag.test_and_set())
             {
@@ -76,9 +76,9 @@ namespace gayrpc { namespace core {
             Response response;
             mOutboundInterceptor(meta, 
                 response, 
-                [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 }, 
-                std::move(context));
+                std::forward<InterceptorContextType>(context));
         }
 
     private:
@@ -93,21 +93,21 @@ namespace gayrpc { namespace core {
     public:
         typedef std::shared_ptr<TemplateReply<T>> PTR;
 
-        TemplateReply(RpcMeta meta,
-            UnaryServerInterceptor outboundInterceptor)
+        TemplateReply(RpcMeta&& meta,
+            UnaryServerInterceptor&& outboundInterceptor)
             :
             BaseReply(std::move(meta), std::move(outboundInterceptor))
         {
         }
 
-        void    reply(const T& response, InterceptorContextType context = InterceptorContextType())
+        void    reply(const T& response, InterceptorContextType&& context = InterceptorContextType())
         {
-            BaseReply::reply(response, std::move(context));
+            BaseReply::reply(response, std::forward<InterceptorContextType>(context));
         }
 
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType context = InterceptorContextType())
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType())
         {
-            BaseReply::error<T>(errorCode, reason, std::move(context));
+            BaseReply::error<T>(errorCode, reason, std::forward<InterceptorContextType>(context));
         }
     };
 

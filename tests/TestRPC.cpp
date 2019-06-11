@@ -14,14 +14,14 @@ TEST_CASE("rpc are computed", "[rpc]")
     class MyService : public dodo::test::EchoServerService
     {
     public:
-        MyService(gayrpc::core::ServiceContext context)
+        explicit MyService(gayrpc::core::ServiceContext&& context)
             :
-            dodo::test::EchoServerService(context)
+            dodo::test::EchoServerService(std::move(context))
         {}
 
         virtual void Echo(const dodo::test::EchoRequest& request,
             const dodo::test::EchoServerService::EchoReply::PTR& replyObj,
-            InterceptorContextType context)
+            InterceptorContextType&& context) override
         {
             receivedString = request.message();
             dodo::test::EchoResponse response;
@@ -31,9 +31,9 @@ TEST_CASE("rpc are computed", "[rpc]")
 
         virtual void Login(const dodo::test::LoginRequest& request,
             const dodo::test::EchoServerService::LoginReply::PTR& replyObj,
-            InterceptorContextType context)
+            InterceptorContextType&& context) override
         {
-
+            ;
         }
 
     public:
@@ -50,21 +50,21 @@ TEST_CASE("rpc are computed", "[rpc]")
     std::string requestBody;
 
     auto client = dodo::test::EchoServerClient::Create(rpcHandlerManager,
-        [&](const gayrpc::core::RpcMeta& meta,
+        [&](gayrpc::core::RpcMeta&& meta,
         const google::protobuf::Message& message,
         const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
-            return next(meta, message, std::move(context));
+            return next(std::move(meta), message, std::move(context));
         },
-        [&](const gayrpc::core::RpcMeta& meta,
+        [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
             requestMeta = meta;
             requestBody = message.SerializeAsString();
-            return next(meta, message, std::move(context));
+            return next(std::move(meta), message, std::move(context));
         });
 
     dodo::test::EchoRequest request;
@@ -77,31 +77,29 @@ TEST_CASE("rpc are computed", "[rpc]")
         });
 
     gayrpc::core::ServiceContext serviceContext(rpcHandlerManager,
-        [&](const gayrpc::core::RpcMeta& meta,
+        [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
-            return next(meta, message, std::move(context));
+            return next(std::move(meta), message, std::move(context));
         },
-        [&](const gayrpc::core::RpcMeta& meta,
+        [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
             responseMeta = meta;
             responseBody = message.SerializeAsString();
-            return next(meta, message, std::move(context));
+            return next(std::move(meta), message, std::move(context));
         });
-    auto service = std::make_shared<MyService>(serviceContext);
+    auto service = std::make_shared<MyService>(std::move(serviceContext));
     dodo::test::EchoServerService::Install(service);
 
     InterceptorContextType context;
-    rpcHandlerManager->handleRpcMsg(requestMeta, requestBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, std::move(context));
     REQUIRE(service->receivedString == hello);
 
-    rpcHandlerManager->handleRpcMsg(responseMeta, responseBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, std::move(context));
     REQUIRE(expectedResponse == world);
-
-    return;
 }

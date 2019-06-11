@@ -10,7 +10,7 @@ namespace gayrpc { namespace core {
     class ServiceContext final
     {
     public:
-        ServiceContext(RpcTypeHandleManager::PTR typeHandleManager, UnaryServerInterceptor inInterceptor, UnaryServerInterceptor outInterceptor)
+        ServiceContext(RpcTypeHandleManager::PTR typeHandleManager, const UnaryServerInterceptor& inInterceptor, const UnaryServerInterceptor& outInterceptor)
             :
             mTypeHandleManager(typeHandleManager),
             mInInterceptor(inInterceptor),
@@ -41,9 +41,9 @@ namespace gayrpc { namespace core {
     class BaseService : public std::enable_shared_from_this<BaseService>
     {
     public:
-        BaseService(ServiceContext context)
+        BaseService(ServiceContext&& context)
             :
-            mContext(context)
+            mContext(std::forward<ServiceContext>(context))
         {
         }
         virtual ~BaseService() = default;

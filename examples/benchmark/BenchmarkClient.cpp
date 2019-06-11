@@ -51,6 +51,7 @@ private:
     void    onEchoResponse(const EchoResponse& response,
         const gayrpc::core::RpcError& error)
     {
+        (void)response;
         mCurrentNum++;
         mLatency->push_back((std::chrono::steady_clock::now() - mRequestTime));
 
@@ -166,6 +167,11 @@ static void outputLatency(int realyTotalRequestNum,
         << std::endl;
 
     auto p99Index = tmp1.size() * 99 / 100;
+    if (p99Index == 0)
+    {
+        p99Index = 1;
+    }
+
     std::chrono::nanoseconds p99Total = std::chrono::nanoseconds::zero();
     for (size_t i = 0; i < p99Index; i++)
     {

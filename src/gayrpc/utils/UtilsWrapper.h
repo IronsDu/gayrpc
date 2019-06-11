@@ -24,7 +24,7 @@ namespace gayrpc { namespace utils {
     using namespace brynet::net;
 
     template<typename RpcServiceType>
-    using ServiceCreator = std::function<std::shared_ptr<RpcServiceType>(ServiceContext)>;
+    using ServiceCreator = std::function<std::shared_ptr<RpcServiceType>(ServiceContext&&)>;
 
     template<typename RpcClientType>
     using RpcClientCallback = std::function<void(std::shared_ptr<RpcClientType>)>;
@@ -52,8 +52,8 @@ namespace gayrpc { namespace utils {
         userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
-        ServiceContext serviceContext(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
-        auto service = serverCreator(serviceContext);
+        ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+        auto service = serverCreator(std::move(serviceContext));
 
         session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr &session) {
             service->onClose();
@@ -85,8 +85,8 @@ namespace gayrpc { namespace utils {
         userOutBoundInterceptor.push_back(withHttpSessionSender(httpSession));
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
-        ServiceContext serviceContext(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
-        auto service = serverCreator(serviceContext);
+        ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+        auto service = serverCreator(std::move(serviceContext));
         RpcServiceType::Install(service);
     }
 
@@ -263,7 +263,7 @@ namespace gayrpc { namespace utils {
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
         // 注册RPC客户端
-        auto client = RpcClientType::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
+        auto client = RpcClientType::Create(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
         callback(client);
     }
 

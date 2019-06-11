@@ -3,6 +3,7 @@
 
 #include <brynet/net/TCPService.h>
 #include <brynet/net/Connector.h>
+#include <brynet/utils/app_status.h>
 
 #include <gayrpc/utils/UtilsWrapper.h>
 
@@ -16,15 +17,15 @@ using namespace dodo::test;
 class MyService : public EchoServerService
 {
 public:
-    MyService(gayrpc::core::ServiceContext context)
+    explicit MyService(gayrpc::core::ServiceContext&& context)
         :
-        EchoServerService(context)
+        EchoServerService(std::move(context))
     {
     }
 
     void Echo(const EchoRequest& request,
         const EchoReply::PTR& replyObj,
-        InterceptorContextType context) override
+        InterceptorContextType&& context) override
     {
         EchoResponse response;
         response.set_message("world");
@@ -34,14 +35,12 @@ public:
 
     void Login(const LoginRequest& request,
         const LoginReply::PTR& replyObj,
-        InterceptorContextType context) override
+        InterceptorContextType&& context) override
     {
         LoginResponse response;
         response.set_message(request.message());
         replyObj->reply(response, std::move(context));
     }
-
-private:
 };
 
 static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
@@ -63,7 +62,7 @@ static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
 static void OnConnection(dodo::test::EchoServerClient::PTR client, size_t batchNum)
 {
     gayrpc::core::ServiceContext context(client->getTypeHandleManager(), client->getInInterceptor(), client->getOutInterceptor());
-    auto service = std::make_shared< MyService>(context);
+    auto service = std::make_shared< MyService>(std::move(context));
     dodo::test::EchoServerService::Install(service);
 
     for (size_t i = 0; i < batchNum; i++)
@@ -74,6 +73,8 @@ static void OnConnection(dodo::test::EchoServerClient::PTR client, size_t batchN
 
 int main(int argc, char **argv)
 {
+    app_init();
+
     if (argc != 6)
     {
         fprintf(stderr, "Usage: <host> <port> <client num> <thread num> <batch num>\n");
@@ -117,7 +118,7 @@ int main(int argc, char **argv)
                 });
 
         }
-        catch (std::runtime_error& e)
+        catch (BrynetCommonException& e)
         {
             std::cout << "error:" << e.what() << std::endl;
         }
@@ -126,6 +127,10 @@ int main(int argc, char **argv)
     while (true)
     {
         mainLoop->loop(1000);
+        if (app_kbhit() > 0)
+        {
+            break;
+        }
     }
 
     return 0;
