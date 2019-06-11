@@ -118,7 +118,7 @@ int main(int argc, char **argv)
                 });
 
         }
-        catch (BrynetCommonException& e)
+        catch (std::runtime_error& e)
         {
             std::cout << "error:" << e.what() << std::endl;
         }
