@@ -19,11 +19,11 @@ namespace gayrpc { namespace core {
     {
     public:
         using PTR = std::shared_ptr<RpcTypeHandleManager>;
-        using ServiceHandler = std::function<void(const RpcMeta&, const std::string_view& body, InterceptorContextType)>;
+        using ServiceHandler = std::function<void(RpcMeta&&, const std::string_view& body, InterceptorContextType&&)>;
         using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
     public:
-        bool    registerTypeHandle(RpcMeta::Type type, ServiceHandler handle, ServiceIDType serviceID)
+        bool    registerTypeHandle(RpcMeta::Type type, ServiceHandler&& handle, ServiceIDType serviceID)
         {
             std::unique_lock<std::shared_mutex> lock(mMutex);
             auto& serviceMap = mTypeHandlers[type];
@@ -31,7 +31,7 @@ namespace gayrpc { namespace core {
             {
                 return false;
             }
-            serviceMap[serviceID] = std::move(handle);
+            serviceMap[serviceID] = std::forward<ServiceHandler>(handle);
             return true;
         }
 
@@ -47,7 +47,7 @@ namespace gayrpc { namespace core {
 
         virtual ~RpcTypeHandleManager() = default;
 
-        void    handleRpcMsg(const RpcMeta& meta, const std::string_view & data, InterceptorContextType context)
+        void    handleRpcMsg(RpcMeta&& meta, const std::string_view & data, InterceptorContextType&& context)
         {
             ServiceHandler handler;
             {
@@ -66,7 +66,7 @@ namespace gayrpc { namespace core {
                 handler = (*serviceIt).second;
             }
 
-            handler(meta, data, context);
+            handler(std::forward<RpcMeta>(meta), data, std::forward<InterceptorContextType>(context));
         }
 
     private:

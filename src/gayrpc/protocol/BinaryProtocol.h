@@ -29,20 +29,35 @@ namespace gayrpc { namespace protocol {
             const std::weak_ptr<brynet::net::TcpConnection>& weakSession)
         {
             auto session = weakSession.lock();
-            if (session != nullptr)
+            if (session == nullptr)
+            {
+                return;
+            }
+
+            if (session->getEventLoop()->isInLoopThread())
+            {
+                // 实际的发送
+                AutoMallocPacket<4096> bpw(true, true);
+                serializeProtobufPacket(bpw,
+                    meta.SerializeAsString(),
+                    message.SerializeAsString());
+
+                session->send(bpw.getData(), bpw.getPos());
+            }
+            else
             {
                 std::shared_ptr<google::protobuf::Message> msg;
                 msg.reset(message.New());
                 msg->CopyFrom(message);
                 session->getEventLoop()->runAsyncFunctor([meta, msg, session]() {
-                        // 实际的发送
-                        AutoMallocPacket<4096> bpw(true, true);
-                        serializeProtobufPacket(bpw,
-                            meta.SerializeAsString(),
-                            msg->SerializeAsString());
+                    // 实际的发送
+                    AutoMallocPacket<4096> bpw(true, true);
+                    serializeProtobufPacket(bpw,
+                        meta.SerializeAsString(),
+                        msg->SerializeAsString());
 
-                        session->send(bpw.getData(), bpw.getPos());
-                    });
+                    session->send(bpw.getData(), bpw.getPos());
+                });
             }
         }
 
@@ -64,7 +79,7 @@ namespace gayrpc { namespace protocol {
                         return;
                     }
                     InterceptorContextType context;
-                    rpcHandlerManager->handleRpcMsg(meta, msg.data_view, std::move(context));
+                    rpcHandlerManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(meta), msg.data_view, std::move(context));
                 };
 
                 if (!parseProtobufPacket(opPacket, pbPacketHandle))
@@ -150,6 +165,7 @@ namespace gayrpc { namespace protocol {
         using OpPacketHandler = std::function<bool(const OpPacket&)>;
 
         // 解析网络消息中的OpPacket
+        template<typename OpPacketHandler>
         static size_t parseOpPacket(const char* buffer,
             size_t len,
             const OpPacketHandler& handler)
@@ -189,6 +205,7 @@ namespace gayrpc { namespace protocol {
         }
 
         // 解析OpPacket中的protobuf packet
+        template<typename ProtobufPacketHandler>
         static bool parseProtobufPacket(const OpPacket& opPacket,
             const ProtobufPacketHandler& handler)
         {

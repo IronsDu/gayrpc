@@ -19,30 +19,33 @@ namespace gayrpc { namespace utils {
 
     static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
     {
-        return [=](const gayrpc::core::RpcMeta& meta,
+        return [=](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context) {
+            InterceptorContextType&& context) {
 
                 std::shared_ptr<google::protobuf::Message> msg;
                 msg.reset(message.New());
                 msg->CopyFrom(message);
 
-                eventLoop->runAsyncFunctor([=]() {
-                        next(meta, *msg, std::move(context));
+                eventLoop->runAsyncFunctor([meta = std::forward<gayrpc::core::RpcMeta>(meta), 
+                    msg, 
+                    context = std::forward<InterceptorContextType>(context),
+                    next]() mutable {
+                        next(std::forward<gayrpc::core::RpcMeta>(meta), *msg, std::forward<InterceptorContextType>(context));
                     });
         };
     }
 
     static auto withProtectedCall()
     {
-        return [](const gayrpc::core::RpcMeta& meta,
+        return [](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context) {
+            InterceptorContextType&& context) {
             try
             {
-                next(meta, message, std::move(context));
+                next(std::forward<gayrpc::core::RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
             }
             catch (const std::exception& e)
             {
@@ -57,12 +60,12 @@ namespace gayrpc { namespace utils {
 
     static auto withSessionBinarySender(std::weak_ptr<brynet::net::TcpConnection> weakSession)
     {
-        return [weakSession](const gayrpc::core::RpcMeta& meta,
+        return [weakSession](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context) {
+            InterceptorContextType&& context) {
             gayrpc::protocol::binary::send(meta, message, weakSession);
-            next(meta, message, std::move(context));
+            next(std::forward<gayrpc::core::RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
         };
     }
 
@@ -73,24 +76,19 @@ namespace gayrpc { namespace utils {
         timeoutMeta.set_type(gayrpc::core::RpcMeta::RESPONSE);
         timeoutMeta.mutable_response_info()->set_timeout(true);
         timeoutMeta.mutable_response_info()->set_sequence_id(seq_id);
-        try
-        {
-            InterceptorContextType context;
-            handleManager->handleRpcMsg(timeoutMeta, "", std::move(context));
-        }
-        catch (...)
-        {
-        }
+
+        InterceptorContextType context;
+        handleManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(timeoutMeta), "", std::move(context));
     }
 
     // 由eventLoop线程处理超时检测
     static auto withTimeoutCheck(const brynet::net::EventLoop::Ptr& eventLoop,
         const gayrpc::core::RpcTypeHandleManager::PTR& handleManager)
     {
-        return [eventLoop, handleManager](const gayrpc::core::RpcMeta& meta,
+        return [eventLoop, handleManager](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context) {
+            InterceptorContextType&& context) {
 
             if (meta.has_request_info() && meta.request_info().timeout() > 0)
             {
@@ -103,19 +101,19 @@ namespace gayrpc { namespace utils {
                     });
             }
 
-            next(meta, message, std::move(context));
+            next(std::forward<gayrpc::core::RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
         };
     }
 
     static auto withHttpSessionSender(const brynet::net::http::HttpSession::Ptr& httpSession)
     {
-        return [httpSession](const gayrpc::core::RpcMeta& meta,
+        return [httpSession](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             const gayrpc::core::UnaryHandler& next,
-            InterceptorContextType context) {
+            InterceptorContextType&& context) {
             gayrpc::protocol::http::send(meta, message, httpSession);
             httpSession->postShutdown();
-            next(meta, message, std::move(context));
+            next(std::forward<gayrpc::core::RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
         };
     }
 

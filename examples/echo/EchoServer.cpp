@@ -19,9 +19,9 @@ std::atomic<int64_t> count(0);
 class MyService : public EchoServerService
 {
 public:
-    MyService(gayrpc::core::ServiceContext context)
+    explicit MyService(gayrpc::core::ServiceContext&& context)
         :
-        EchoServerService(context)
+        EchoServerService(std::move(context))
     {
         mClient = EchoServerClient::Create(context.getTypeHandleManager(), 
             context.getInInterceptor(), 
@@ -30,7 +30,7 @@ public:
 
     void Echo(const EchoRequest& request, 
         const EchoReply::PTR& replyObj,
-        InterceptorContextType context) override
+        InterceptorContextType&& context) override
     {
         EchoResponse response;
         response.set_message("world");
@@ -40,7 +40,7 @@ public:
 
     void Login(const LoginRequest& request,
         const LoginReply::PTR& replyObj,
-        InterceptorContextType context) override
+        InterceptorContextType&& context) override
     {
         LoginResponse response;
         response.set_message(request.message());
@@ -51,13 +51,13 @@ private:
     std::shared_ptr<EchoServerClient>   mClient;
 };
 
-static void counter(const RpcMeta& meta, 
+static void counter(RpcMeta&& meta, 
     const google::protobuf::Message& message, 
     const UnaryHandler& next, 
-    InterceptorContextType context)
+    InterceptorContextType&& context)
 {
     count++;
-    next(meta, message, std::move(context));
+    next(std::move(meta), message, std::move(context));
 }
 
 int main(int argc, char **argv)
@@ -82,8 +82,8 @@ int main(int argc, char **argv)
             })
         })
         .configureService(service)
-        .configureCreator([](gayrpc::core::ServiceContext context) {
-            return std::make_shared<MyService>(context);
+        .configureCreator([](gayrpc::core::ServiceContext&& context) {
+            return std::make_shared<MyService>(std::move(context));
         })
         .configureListen([=](wrapper::BuildListenConfig listenConfig) {
             listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));

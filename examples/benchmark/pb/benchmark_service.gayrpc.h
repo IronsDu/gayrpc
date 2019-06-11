@@ -66,14 +66,14 @@ namespace benchmark {
         void Echo(const dodo::benchmark::EchoRequest& request,
             const EchoHandle& handle,
             std::chrono::seconds timeout, 
-            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+            BaseClient::TIMEOUT_CALLBACK&& timeoutCallback)
         {
             call<dodo::benchmark::EchoResponse>(request, 
                 static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
                 handle,
                 timeout,
-                std::move(timeoutCallback));
+                std::forward<BaseClient::TIMEOUT_CALLBACK>(timeoutCallback));
         }
         
 
@@ -149,7 +149,7 @@ namespace benchmark {
 
         virtual void onClose() {}
 
-        static inline bool Install(const EchoServerService::PTR& service);
+        static bool Install(const EchoServerService::PTR& service);
 
         static  std::string GetServiceTypeName()
         {
@@ -158,25 +158,29 @@ namespace benchmark {
     private:
         virtual void Echo(const dodo::benchmark::EchoRequest& request, 
             const dodo::benchmark::EchoServerService::EchoReply::PTR& replyObj,
-            InterceptorContextType) = 0;
+            InterceptorContextType&&) = 0;
         
 
     private:
 
-        static void Echo_stub(const RpcMeta& meta,
+        static void Echo_stub(RpcMeta&& meta,
             const std::string_view& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
             dodo::benchmark::EchoRequest request;
-            parseRequestWrapper(request, meta, data, inboundInterceptor, [service,
-                outboundInterceptor,
-                &request](const RpcMeta& meta, const google::protobuf::Message& message, InterceptorContextType context) {
-                auto replyObject = std::make_shared<EchoReply>(meta, outboundInterceptor);
-                service->Echo(request, replyObject, std::move(context));
-            }, context);
+            parseRequestWrapper(request, 
+                std::forward<RpcMeta>(meta), 
+                data, 
+                inboundInterceptor,
+                [service,
+                outboundInterceptor = outboundInterceptor,
+                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+                auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
+                service->Echo(request, replyObject, std::forward<InterceptorContextType>(context));
+            }, std::forward<InterceptorContextType>(context));
         }
         
     };
@@ -187,12 +191,12 @@ namespace benchmark {
         auto inboundInterceptor = service->getServiceContext().getInInterceptor();
         auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
 
-        using EchoServerServiceRequestHandler = std::function<void(const RpcMeta&,
+        using EchoServerServiceRequestHandler = std::function<void(RpcMeta&&,
             const std::string_view& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&,
-            InterceptorContextType context)>;
+            InterceptorContextType&& context)>;
 
         using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
         using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
@@ -212,7 +216,7 @@ namespace benchmark {
             serviceHandlerMapById,
             serviceHandlerMapByStr,
             inboundInterceptor,
-            outboundInterceptor](const RpcMeta& meta, const std::string_view& data, InterceptorContextType context) {
+            outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) mutable {
             
             if (meta.type() != RpcMeta::REQUEST)
             {
@@ -240,12 +244,12 @@ namespace benchmark {
                 handler = (*it).second;
             }
 
-            handler(meta,
+            handler(std::forward<RpcMeta>(meta),
                 data,
                 service,
                 inboundInterceptor,
                 outboundInterceptor,
-                std::move(context));
+                std::forward<InterceptorContextType>(context));
         };
 
         return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));

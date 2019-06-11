@@ -33,10 +33,10 @@ namespace gayrpc { namespace core {
     // 解析Response然后(通过拦截器)调用回调
     template<typename Response, typename Hanele>
     inline void    parseResponseWrapper(const Hanele& handle,
-        const RpcMeta& meta,
+        RpcMeta&& meta,
         const std::string_view & data,
         const UnaryServerInterceptor& inboundInterceptor,
-        InterceptorContextType context)
+        InterceptorContextType&& context)
     {
         Response response;
         switch (meta.encoding())
@@ -68,22 +68,22 @@ namespace gayrpc { namespace core {
                 meta.response_info().reason());
         }
         inboundInterceptor(
-            meta,
+            std::move(meta),
             response,
-            [=](const RpcMeta&, const google::protobuf::Message& msg, InterceptorContextType context) {
+            [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
                 handle(response, error);
             }, 
-            std::move(context));
+            std::forward<InterceptorContextType>(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数
-    template<typename RequestType>
+    template<typename RequestType, typename UnaryServerInterceptor>
     inline void parseRequestWrapper(RequestType& request,
-        const RpcMeta& meta,
+        RpcMeta&& meta,
         const std::string_view& data,
         const UnaryServerInterceptor& inboundInterceptor,
-        const UnaryHandler& handler,
-        InterceptorContextType context)
+        UnaryHandler&& handler,
+        InterceptorContextType&& context)
     {
         switch (meta.encoding())
         {
@@ -106,7 +106,7 @@ namespace gayrpc { namespace core {
             throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
         }
 
-        inboundInterceptor(meta, request, handler, std::move(context));
+        inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
     }
 
 } }
