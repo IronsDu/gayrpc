@@ -53,7 +53,7 @@ private:
 
 static void counter(RpcMeta&& meta, 
     const google::protobuf::Message& message, 
-    const UnaryHandler& next, 
+    UnaryHandler&& next, 
     InterceptorContextType&& context)
 {
     count++;

@@ -76,7 +76,7 @@ namespace test {
         void Echo(const dodo::test::EchoRequest& request,
             const EchoHandle& handle,
             std::chrono::seconds timeout, 
-            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+            BaseClient::TIMEOUT_CALLBACK&& timeoutCallback)
         {
             call<dodo::test::EchoResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
@@ -88,7 +88,7 @@ namespace test {
         void Login(const dodo::test::LoginRequest& request,
             const LoginHandle& handle,
             std::chrono::seconds timeout, 
-            BaseClient::TIMEOUT_CALLBACK timeoutCallback)
+            BaseClient::TIMEOUT_CALLBACK&& timeoutCallback)
         {
             call<dodo::test::LoginResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
@@ -152,7 +152,7 @@ namespace test {
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor)
         {
-            struct make_shared_enabler : public EchoServerClient
+            class make_shared_enabler : public EchoServerClient
             {
             public:
                 make_shared_enabler(const RpcTypeHandleManager::PTR& rpcHandlerManager,
@@ -195,7 +195,7 @@ namespace test {
 
         virtual void onClose() {}
 
-        static inline bool Install(const EchoServerService::PTR& service);
+        static bool Install(const EchoServerService::PTR& service);
 
         static  std::string GetServiceTypeName()
         {
@@ -217,7 +217,7 @@ namespace test {
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor,
-            InterceptorContextType context)
+            InterceptorContextType&& context)
         {
             dodo::test::EchoRequest request;
             parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
@@ -278,7 +278,7 @@ namespace test {
             serviceHandlerMapById,
             serviceHandlerMapByStr,
             inboundInterceptor,
-            outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType context) {
+            outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) {
             
             if (meta.type() != RpcMeta::REQUEST)
             {

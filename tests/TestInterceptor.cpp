@@ -17,7 +17,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
         interceptor(
             std::move(meta),
             *message, 
-            [&v](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType context) {
+            [&v](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 v++;
             },
             InterceptorContextType());
@@ -30,12 +30,12 @@ TEST_CASE("interceptor are computed", "[interceptor]")
         std::vector<int> vlist;
 
         auto interceptor = gayrpc::core::makeInterceptor(
-            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
-                InterceptorContextType context){
+            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
+                InterceptorContextType&& context){
                 vlist.push_back(1);
                 next(std::move(meta), message, std::move(context));
             },
-            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
+            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType context){
                 vlist.push_back(2);
                 next(std::move(meta), message, std::move(context));
@@ -60,11 +60,11 @@ TEST_CASE("interceptor are computed", "[interceptor]")
         std::vector<int> vlist;
 
         auto interceptor = gayrpc::core::makeInterceptor(
-            [&vlist](const gayrpc::core::RpcMeta& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
-                InterceptorContextType context) {
+            [&vlist](const gayrpc::core::RpcMeta& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
+                InterceptorContextType&& context) {
                 vlist.push_back(1);
             },
-            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
+            [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context) {
                 vlist.push_back(2);
                 next(std::move(meta), message, std::move(context));
@@ -76,7 +76,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
         interceptor(
             std::move(meta),
             *message,
-            [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType context) {
+            [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 vlist.push_back(3);
             }, std::move(InterceptorContextType()));
 
@@ -94,12 +94,12 @@ TEST_CASE("interceptor are computed", "[interceptor]")
 
         {
             auto interceptor = gayrpc::core::makeInterceptor(
-                [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
+                [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                     InterceptorContextType&& context) {
                     vlist.push_back(1);
                     tmpHandler = next;
                 },
-                [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, const gayrpc::core::UnaryHandler& next,
+                [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                     InterceptorContextType&& context) {
                     vlist.push_back(2);
                     next(std::move(meta), message, std::move(context));

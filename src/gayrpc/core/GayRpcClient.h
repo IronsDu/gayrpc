@@ -144,7 +144,7 @@ namespace gayrpc { namespace core {
             }
 
             InterceptorContextType context;
-            mOutboundInterceptor(std::move(meta), request, [](const RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
+            mOutboundInterceptor(std::move(meta), request, [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
             }, std::move(context));
         }
 

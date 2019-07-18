@@ -41,7 +41,7 @@ namespace gayrpc { namespace core {
     class BaseService : public std::enable_shared_from_this<BaseService>
     {
     public:
-        BaseService(ServiceContext&& context)
+        explicit BaseService(ServiceContext&& context)
             :
             mContext(std::forward<ServiceContext>(context))
         {

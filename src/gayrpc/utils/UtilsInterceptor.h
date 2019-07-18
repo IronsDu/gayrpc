@@ -21,7 +21,7 @@ namespace gayrpc { namespace utils {
     {
         return [=](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
 
                 std::shared_ptr<google::protobuf::Message> msg;
@@ -41,7 +41,7 @@ namespace gayrpc { namespace utils {
     {
         return [](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
             try
             {
@@ -62,7 +62,7 @@ namespace gayrpc { namespace utils {
     {
         return [weakSession](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
             gayrpc::protocol::binary::send(meta, message, weakSession);
             next(std::forward<gayrpc::core::RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
@@ -87,7 +87,7 @@ namespace gayrpc { namespace utils {
     {
         return [eventLoop, handleManager](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
 
             if (meta.has_request_info() && meta.request_info().timeout() > 0)
@@ -109,7 +109,7 @@ namespace gayrpc { namespace utils {
     {
         return [httpSession](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
             gayrpc::protocol::http::send(meta, message, httpSession);
             httpSession->postShutdown();

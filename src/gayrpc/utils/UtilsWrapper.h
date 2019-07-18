@@ -93,9 +93,10 @@ namespace gayrpc { namespace utils {
     class BuildInterceptor final
     {
     public:
-        BuildInterceptor(std::vector<UnaryServerInterceptor>* nterceptors)
+        explicit BuildInterceptor(std::vector<UnaryServerInterceptor>* interceptors)
+            :
+            mInterceptors(interceptors)
         {
-            mInterceptors = nterceptors;
         }
 
         void    addInterceptor(UnaryServerInterceptor interceptor)
@@ -116,7 +117,7 @@ namespace gayrpc { namespace utils {
     class TransportTypeConfig final
     {
     public:
-        TransportTypeConfig(TransportType type)
+        explicit TransportTypeConfig(TransportType type)
             :
             mType(type)
         {}
@@ -138,7 +139,7 @@ namespace gayrpc { namespace utils {
     class BuildTransportType final
     {
     public:
-        BuildTransportType(TransportTypeConfig* config)
+        explicit BuildTransportType(TransportTypeConfig* config)
             :
             mConfig(config)
         {}
@@ -166,13 +167,13 @@ namespace gayrpc { namespace utils {
             mTransportTypeConfig(TransportType::Binary)
         {}
 
-        ServiceBuilder<RpcServiceType>& buildInboundInterceptor(InterceptorBuilder builder)
+        ServiceBuilder<RpcServiceType>& buildInboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
             return *this;
         }
 
-        ServiceBuilder<RpcServiceType>& buildOutboundInterceptor(InterceptorBuilder builder)
+        ServiceBuilder<RpcServiceType>& buildOutboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
             return *this;
@@ -228,7 +229,7 @@ namespace gayrpc { namespace utils {
         }
 
     private:
-        void buildInterceptor(InterceptorBuilder builder, std::vector<UnaryServerInterceptor>& result)
+        void buildInterceptor(const InterceptorBuilder& builder, std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);
@@ -270,13 +271,13 @@ namespace gayrpc { namespace utils {
     class ClientBuilder : public wrapper::BaseConnectionBuilder<ClientBuilder>
     {
     public:
-        ClientBuilder& buildInboundInterceptor(InterceptorBuilder builder)
+        ClientBuilder& buildInboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
             return *this;
         }
 
-        ClientBuilder& buildOutboundInterceptor(InterceptorBuilder builder)
+        ClientBuilder& buildOutboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
             return *this;
@@ -303,7 +304,7 @@ namespace gayrpc { namespace utils {
         }
 
     protected:
-        void buildInterceptor(InterceptorBuilder builder, std::vector<UnaryServerInterceptor>& result)
+        void buildInterceptor(const InterceptorBuilder& builder, std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);

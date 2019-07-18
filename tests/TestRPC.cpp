@@ -52,14 +52,14 @@ TEST_CASE("rpc are computed", "[rpc]")
     auto client = dodo::test::EchoServerClient::Create(rpcHandlerManager,
         [&](gayrpc::core::RpcMeta&& meta,
         const google::protobuf::Message& message,
-        const gayrpc::core::UnaryHandler& next,
+        gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context)
         {
             return next(std::move(meta), message, std::move(context));
         },
         [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context)
         {
             requestMeta = meta;
@@ -79,14 +79,14 @@ TEST_CASE("rpc are computed", "[rpc]")
     gayrpc::core::ServiceContext serviceContext(rpcHandlerManager,
         [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context)
         {
             return next(std::move(meta), message, std::move(context));
         },
         [&](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
-            const gayrpc::core::UnaryHandler& next,
+            gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context)
         {
             responseMeta = meta;

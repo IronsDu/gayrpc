@@ -37,7 +37,7 @@ public:
     }
 };
 
-static void counter(RpcMeta&& meta, const google::protobuf::Message& message, const UnaryHandler& next, InterceptorContextType&& context)
+static void counter(RpcMeta&& meta, const google::protobuf::Message& message, UnaryHandler&& next, InterceptorContextType&& context)
 {
     count++;
     next(std::forward<RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
 {
     app_init();
 
-    if (argc != 2)
+    if (argc != 3)
     {
         fprintf(stderr, "Usage: <listen port> <thread num>\n");
         exit(-1);
