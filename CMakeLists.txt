@@ -14,6 +14,7 @@ elseif(WIN32)
 endif()
 
 if(WIN32)
+    ADD_DEFINITIONS(-DNOMINMAX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++latest")
 elseif(UNIX)
     if(NOT CMAKE_BUILD_TYPE)
