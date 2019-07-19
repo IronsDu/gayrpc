@@ -9,9 +9,8 @@
 
 namespace gayrpc { namespace core {
 
-
-    template<class... Args>
-    UnaryServerInterceptor makeInterceptor(Args... args)
+    template<typename... Interceptors>
+    UnaryServerInterceptor makeInterceptor(Interceptors... interceptors)
     {
         return [=](RpcMeta&& meta,
             const google::protobuf::Message& message,
@@ -21,7 +20,7 @@ namespace gayrpc { namespace core {
                 class WrapNextInterceptor final
                 {
                 public:
-                    WrapNextInterceptor(std::vector<UnaryServerInterceptor> interceptors,
+                    WrapNextInterceptor(std::vector<UnaryServerInterceptor>&& interceptors,
                         UnaryHandler&& tail) noexcept
                         :
                         mCurIndex(0),
@@ -36,12 +35,21 @@ namespace gayrpc { namespace core {
                     {
                         if (mInterceptors.size() == mCurIndex)
                         {
-                            return mTail(std::forward<RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
+                            return mTail(std::forward<RpcMeta>(meta), 
+                                message, 
+                                std::forward<InterceptorContextType>(context));
                         }
                         else
                         {
                             mCurIndex++;
-                            mInterceptors[mCurIndex - 1](std::forward<RpcMeta>(meta), message, *this, std::forward<InterceptorContextType>(context));
+                            auto interceptor = std::move(mInterceptors[mCurIndex - 1]);
+                            interceptor(std::forward<RpcMeta>(meta),
+                                message, 
+                                std::move(*this), 
+                                std::forward<InterceptorContextType>(context));
+                            // expect the std::move(*this) is really successful;
+                            assert(mTail == nullptr);
+                            assert(mInterceptors.empty());
                         }
                     }
 
@@ -51,12 +59,13 @@ namespace gayrpc { namespace core {
                     }
 
                 private:
-                    size_t  mCurIndex;
-                    const std::vector<UnaryServerInterceptor> mInterceptors;
-                    const UnaryHandler    mTail;
+                    size_t                              mCurIndex;
+                    std::vector<UnaryServerInterceptor> mInterceptors;
+                    UnaryHandler                        mTail;
                 };
 
-                WrapNextInterceptor next({ args... }, std::forward<UnaryHandler>(tail));
+                WrapNextInterceptor next(std::vector<UnaryServerInterceptor>{ interceptors... },
+                    std::forward<UnaryHandler>(tail));
                 return next(std::move(meta), message, std::forward<InterceptorContextType>(context));
         };
     }
