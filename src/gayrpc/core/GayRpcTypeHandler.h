@@ -55,13 +55,15 @@ namespace gayrpc { namespace core {
                 auto it = mTypeHandlers.find(meta.type());
                 if (it == mTypeHandlers.end())
                 {
-                    throw std::runtime_error("not found type handle of type:" + std::to_string(meta.type()));
+                    throw std::runtime_error("not found type handle of type:"
+                                             + std::to_string(meta.type()));
                 }
                 auto& serviceMap = (*it).second;
                 auto serviceIt = serviceMap.find(meta.service_id());
                 if (serviceIt == serviceMap.end())
                 {
-                    throw std::runtime_error("not found service handle of id:" + std::to_string(meta.service_id()));
+                    throw std::runtime_error("not found service handle of id:"
+                                             + std::to_string(meta.service_id()));
                 }
                 handler = (*serviceIt).second;
             }

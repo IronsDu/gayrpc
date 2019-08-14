@@ -82,9 +82,9 @@ namespace gayrpc { namespace core {
         }
 
     private:
-        std::atomic_flag            mReplyFlag = ATOMIC_FLAG_INIT;
-        RpcMeta                     mRequestMeta;
-        UnaryServerInterceptor      mOutboundInterceptor;
+        const RpcMeta                   mRequestMeta;
+        const UnaryServerInterceptor    mOutboundInterceptor;
+        std::atomic_flag                mReplyFlag = ATOMIC_FLAG_INIT;
     };
 
     template<typename T>

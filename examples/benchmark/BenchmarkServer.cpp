@@ -16,7 +16,7 @@ using namespace dodo::benchmark;
 using namespace gayrpc::core;
 using namespace gayrpc::utils;
 
-std::atomic<int64_t> count(0);
+static std::atomic<int64_t> count(0);
 
 class MyService : public EchoServerService
 {

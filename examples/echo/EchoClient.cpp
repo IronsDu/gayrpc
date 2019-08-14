@@ -14,6 +14,8 @@ using namespace brynet::net;
 using namespace gayrpc::utils;
 using namespace dodo::test;
 
+static brynet::net::EventLoop::Ptr mainLoop;
+
 class MyService : public EchoServerService
 {
 public:
@@ -28,7 +30,7 @@ public:
         InterceptorContextType&& context) override
     {
         EchoResponse response;
-        response.set_message("world");
+        response.set_message(request.message());
 
         replyObj->reply(response, std::move(context));
     }
@@ -40,6 +42,11 @@ public:
         LoginResponse response;
         response.set_message(request.message());
         replyObj->reply(response, std::move(context));
+    }
+
+    void    onClose() override
+    {
+        std::cout << "closed" << std::endl;
     }
 };
 
@@ -82,17 +89,18 @@ int main(int argc, char **argv)
     }
 
     auto service = TcpService::Create();
-    service->startWorkerThread(std::atoi(argv[4]));
+    service->startWorkerThread(static_cast<size_t>(std::atoi(argv[4])));
 
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
     auto clientNum = std::atoi(argv[3]);
-    size_t batchNum = std::atoi(argv[5]);
+    size_t batchNum = static_cast<size_t>(std::atoi(argv[5]));
 
-    auto mainLoop = std::make_shared<brynet::net::EventLoop>();
+    mainLoop = std::make_shared<brynet::net::EventLoop>();
     
     auto b = ClientBuilder();
     b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+                //buildInterceptors.addInterceptor(gayrpc::utils::withEventLoop(mainLoop));
             })
         .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
@@ -127,10 +135,11 @@ int main(int argc, char **argv)
     while (true)
     {
         mainLoop->loop(1000);
-        if (app_kbhit() > 0)
+        if(app_kbhit() > 0)
         {
             break;
         }
+        
     }
 
     return 0;

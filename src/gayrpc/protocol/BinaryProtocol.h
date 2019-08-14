@@ -79,7 +79,20 @@ namespace gayrpc { namespace protocol {
                         return;
                     }
                     InterceptorContextType context;
-                    rpcHandlerManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(meta), msg.data_view, std::move(context));
+                    try
+                    {
+                        rpcHandlerManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(meta),
+                                                        msg.data_view,
+                                                        std::move(context));
+                    }
+                    catch (const std::runtime_error& e)
+                    {
+                        std::cerr << "handle rpc cause exception:" << e.what()<< std::endl;
+                    }
+                    catch (...)
+                    {
+                        std::cerr << "handle rpc cause unknown exception" << std::endl;
+                    }
                 };
 
                 if (!parseProtobufPacket(opPacket, pbPacketHandle))

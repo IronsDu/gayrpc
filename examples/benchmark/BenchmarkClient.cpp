@@ -82,7 +82,7 @@ private:
     std::chrono::steady_clock::time_point           mRequestTime;
 };
 
-std::atomic<int64_t> connectionCounter(0);
+static std::atomic<int64_t> connectionCounter(0);
 
 static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
     const utils::WaitGroup::PTR& wg,

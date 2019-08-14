@@ -44,7 +44,8 @@ namespace gayrpc { namespace core {
         case RpcMeta::BINARY:
             if (!response.ParseFromArray(data.data(), data.size()))
             {
-                throw std::runtime_error(std::string("parse binary response failed, type of:") + typeid(Response).name());
+                throw std::runtime_error(std::string("parse binary response failed, type of:")
+                                         + typeid(Response).name());
             }
             break;
         case RpcMeta::JSON:
@@ -52,12 +53,17 @@ namespace gayrpc { namespace core {
                 auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response);
                 if (!s.ok())
                 {
-                    throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
+                    throw std::runtime_error(std::string("parse json response failed:")
+                                             + s.error_message().as_string()
+                                             + ", type of:" + typeid(Response).name());
                 }
             }
             break;
         default:
-            throw std::runtime_error(std::string("response by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(Response).name());
+            throw std::runtime_error(std::string("response by unsupported encoding:")
+                                     + std::to_string(meta.encoding())
+                                     + ", type of:"
+                                     + typeid(Response).name());
         }
 
         gayrpc::core::RpcError error;
@@ -90,7 +96,8 @@ namespace gayrpc { namespace core {
         case RpcMeta::BINARY:
             if (!request.ParseFromArray(data.data(), data.size()))
             {
-                throw std::runtime_error(std::string("parse binary request failed, type of:") + typeid(RequestType).name());
+                throw std::runtime_error(std::string("parse binary request failed, type of:")
+                                         + typeid(RequestType).name());
             }
             break;
         case RpcMeta::JSON:
@@ -98,12 +105,18 @@ namespace gayrpc { namespace core {
                 auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request);
                 if (!s.ok())
                 {
-                    throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
+                    throw std::runtime_error(std::string("parse json request failed:")
+                                             + s.error_message().as_string()
+                                             + ", type of:"
+                                             + typeid(RequestType).name());
                 }
             }
             break;
         default:
-            throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
+            throw std::runtime_error(std::string("request by unsupported encoding:")
+                                     + std::to_string(meta.encoding())
+                                     + ", type of:"
+                                     + typeid(RequestType).name());
         }
 
         inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
