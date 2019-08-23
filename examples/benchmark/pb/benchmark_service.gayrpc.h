@@ -75,8 +75,8 @@ namespace benchmark {
                 timeout,
                 std::move(timeoutCallback));
         }
-        
 
+        
         dodo::benchmark::EchoResponse SyncEcho(
             const dodo::benchmark::EchoRequest& request,
             gayrpc::core::RpcError& error,
@@ -100,6 +100,7 @@ namespace benchmark {
             error = errorFuture.get();
             return *responsePointer;
         }
+
         
 
     public:
@@ -125,7 +126,7 @@ namespace benchmark {
 
         static  std::string GetServiceTypeName()
         {
-            return "dodo::benchmark::EchoServer";
+            return u8"dodo::benchmark::EchoServer";
         }
 
     private:
@@ -153,7 +154,7 @@ namespace benchmark {
 
         static  std::string GetServiceTypeName()
         {
-            return "dodo::benchmark::EchoServer";
+            return u8"dodo::benchmark::EchoServer";
         }
     private:
         virtual void Echo(const dodo::benchmark::EchoRequest& request, 
@@ -178,6 +179,7 @@ namespace benchmark {
                 service->Echo(request, replyObject, std::move(context));
             }, std::move(context));
         }
+
         
     };
 
@@ -197,16 +199,14 @@ namespace benchmark {
         using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
         using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
 
-        // TODO::static unordered map
-        auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
-        auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
-
-        const std::string namespaceStr = "dodo.benchmark.";
-
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
-        
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Echo"] = EchoServerService::Echo_stub;
-        
+        EchoServerServiceHandlerMapById serviceHandlerMapById = {
+            {static_cast<uint64_t>(EchoServerMsgID::Echo), EchoServerService::Echo_stub},
+            
+        };
+        EchoServerServiceHandlerMapByStr serviceHandlerMapByStr = {
+            {u8"dodo.benchmark.EchoServer.Echo", EchoServerService::Echo_stub},
+            
+        };
 
         auto requestStub = [service,
             serviceHandlerMapById,
@@ -223,8 +223,8 @@ namespace benchmark {
 
             if (!meta.request_info().strmethod().empty())
             {
-                auto it = serviceHandlerMapByStr->find(meta.request_info().strmethod());
-                if (it == serviceHandlerMapByStr->end())
+                auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
+                if (it == serviceHandlerMapByStr.end())
                 {
                     throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
                 }
@@ -232,8 +232,8 @@ namespace benchmark {
             }
             else
             {
-                auto it = serviceHandlerMapById->find(meta.request_info().intmethod());
-                if (it == serviceHandlerMapById->end())
+                auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
+                if (it == serviceHandlerMapById.end())
                 {
                     throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
                 }

@@ -85,6 +85,7 @@ namespace test {
                 timeout,
                 std::move(timeoutCallback));
         }
+
         void Login(const dodo::test::LoginRequest& request,
             const LoginHandle& handle,
             std::chrono::seconds timeout, 
@@ -97,8 +98,8 @@ namespace test {
                 timeout,
                 std::move(timeoutCallback));
         }
-        
 
+        
         dodo::test::EchoResponse SyncEcho(
             const dodo::test::EchoRequest& request,
             gayrpc::core::RpcError& error,
@@ -122,6 +123,7 @@ namespace test {
             error = errorFuture.get();
             return *responsePointer;
         }
+
         dodo::test::LoginResponse SyncLogin(
             const dodo::test::LoginRequest& request,
             gayrpc::core::RpcError& error,
@@ -145,6 +147,7 @@ namespace test {
             error = errorFuture.get();
             return *responsePointer;
         }
+
         
 
     public:
@@ -170,7 +173,7 @@ namespace test {
 
         static  std::string GetServiceTypeName()
         {
-            return "dodo::test::EchoServer";
+            return u8"dodo::test::EchoServer";
         }
 
     private:
@@ -199,7 +202,7 @@ namespace test {
 
         static  std::string GetServiceTypeName()
         {
-            return "dodo::test::EchoServer";
+            return u8"dodo::test::EchoServer";
         }
     private:
         virtual void Echo(const dodo::test::EchoRequest& request, 
@@ -227,6 +230,7 @@ namespace test {
                 service->Echo(request, replyObject, std::move(context));
             }, std::move(context));
         }
+
         static void Login_stub(RpcMeta&& meta,
             const std::string_view& data,
             const EchoServerService::PTR& service,
@@ -242,6 +246,7 @@ namespace test {
                 service->Login(request, replyObject, std::move(context));
             }, std::move(context));
         }
+
         
     };
 
@@ -261,18 +266,16 @@ namespace test {
         using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
         using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
 
-        // TODO::static unordered map
-        auto serviceHandlerMapById = std::make_shared<EchoServerServiceHandlerMapById>();
-        auto serviceHandlerMapByStr = std::make_shared<EchoServerServiceHandlerMapByStr>();
-
-        const std::string namespaceStr = "dodo.test.";
-
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Echo)] = EchoServerService::Echo_stub;
-        (*serviceHandlerMapById)[static_cast<uint64_t>(EchoServerMsgID::Login)] = EchoServerService::Login_stub;
-        
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Echo"] = EchoServerService::Echo_stub;
-        (*serviceHandlerMapByStr)[namespaceStr+"EchoServer.Login"] = EchoServerService::Login_stub;
-        
+        EchoServerServiceHandlerMapById serviceHandlerMapById = {
+            {static_cast<uint64_t>(EchoServerMsgID::Echo), EchoServerService::Echo_stub},
+            {static_cast<uint64_t>(EchoServerMsgID::Login), EchoServerService::Login_stub},
+            
+        };
+        EchoServerServiceHandlerMapByStr serviceHandlerMapByStr = {
+            {u8"dodo.test.EchoServer.Echo", EchoServerService::Echo_stub},
+            {u8"dodo.test.EchoServer.Login", EchoServerService::Login_stub},
+            
+        };
 
         auto requestStub = [service,
             serviceHandlerMapById,
@@ -289,8 +292,8 @@ namespace test {
 
             if (!meta.request_info().strmethod().empty())
             {
-                auto it = serviceHandlerMapByStr->find(meta.request_info().strmethod());
-                if (it == serviceHandlerMapByStr->end())
+                auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
+                if (it == serviceHandlerMapByStr.end())
                 {
                     throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
                 }
@@ -298,8 +301,8 @@ namespace test {
             }
             else
             {
-                auto it = serviceHandlerMapById->find(meta.request_info().intmethod());
-                if (it == serviceHandlerMapById->end())
+                auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
+                if (it == serviceHandlerMapById.end())
                 {
                     throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
                 }
