@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 project(gayrpc)
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/dep/ananas/include")
 
 if(UNIX)
     find_library(BRYNET_LIBRARY brynet)

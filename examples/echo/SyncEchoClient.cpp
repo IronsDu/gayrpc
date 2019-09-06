@@ -59,24 +59,28 @@ int main(int argc, char **argv)
     auto client = createEchoClient(session);
 
     {
-        gayrpc::core::RpcError error;
         EchoRequest request;
         request.set_message("sync echo test");
 
         // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
-        auto response = client->SyncEcho(request, error, std::chrono::seconds(10));
+        auto responseFuture = client->SyncEcho(request, std::chrono::seconds(10));
+        auto result = responseFuture.Wait();
+        const auto& response = result.Value().first;
+        const auto& error = result.Value().second;
 
         std::cout << "echo result:" << error.failed() << std::endl;
         std::cout << "echo message:" << response.message() << std::endl;
     }
 
     {
-        gayrpc::core::RpcError error;
         LoginRequest request;
         request.set_message("sync login test");
 
-        auto response = client->SyncLogin(request, error, std::chrono::seconds(10));
+        auto responseFuture = client->SyncLogin(request, std::chrono::seconds(10));
+        auto result = responseFuture.Wait();
+        const auto& response = result.Value().first;
+        const auto& error = result.Value().second;
 
         std::cout << "login result:" << error.failed() << std::endl;
         std::cout << "login message:" << response.message() << std::endl;

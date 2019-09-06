@@ -45,6 +45,7 @@ namespace gayrpc { namespace core {
     public:
         using PTR = std::shared_ptr<BaseClient>;
         using TIMEOUT_CALLBACK = std::function<void(void)>;
+        using NetworkThreadChecker = std::function<bool(void)>;
 
     public:
         const RpcTypeHandleManager::PTR&    getTypeHandleManager() const
@@ -60,6 +61,22 @@ namespace gayrpc { namespace core {
         const UnaryServerInterceptor&       getOutInterceptor() const
         {
             return mOutboundInterceptor;
+        }
+
+        bool                                inInNetworkThread() const
+        {
+            std::shared_lock<std::shared_mutex> lock(mNetworkThreadCheckerMutex);
+            if (mNetworkThreadChecker == nullptr)
+            {
+                throw std::runtime_error("not setting network thread checker");
+            }
+            return mNetworkThreadChecker();
+        }
+
+        void                                setNetworkThreadChecker(NetworkThreadChecker checker)
+        {
+            std::unique_lock<std::shared_mutex> lock(mNetworkThreadCheckerMutex);
+            mNetworkThreadChecker = checker;
         }
 
         void    checkTimeout()
@@ -276,6 +293,9 @@ namespace gayrpc { namespace core {
         };
 
         std::priority_queue<WaitResponseTimer, std::vector<WaitResponseTimer>, CompareWaitResponseTimer>  mWaitResponseTimerQueue;
+
+        mutable std::shared_mutex           mNetworkThreadCheckerMutex;
+        NetworkThreadChecker                mNetworkThreadChecker;
     };
 
 } }

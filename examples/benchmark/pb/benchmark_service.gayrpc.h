@@ -24,6 +24,7 @@
 #include <gayrpc/core/GayRpcClient.h>
 #include <gayrpc/core/GayRpcService.h>
 #include <gayrpc/core/GayRpcReply.h>
+#include <ananas/future/Future.h>
 
 namespace dodo {
 namespace benchmark {
@@ -77,28 +78,26 @@ namespace benchmark {
         }
 
         
-        dodo::benchmark::EchoResponse SyncEcho(
+        ananas::Future<std::pair<dodo::benchmark::EchoResponse, gayrpc::core::RpcError>> SyncEcho(
             const dodo::benchmark::EchoRequest& request,
-            gayrpc::core::RpcError& error,
             std::chrono::seconds timeout)
         {
-            auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePointer = std::make_shared<dodo::benchmark::EchoResponse>();
+            ananas::Promise<std::pair<dodo::benchmark::EchoResponse, gayrpc::core::RpcError>> promise;
 
-            Echo(request, [responsePointer, errorPromise](const dodo::benchmark::EchoResponse& response,
-                const gayrpc::core::RpcError& error) {
-                *responsePointer = response;
-                errorPromise->set_value(error);
-            });
+            Echo(request, 
+                [promise](const dodo::benchmark::EchoResponse& response,
+                    const gayrpc::core::RpcError& error) mutable {
+                    promise.SetValue(std::make_pair(response, error));
+                },
+                timeout,
+                [promise]() mutable {
+                    dodo::benchmark::EchoResponse response;
+                    gayrpc::core::RpcError error;
+                    error.setTimeout();
+                    promise.SetValue(std::make_pair(response, error));
+                });
 
-            auto errorFuture = errorPromise->get_future();
-            if (errorFuture.wait_for(timeout) != std::future_status::ready)
-            {
-                throw std::runtime_error("timeout");
-            }
-
-            error = errorFuture.get();
-            return *responsePointer;
+            return promise.GetFuture();
         }
 
         

@@ -265,6 +265,9 @@ namespace gayrpc { namespace utils {
 
         // 注册RPC客户端
         auto client = RpcClientType::Create(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+        client->setNetworkThreadChecker([session]() {
+                return session->getEventLoop()->isInLoopThread();
+            });
         callback(client);
     }
 

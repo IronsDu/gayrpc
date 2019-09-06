@@ -24,6 +24,7 @@
 #include <gayrpc/core/GayRpcClient.h>
 #include <gayrpc/core/GayRpcService.h>
 #include <gayrpc/core/GayRpcReply.h>
+#include <ananas/future/Future.h>
 
 namespace dodo {
 namespace test {
@@ -100,52 +101,48 @@ namespace test {
         }
 
         
-        dodo::test::EchoResponse SyncEcho(
+        ananas::Future<std::pair<dodo::test::EchoResponse, gayrpc::core::RpcError>> SyncEcho(
             const dodo::test::EchoRequest& request,
-            gayrpc::core::RpcError& error,
             std::chrono::seconds timeout)
         {
-            auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePointer = std::make_shared<dodo::test::EchoResponse>();
+            ananas::Promise<std::pair<dodo::test::EchoResponse, gayrpc::core::RpcError>> promise;
 
-            Echo(request, [responsePointer, errorPromise](const dodo::test::EchoResponse& response,
-                const gayrpc::core::RpcError& error) {
-                *responsePointer = response;
-                errorPromise->set_value(error);
-            });
+            Echo(request, 
+                [promise](const dodo::test::EchoResponse& response,
+                    const gayrpc::core::RpcError& error) mutable {
+                    promise.SetValue(std::make_pair(response, error));
+                },
+                timeout,
+                [promise]() mutable {
+                    dodo::test::EchoResponse response;
+                    gayrpc::core::RpcError error;
+                    error.setTimeout();
+                    promise.SetValue(std::make_pair(response, error));
+                });
 
-            auto errorFuture = errorPromise->get_future();
-            if (errorFuture.wait_for(timeout) != std::future_status::ready)
-            {
-                throw std::runtime_error("timeout");
-            }
-
-            error = errorFuture.get();
-            return *responsePointer;
+            return promise.GetFuture();
         }
 
-        dodo::test::LoginResponse SyncLogin(
+        ananas::Future<std::pair<dodo::test::LoginResponse, gayrpc::core::RpcError>> SyncLogin(
             const dodo::test::LoginRequest& request,
-            gayrpc::core::RpcError& error,
             std::chrono::seconds timeout)
         {
-            auto errorPromise = std::make_shared<std::promise<gayrpc::core::RpcError>>();
-            auto responsePointer = std::make_shared<dodo::test::LoginResponse>();
+            ananas::Promise<std::pair<dodo::test::LoginResponse, gayrpc::core::RpcError>> promise;
 
-            Login(request, [responsePointer, errorPromise](const dodo::test::LoginResponse& response,
-                const gayrpc::core::RpcError& error) {
-                *responsePointer = response;
-                errorPromise->set_value(error);
-            });
+            Login(request, 
+                [promise](const dodo::test::LoginResponse& response,
+                    const gayrpc::core::RpcError& error) mutable {
+                    promise.SetValue(std::make_pair(response, error));
+                },
+                timeout,
+                [promise]() mutable {
+                    dodo::test::LoginResponse response;
+                    gayrpc::core::RpcError error;
+                    error.setTimeout();
+                    promise.SetValue(std::make_pair(response, error));
+                });
 
-            auto errorFuture = errorPromise->get_future();
-            if (errorFuture.wait_for(timeout) != std::future_status::ready)
-            {
-                throw std::runtime_error("timeout");
-            }
-
-            error = errorFuture.get();
-            return *responsePointer;
+            return promise.GetFuture();
         }
 
         

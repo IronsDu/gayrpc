@@ -28,6 +28,16 @@ namespace gayrpc { namespace core {
 
         virtual ~RpcError() = default;
 
+        void        setTimeout()
+        {
+            mTimeout = true;
+        }
+
+        bool        timeout() const
+        {
+            return mTimeout;
+        }
+
         bool        failed() const
         {
             return mFailed;
@@ -47,6 +57,7 @@ namespace gayrpc { namespace core {
         bool        mFailed;
         ErrorCode   mErrorCode;
         std::string mReason;
+        bool        mTimeout = false;
     };
 
 } }
