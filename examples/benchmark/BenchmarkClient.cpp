@@ -4,9 +4,9 @@
 #include <chrono>
 #include <algorithm>
 
-#include <brynet/net/TCPService.h>
-#include <brynet/net/Connector.h>
-#include <brynet/utils/WaitGroup.h>
+#include <brynet/net/TcpService.hpp>
+#include <brynet/net/AsyncConnector.hpp>
+#include <brynet/base/WaitGroup.hpp>
 
 #include <gayrpc/utils/UtilsWrapper.h>
 #include "./pb/benchmark_service.gayrpc.h"
@@ -23,7 +23,7 @@ class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
     BenchmarkClient(EchoServerClient::PTR client,
-        brynet::utils::WaitGroup::PTR wg,
+        brynet::base::WaitGroup::PTR wg,
         int maxNum,
         LATENCY_PTR latency,
         std::string payload)
@@ -74,7 +74,7 @@ private:
 private:
     const int                                       maxRequestNum;
     const EchoServerClient::PTR                     mClient;
-    const utils::WaitGroup::PTR                     mWg;
+    const brynet::base::WaitGroup::PTR              mWg;
     const std::string                               mPayload;
 
     int                                             mCurrentNum;
@@ -85,7 +85,7 @@ private:
 static std::atomic<int64_t> connectionCounter(0);
 
 static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
-    const utils::WaitGroup::PTR& wg,
+    const brynet::base::WaitGroup::PTR& wg,
     int maxRequestNum,
     LATENCY_PTR latency,
     std::string payload)
@@ -203,7 +203,7 @@ int main(int argc, char **argv)
     auto realyTotalRequestNum = maxRequestNumEveryClient * clientNum;
     auto payload = std::string(std::stoi(argv[5]), 'a');
 
-    auto wg = utils::WaitGroup::Create();
+    auto wg = brynet::base::WaitGroup::Create();
 
     std::vector<LATENCY_PTR> latencyArray;
 
@@ -215,8 +215,8 @@ int main(int argc, char **argv)
         .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
         })
         .configureConnectionOptions({
-            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+            brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
                 session->setHeartBeat(std::chrono::seconds(10));
             })
         })
@@ -233,11 +233,11 @@ int main(int argc, char **argv)
             latencyArray.push_back(latency);
 
             b.configureConnectOptions({
-                AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
-                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10))
+                    ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
+                    ConnectOption::WithTimeout(std::chrono::seconds(10))
                 })
                 .asyncConnect<EchoServerClient>([=](EchoServerClient::PTR client) {
-                        onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
+                    onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
                 });
         }
         catch (std::runtime_error& e)

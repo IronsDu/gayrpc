@@ -4,16 +4,16 @@
 #include <string_view>
 
 #include <gayrpc/core/GayRpcTypeHandler.h>
-#include <brynet/utils/packet.h>
-#include <brynet/net/TcpConnection.h>
-#include <brynet/net/EventLoop.h>
+#include <brynet/base/Packet.hpp>
+#include <brynet/net/TcpConnection.hpp>
+#include <brynet/net/EventLoop.hpp>
 
 // 实现协议解析和序列化
 
 namespace gayrpc { namespace protocol {
 
     using namespace gayrpc::core;
-    using namespace brynet::utils;
+    using namespace brynet::base;
 
     class binary
     {

@@ -5,10 +5,11 @@
 #include <exception>
 #include <future>
 
-#include <brynet/net/http/HttpService.h>
-#include <brynet/net/Connector.h>
-#include <brynet/net/http/HttpParser.h>
-#include <brynet/net/Wrapper.h>
+#include <brynet/net/http/HttpService.hpp>
+#include <brynet/net/AsyncConnector.hpp>
+#include <brynet/net/http/HttpParser.hpp>
+#include <brynet/net/wrapper/ServiceBuilder.hpp>
+#include <brynet/net/wrapper/ConnectionBuilder.hpp>
 
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
@@ -195,7 +196,7 @@ namespace gayrpc { namespace utils {
         void    asyncRun()
         {
             auto connectionOptions = wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>::getConnectionOptions();
-            connectionOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(
+            connectionOptions.push_back(AddSocketOption::AddEnterCallback(
                 [creator = mCreator,
                 inboundInterceptors = mInboundInterceptors,
                 outboundInterceptors = mOutboundInterceptors,
@@ -299,7 +300,7 @@ namespace gayrpc { namespace utils {
             };
 
             auto connectionOptions = wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectionOptions();
-            connectionOptions.push_back(TcpService::AddSocketOption::AddEnterCallback(enterCallback));
+            connectionOptions.push_back(AddSocketOption::AddEnterCallback(enterCallback));
 
             wrapper::BaseConnectionBuilder<ClientBuilder>::asyncConnect(
                 wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectOptions(), 

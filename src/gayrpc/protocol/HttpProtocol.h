@@ -3,15 +3,15 @@
 #include <string>
 
 #include <google/protobuf/util/json_util.h>
-#include <brynet/net/http/HttpService.h>
-#include <brynet/net/http/HttpFormat.h>
+#include <brynet/net/http/HttpService.hpp>
+#include <brynet/net/http/HttpFormat.hpp>
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
 
 namespace gayrpc { namespace protocol {
 
     using namespace gayrpc::core;
-    using namespace brynet::utils;
+    using namespace brynet::base;
 
     class http
     {

@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include <brynet/net/TCPService.h>
-#include <brynet/net/Connector.h>
-#include <brynet/utils/app_status.h>
+#include <brynet/net/TcpService.hpp>
+#include <brynet/net/AsyncConnector.hpp>
+#include <brynet/base/AppStatus.hpp>
 
 #include <gayrpc/utils/UtilsWrapper.h>
 
@@ -80,8 +80,6 @@ static void OnConnection(dodo::test::EchoServerClient::PTR client, size_t batchN
 
 int main(int argc, char **argv)
 {
-    app_init();
-
     if (argc != 6)
     {
         fprintf(stderr, "Usage: <host> <port> <client num> <thread num> <batch num>\n");
@@ -105,8 +103,8 @@ int main(int argc, char **argv)
         .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
         .configureConnectionOptions({
-            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            brynet::net::TcpService::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+            brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
                 session->setHeartBeat(std::chrono::seconds(10));
             })
         })
@@ -118,8 +116,8 @@ int main(int argc, char **argv)
         try
         {
             b.configureConnectOptions({
-                    AsyncConnector::ConnectOptions::WithAddr(argv[1], std::stoi(argv[2])),
-                    AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10))
+                    ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
+                    ConnectOption::WithTimeout(std::chrono::seconds(10)),
                 })
                 .asyncConnect<EchoServerClient>([=](dodo::test::EchoServerClient::PTR client) {
                     OnConnection(client, batchNum);
@@ -135,11 +133,10 @@ int main(int argc, char **argv)
     while (true)
     {
         mainLoop->loop(1000);
-        if(app_kbhit() > 0)
+        if(brynet::base::app_kbhit() > 0)
         {
             break;
         }
-        
     }
 
     return 0;

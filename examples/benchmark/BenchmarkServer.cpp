@@ -1,10 +1,10 @@
 #include <iostream>
 #include <atomic>
 
-#include <brynet/net/EventLoop.h>
-#include <brynet/net/TCPService.h>
-#include <brynet/net/ListenThread.h>
-#include <brynet/utils/app_status.h>
+#include <brynet/net/EventLoop.hpp>
+#include <brynet/net/TcpService.hpp>
+#include <brynet/net/ListenThread.hpp>
+#include <brynet/base/AppStatus.hpp>
 
 #include <gayrpc/utils/UtilsWrapper.h>
 
@@ -45,8 +45,6 @@ static void counter(RpcMeta&& meta, const google::protobuf::Message& message, Un
 
 int main(int argc, char **argv)
 {
-    app_init();
-
     if (argc != 3)
     {
         fprintf(stderr, "Usage: <listen port> <thread num>\n");
@@ -61,8 +59,8 @@ int main(int argc, char **argv)
             buildInterceptors.addInterceptor(counter);
         })
         .configureConnectionOptions( {
-            TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            TcpService::AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
+            AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+            AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
                 session->setHeartBeat(std::chrono::seconds(10));
             })
         })
@@ -83,7 +81,7 @@ int main(int argc, char **argv)
         mainLoop.loop(1000);
         std::cout << "count is:" << (count-tmp) << std::endl;
         tmp.store(count);
-        if (app_kbhit() > 0)
+        if (brynet::base::app_kbhit() > 0)
         {
             break;
         }

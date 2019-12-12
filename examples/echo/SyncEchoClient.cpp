@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <brynet/net/Wrapper.h>
+#include <brynet/net/wrapper/ConnectionBuilder.hpp>
 
 #include <gayrpc/protocol/BinaryProtocol.h>
 #include <gayrpc/utils/UtilsInterceptor.h>
@@ -49,11 +49,11 @@ int main(int argc, char **argv)
         .configureService(service)
         .configureConnector(connector)
         .configureConnectOptions( {
-                AsyncConnector::ConnectOptions::WithAddr(argv[1], atoi(argv[2])),
-                AsyncConnector::ConnectOptions::WithTimeout(std::chrono::seconds(10)),
+                ConnectOption::WithAddr(argv[1], atoi(argv[2])),
+                ConnectOption::WithTimeout(std::chrono::seconds(10)),
         })
         .configureConnectionOptions({
-            brynet::net::TcpService::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)
+            brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)
         })
         .syncConnect();
     auto client = createEchoClient(session);
