@@ -23,7 +23,6 @@ namespace gayrpc { namespace core {
 
         virtual ~BaseReply() = default;
 
-    protected:
         void    reply(const google::protobuf::Message& response, InterceptorContextType&& context)
         {
             if (mReplyFlag.test_and_set())
@@ -46,6 +45,7 @@ namespace gayrpc { namespace core {
             mOutboundInterceptor(std::move(meta), 
                 response, 
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 }, 
                 std::forward<InterceptorContextType>(context));
         }
@@ -74,9 +74,10 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_timeout(false);
 
             Response response;
-            mOutboundInterceptor(meta, 
+            mOutboundInterceptor(std::move(meta), 
                 response, 
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 }, 
                 std::forward<InterceptorContextType>(context));
         }

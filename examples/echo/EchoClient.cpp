@@ -56,10 +56,10 @@ static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
     EchoRequest request;
     request.set_message("hello");
     client->Echo(request, [client](const EchoResponse & response,
-        const gayrpc::core::RpcError & error) {
-            if (error.failed())
+        std::optional<gayrpc::core::RpcError> error) {
+            if (error)
             {
-                std::cout << "reason" << error.reason() << std::endl;
+                std::cout << "reason:" << error->reason() << std::endl;
                 return;
             }
             sendEchoRequest(client);

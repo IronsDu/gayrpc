@@ -92,7 +92,7 @@ namespace gayrpc { namespace core {
                     {
                         break;
                     }
-                    auto it = mTimeoutHandleMap.find(head.getSeqID());
+                    const auto it = mTimeoutHandleMap.find(head.getSeqID());
                     if (it != mTimeoutHandleMap.end())
                     {
                         callbacks.push_back((*it).second);
@@ -162,6 +162,7 @@ namespace gayrpc { namespace core {
 
             InterceptorContextType context;
             mOutboundInterceptor(std::move(meta), request, [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
 
@@ -200,6 +201,7 @@ namespace gayrpc { namespace core {
 
             InterceptorContextType context;
             mOutboundInterceptor(std::move(meta), request, [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::forward<InterceptorContextType>(context));
         }
 
@@ -233,7 +235,7 @@ namespace gayrpc { namespace core {
 
                 mStubHandleMap.erase(sequenceID);
 
-                auto it = mTimeoutHandleMap.find(sequenceID);
+                const auto it = mTimeoutHandleMap.find(sequenceID);
                 if (it == mTimeoutHandleMap.end())
                 {
                     return;
@@ -265,7 +267,7 @@ namespace gayrpc { namespace core {
     private:
         using ResponseStubHandle =
             std::function<
-            void(
+            InterceptorReturnType(
                 RpcMeta&&,
                 const std::string_view& data,
                 const UnaryServerInterceptor&,

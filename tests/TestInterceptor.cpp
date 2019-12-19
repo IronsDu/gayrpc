@@ -19,10 +19,30 @@ TEST_CASE("interceptor are computed", "[interceptor]")
             *message, 
             [&v](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 v++;
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             },
             InterceptorContextType());
 
         REQUIRE(v == 1);
+    }
+
+    // check err
+    {
+        auto interceptor = gayrpc::core::makeInterceptor();
+        gayrpc::core::RpcMeta meta;
+        google::protobuf::Message* message = nullptr;
+
+        interceptor(
+            std::move(meta),
+            *message,
+            [](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                return ananas::MakeReadyFuture(std::optional<std::string>("test"));
+            },
+            InterceptorContextType())
+            .Then([](std::optional<std::string> err) {
+                REQUIRE(err);
+                REQUIRE(err.value() == "test");
+            });
     }
 
     // normal
@@ -33,12 +53,12 @@ TEST_CASE("interceptor are computed", "[interceptor]")
             [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context){
                 vlist.push_back(1);
-                next(std::move(meta), message, std::move(context));
+                return next(std::move(meta), message, std::move(context));
             },
             [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType context){
                 vlist.push_back(2);
-                next(std::move(meta), message, std::move(context));
+                return next(std::move(meta), message, std::move(context));
             });
 
         gayrpc::core::RpcMeta meta;
@@ -49,6 +69,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
             *message, 
             [&vlist](const gayrpc::core::RpcMeta&, const google::protobuf::Message&, InterceptorContextType context) {
                 vlist.push_back(3);
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(InterceptorContextType()));
 
         std::vector<int> tmp = {1, 2, 3};
@@ -63,11 +84,12 @@ TEST_CASE("interceptor are computed", "[interceptor]")
             [&vlist](const gayrpc::core::RpcMeta& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context) {
                 vlist.push_back(1);
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             },
             [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context) {
                 vlist.push_back(2);
-                next(std::move(meta), message, std::move(context));
+                return next(std::move(meta), message, std::move(context));
             });
 
         gayrpc::core::RpcMeta meta;
@@ -78,6 +100,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
             *message,
             [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                 vlist.push_back(3);
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(InterceptorContextType()));
 
         std::vector<int> tmp = {1};
@@ -98,11 +121,12 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                     InterceptorContextType&& context) {
                     vlist.push_back(1);
                     tmpHandler = next;
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                     InterceptorContextType&& context) {
                     vlist.push_back(2);
-                    next(std::move(meta), message, std::move(context));
+                    return next(std::move(meta), message, std::move(context));
                 });
 
             auto metaCopy = meta;
@@ -111,6 +135,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 *message,
                 [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                     vlist.push_back(3);
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 }, std::move(InterceptorContextType()));
         }
 

@@ -370,6 +370,7 @@ public:
             try {
                 t = std::move(state_->value_);
             } catch(const std::exception& e) {
+                (void)e;
                 t = (typename TryWrapper<T>::Type)(std::current_exception());
             }
 

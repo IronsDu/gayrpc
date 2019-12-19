@@ -29,7 +29,7 @@ namespace gayrpc { namespace core {
                     {
                     }
 
-                    void operator () (RpcMeta&& meta,
+                    InterceptorReturnType operator () (RpcMeta&& meta,
                         const google::protobuf::Message& message,
                         InterceptorContextType&& context)
                     {
@@ -43,7 +43,7 @@ namespace gayrpc { namespace core {
                         {
                             mCurIndex++;
                             auto interceptor = std::move(mInterceptors[mCurIndex - 1]);
-                            interceptor(std::forward<RpcMeta>(meta),
+                            return interceptor(std::forward<RpcMeta>(meta),
                                 message, 
                                 std::move(*this), 
                                 std::forward<InterceptorContextType>(context));

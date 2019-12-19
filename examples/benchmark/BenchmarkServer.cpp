@@ -37,10 +37,13 @@ public:
     }
 };
 
-static void counter(RpcMeta&& meta, const google::protobuf::Message& message, UnaryHandler&& next, InterceptorContextType&& context)
+static auto counter(RpcMeta&& meta,
+                    const google::protobuf::Message& message,
+                    UnaryHandler&& next,
+                    InterceptorContextType&& context)
 {
     count++;
-    next(std::forward<RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
+    return next(std::forward<RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
 }
 
 int main(int argc, char **argv)

@@ -51,7 +51,7 @@ namespace benchmark {
         using PTR = std::shared_ptr<EchoServerClient>;
         using WeakPtr = std::weak_ptr<EchoServerClient>;
 
-        using EchoHandle = std::function<void(const dodo::benchmark::EchoResponse&, const gayrpc::core::RpcError&)>;
+        using EchoHandle = std::function<void(const dodo::benchmark::EchoResponse&, std::optional<gayrpc::core::RpcError>)>;
         
 
     public:
@@ -78,15 +78,15 @@ namespace benchmark {
         }
 
         
-        ananas::Future<std::pair<dodo::benchmark::EchoResponse, gayrpc::core::RpcError>> SyncEcho(
+        ananas::Future<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
             const dodo::benchmark::EchoRequest& request,
             std::chrono::seconds timeout)
         {
-            ananas::Promise<std::pair<dodo::benchmark::EchoResponse, gayrpc::core::RpcError>> promise;
+            ananas::Promise<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>> promise;
 
             Echo(request, 
                 [promise](const dodo::benchmark::EchoResponse& response,
-                    const gayrpc::core::RpcError& error) mutable {
+                    std::optional<gayrpc::core::RpcError> error) mutable {
                     promise.SetValue(std::make_pair(response, error));
                 },
                 timeout,
@@ -94,7 +94,7 @@ namespace benchmark {
                     dodo::benchmark::EchoResponse response;
                     gayrpc::core::RpcError error;
                     error.setTimeout();
-                    promise.SetValue(std::make_pair(response, error));
+                    promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
             return promise.GetFuture();
@@ -125,7 +125,7 @@ namespace benchmark {
 
         static  std::string GetServiceTypeName()
         {
-            return u8"dodo::benchmark::EchoServer";
+            return "dodo::benchmark::EchoServer";
         }
 
     private:
@@ -153,7 +153,7 @@ namespace benchmark {
 
         static  std::string GetServiceTypeName()
         {
-            return u8"dodo::benchmark::EchoServer";
+            return "dodo::benchmark::EchoServer";
         }
     private:
         virtual void Echo(const dodo::benchmark::EchoRequest& request, 
@@ -163,7 +163,7 @@ namespace benchmark {
 
     private:
 
-        static void Echo_stub(RpcMeta&& meta,
+        static auto Echo_stub(RpcMeta&& meta,
             const std::string_view& data,
             const EchoServerService::PTR& service,
             const UnaryServerInterceptor& inboundInterceptor,
@@ -171,11 +171,12 @@ namespace benchmark {
             InterceptorContextType&& context)
         {
             dodo::benchmark::EchoRequest request;
-            parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
+            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
                 outboundInterceptor = outboundInterceptor,
                 &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
                 service->Echo(request, replyObject, std::move(context));
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
 
@@ -188,7 +189,7 @@ namespace benchmark {
         auto inboundInterceptor = service->getServiceContext().getInInterceptor();
         auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
 
-        using EchoServerServiceRequestHandler = std::function<void(RpcMeta&&,
+        using EchoServerServiceRequestHandler = std::function<InterceptorReturnType(RpcMeta&&,
             const std::string_view& data,
             const EchoServerService::PTR&,
             const UnaryServerInterceptor&,
@@ -203,7 +204,7 @@ namespace benchmark {
             
         };
         EchoServerServiceHandlerMapByStr serviceHandlerMapByStr = {
-            {u8"dodo.benchmark.EchoServer.Echo", EchoServerService::Echo_stub},
+            {"dodo.benchmark.EchoServer.Echo", EchoServerService::Echo_stub},
             
         };
 
@@ -219,24 +220,35 @@ namespace benchmark {
             }
             
             EchoServerServiceRequestHandler handler;
-
-            if (!meta.request_info().strmethod().empty())
+            try
             {
-                auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
-                if (it == serviceHandlerMapByStr.end())
+                if (!meta.request_info().strmethod().empty())
                 {
-                    throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
+                    auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
+                    if (it == serviceHandlerMapByStr.end())
+                    {
+                        throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
+                    }
+                    handler = (*it).second;
                 }
-                handler = (*it).second;
+                else
+                {
+                    auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
+                    if (it == serviceHandlerMapById.end())
+                    {
+                        throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
+                    }
+                    handler = (*it).second;
+                }
             }
-            else
+            catch (const std::exception& e)
             {
-                auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
-                if (it == serviceHandlerMapById.end())
-                {
-                    throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
-                }
-                handler = (*it).second;
+                auto tmpMeta = meta;
+                auto tmpOutboundInterceptor = outboundInterceptor;
+                BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
+                reply.error<RpcMeta>(0, e.what(), InterceptorContextType());
+
+                return;
             }
 
             handler(std::move(meta),
@@ -244,7 +256,17 @@ namespace benchmark {
                 service,
                 inboundInterceptor,
                 outboundInterceptor,
-                std::move(context));
+                std::move(context))
+                .Then([=](std::optional<std::string> err) {
+                        if (err)
+                        {
+                            auto tmpMeta = meta;
+                            auto tmpOutboundInterceptor = outboundInterceptor;
+                            BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
+                            // TODO::错误码0可能和业务层的错误码冲突!
+                            reply.error<RpcMeta>(0, err.value(), InterceptorContextType());
+                        }
+                    });
         };
 
         return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
