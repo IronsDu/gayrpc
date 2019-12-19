@@ -56,13 +56,26 @@ private:
     std::shared_ptr<EchoServerClient>   mClient;
 };
 
-static void counter(RpcMeta&& meta, 
+static auto counter(RpcMeta&& meta, 
     const google::protobuf::Message& message, 
     UnaryHandler&& next, 
     InterceptorContextType&& context)
 {
     count++;
-    next(std::move(meta), message, std::move(context));
+    return next(std::move(meta), message, std::move(context));
+}
+
+static auto auth(RpcMeta&& meta,
+    const google::protobuf::Message& message,
+    UnaryHandler&& next,
+    InterceptorContextType&& context)
+{
+    // auth ¥¶¿Ì
+    if (true) {
+        return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
+    }
+
+    return next(std::move(meta), message, std::move(context));
 }
 
 int main(int argc, char **argv)
@@ -82,6 +95,7 @@ int main(int argc, char **argv)
             buildInterceptors.addInterceptor(gayrpc::utils::withProtectedCall());
         })
         .buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+            buildInterceptors.addInterceptor(auth);
             buildInterceptors.addInterceptor(gayrpc::utils::withProtectedCall());
         })
         .configureConnectionOptions({

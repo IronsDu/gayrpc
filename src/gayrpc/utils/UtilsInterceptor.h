@@ -24,27 +24,31 @@ namespace gayrpc { namespace utils {
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) mutable {
-
                 if(eventLoop->isInLoopThread())
                 {
-                    next(std::forward<gayrpc::core::RpcMeta>(meta),
+                    return next(std::forward<gayrpc::core::RpcMeta>(meta),
                          message,
                          std::forward<InterceptorContextType>(context));
                 }
                 else
                 {
-                    std::shared_ptr<google::protobuf::Message> msg;
-                    msg.reset(message.New());
+                    ananas::Promise<std::optional<std::string>> promise;
+
+                    std::shared_ptr<google::protobuf::Message> msg(message.New());
                     msg->CopyFrom(message);
 
-                    eventLoop->runAsyncFunctor([meta = std::forward<gayrpc::core::RpcMeta>(meta),
-                        msg,
+                    eventLoop->runAsyncFunctor([=,
+                        meta = std::forward<gayrpc::core::RpcMeta>(meta),
                         context = std::forward<InterceptorContextType>(context),
                         next = std::forward<gayrpc::core::UnaryHandler>(next)]() mutable {
                             next(std::forward<gayrpc::core::RpcMeta>(meta),
-                                 *msg,
-                                 std::forward<InterceptorContextType>(context));
+                                *msg,
+                                std::forward<InterceptorContextType>(context))
+                                .Then([=](std::optional<std::string> err) mutable {
+                                    promise.SetValue(err);
+                                });
                         });
+                    return promise.GetFuture();
                 }
         };
     }
@@ -57,18 +61,22 @@ namespace gayrpc { namespace utils {
             InterceptorContextType&& context) {
             try
             {
-                next(std::forward<gayrpc::core::RpcMeta>(meta),
+                return next(std::forward<gayrpc::core::RpcMeta>(meta),
                      message,
                      std::forward<InterceptorContextType>(context));
             }
             catch (const std::exception& e)
             {
                 std::cout << e.what() << std::endl;
+                return ananas::MakeReadyFuture(std::optional<std::string>(e.what()));
             }
             catch (...)
             {
                 std::cout << "unknow exception" << std::endl;
+                return ananas::MakeReadyFuture(std::optional<std::string>("unknow exception"));
             }
+
+            return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
         };
     }
 
@@ -79,7 +87,7 @@ namespace gayrpc { namespace utils {
             gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
             gayrpc::protocol::binary::send(meta, message, weakSession);
-            next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::forward<gayrpc::core::RpcMeta>(meta),
                  message,
                  std::forward<InterceptorContextType>(context));
         };
@@ -130,7 +138,7 @@ namespace gayrpc { namespace utils {
                     });
             }
 
-            next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::forward<gayrpc::core::RpcMeta>(meta),
                  message,
                  std::forward<InterceptorContextType>(context));
         };
@@ -144,7 +152,7 @@ namespace gayrpc { namespace utils {
             InterceptorContextType&& context) {
             gayrpc::protocol::http::send(meta, message, httpSession);
             httpSession->postShutdown();
-            next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::forward<gayrpc::core::RpcMeta>(meta),
                  message,
                  std::forward<InterceptorContextType>(context));
         };

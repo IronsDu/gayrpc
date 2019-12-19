@@ -32,7 +32,7 @@ namespace gayrpc { namespace core {
 
     // 解析Response然后(通过拦截器)调用回调
     template<typename Response, typename Hanele>
-    inline void    parseResponseWrapper(const Hanele& handle,
+    inline auto    parseResponseWrapper(const Hanele& handle,
         RpcMeta&& meta,
         const std::string_view & data,
         const UnaryServerInterceptor& inboundInterceptor,
@@ -42,7 +42,7 @@ namespace gayrpc { namespace core {
         switch (meta.encoding())
         {
         case RpcMeta::BINARY:
-            if (!response.ParseFromArray(data.data(), data.size()))
+            if (!response.ParseFromArray(data.data(), static_cast<int>(data.size())))
             {
                 throw std::runtime_error(std::string("parse binary response failed, type of:")
                                          + typeid(Response).name());
@@ -66,25 +66,25 @@ namespace gayrpc { namespace core {
                                      + typeid(Response).name());
         }
 
-        gayrpc::core::RpcError error;
+        std::optional<gayrpc::core::RpcError> error;
         if (meta.response_info().failed())
         {
-            error = gayrpc::core::RpcError(meta.response_info().failed(),
-                meta.response_info().error_code(),
+            error = gayrpc::core::RpcError(meta.response_info().error_code(),
                 meta.response_info().reason());
         }
-        inboundInterceptor(
+        return inboundInterceptor(
             std::move(meta),
             response,
             [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
                 handle(response, error);
+                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, 
             std::forward<InterceptorContextType>(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数
     template<typename RequestType, typename UnaryServerInterceptor>
-    inline void parseRequestWrapper(RequestType& request,
+    inline auto parseRequestWrapper(RequestType& request,
         RpcMeta&& meta,
         const std::string_view& data,
         const UnaryServerInterceptor& inboundInterceptor,
@@ -94,7 +94,7 @@ namespace gayrpc { namespace core {
         switch (meta.encoding())
         {
         case RpcMeta::BINARY:
-            if (!request.ParseFromArray(data.data(), data.size()))
+            if (!request.ParseFromArray(data.data(), static_cast<int>(data.size())))
             {
                 throw std::runtime_error(std::string("parse binary request failed, type of:")
                                          + typeid(RequestType).name());
@@ -119,7 +119,7 @@ namespace gayrpc { namespace core {
                                      + typeid(RequestType).name());
         }
 
-        inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
+        return inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
     }
 
 } }

@@ -69,7 +69,6 @@ int main(int argc, char **argv)
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
 
-        std::cout << "echo result:" << error.failed() << std::endl;
         std::cout << "echo message:" << response.message() << std::endl;
     }
 
@@ -82,7 +81,6 @@ int main(int argc, char **argv)
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
 
-        std::cout << "login result:" << error.failed() << std::endl;
         std::cout << "login message:" << response.message() << std::endl;
     }
 

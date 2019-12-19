@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <optional>
 
 namespace gayrpc { namespace core {
 
@@ -13,15 +14,12 @@ namespace gayrpc { namespace core {
     public:
         RpcError()
             :
-            mFailed(false),
             mErrorCode(0)
         {}
 
-        RpcError(bool failed,
-            ErrorCode errorCode,
+        RpcError(ErrorCode errorCode,
             std::string reason)
             :
-            mFailed(failed),
             mErrorCode(errorCode),
             mReason(std::move(reason))
         {}
@@ -38,11 +36,6 @@ namespace gayrpc { namespace core {
             return mTimeout;
         }
 
-        bool        failed() const
-        {
-            return mFailed;
-        }
-
         ErrorCode   code() const
         {
             return mErrorCode;
@@ -54,7 +47,6 @@ namespace gayrpc { namespace core {
         }
 
     private:
-        bool        mFailed;
         ErrorCode   mErrorCode;
         std::string mReason;
         bool        mTimeout = false;

@@ -49,15 +49,15 @@ public:
 
 private:
     void    onEchoResponse(const EchoResponse& response,
-        const gayrpc::core::RpcError& error)
+        std::optional<gayrpc::core::RpcError> error)
     {
         (void)response;
         mCurrentNum++;
         mLatency->push_back((std::chrono::steady_clock::now() - mRequestTime));
 
-        if (error.failed())
+        if (error)
         {
-            std::cout << "reason" << error.reason() << std::endl;
+            std::cout << "reason" << error.value().reason() << std::endl;
             return;
         }
 
