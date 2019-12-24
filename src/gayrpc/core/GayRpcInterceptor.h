@@ -43,19 +43,15 @@ namespace gayrpc { namespace core {
                         {
                             mCurIndex++;
                             auto interceptor = std::move(mInterceptors[mCurIndex - 1]);
-                            return interceptor(std::forward<RpcMeta>(meta),
+                            auto result = interceptor(std::forward<RpcMeta>(meta),
                                 message, 
                                 std::move(*this), 
                                 std::forward<InterceptorContextType>(context));
                             // expect the std::move(*this) is really successful;
                             assert(mTail == nullptr);
                             assert(mInterceptors.empty());
+                            return result;
                         }
-                    }
-
-                    size_t  curIndex() const
-                    {
-                        return mCurIndex;
                     }
 
                 private:
