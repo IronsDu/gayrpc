@@ -24,48 +24,47 @@ namespace gayrpc { namespace utils {
     using namespace gayrpc::core;
     using namespace brynet::net;
 
-    template<typename RpcServiceType>
-    using ServiceCreator = std::function<std::shared_ptr<RpcServiceType>(ServiceContext&&)>;
+    using ServiceCreator = std::function<std::shared_ptr<BaseService>(ServiceContext&&)>;
 
     template<typename RpcClientType>
     using RpcClientCallback = std::function<void(std::shared_ptr<RpcClientType>)>;
 
-    template<typename RpcServiceType>
     static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& session,
-        const ServiceCreator<RpcServiceType>& serverCreator,
+        const std::vector<ServiceCreator>& serverCreators,
         std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
-        session->setDataCallback([=](const char *buffer,
+        session->setDataCallback([=](const char* buffer,
             size_t len) {
-            // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
-            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
-        });
+                // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
+                return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
+            });
 
-        // 入站拦截器
-        UnaryServerInterceptor inboundInterceptor = makeInterceptor();
-        if (!userInBoundInterceptor.empty()) {
-            inboundInterceptor = makeInterceptor(userInBoundInterceptor);
+        for (const auto& serverCreator : serverCreators)
+        {
+            // 入站拦截器
+            UnaryServerInterceptor inboundInterceptor = makeInterceptor();
+            if (!userInBoundInterceptor.empty()) {
+                inboundInterceptor = makeInterceptor(userInBoundInterceptor);
+            }
+            // 出站拦截器
+            userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
+            UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
+
+            ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+            auto service = serverCreator(std::move(serviceContext));
+
+            session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
+                    service->onClose();
+                });
+            service->install();
         }
-        // 出站拦截器
-        userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
-        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
-
-        ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
-        auto service = serverCreator(std::move(serviceContext));
-
-        session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr &session) {
-            service->onClose();
-        });
-
-        RpcServiceType::Install(service);
     }
 
-    template<typename RpcServiceType>
     static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
-        const ServiceCreator<RpcServiceType>& serverCreator,
+        const std::vector<ServiceCreator>& serverCreators,
         std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
     {
@@ -76,19 +75,22 @@ namespace gayrpc { namespace utils {
                 gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
             });
 
-        // 入站拦截器
-        UnaryServerInterceptor inboundInterceptor = makeInterceptor();
-        if (!userInBoundInterceptor.empty()) {
-            inboundInterceptor = makeInterceptor(userInBoundInterceptor);
-        }
-        // 出站拦截器	
-        userOutBoundInterceptor.push_back(withProtectedCall());
-        userOutBoundInterceptor.push_back(withHttpSessionSender(httpSession));
-        UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
+        for (const auto& serverCreator : serverCreators)
+        {
+            // 入站拦截器
+            UnaryServerInterceptor inboundInterceptor = makeInterceptor();
+            if (!userInBoundInterceptor.empty()) {
+                inboundInterceptor = makeInterceptor(userInBoundInterceptor);
+            }
+            // 出站拦截器	
+            userOutBoundInterceptor.push_back(withProtectedCall());
+            userOutBoundInterceptor.push_back(withHttpSessionSender(httpSession));
+            UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
-        ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
-        auto service = serverCreator(std::move(serviceContext));
-        RpcServiceType::Install(service);
+            ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+            auto service = serverCreator(std::move(serviceContext));
+            service->install();
+        }
     }
 
     class BuildInterceptor final
@@ -156,11 +158,10 @@ namespace gayrpc { namespace utils {
 
     using InterceptorBuilder = std::function<void(BuildInterceptor)>;
 
-    template<typename RpcServiceType>
-    class ServiceBuilder : public wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>
+    class ServiceBuilder : public wrapper::BaseListenerBuilder<ServiceBuilder>
     {
     public:
-        using Ptr = std::shared_ptr<ServiceBuilder<RpcServiceType>>;
+        using Ptr = std::shared_ptr<ServiceBuilder>;
         using BuildTransportTypeSet = std::function<void(BuildTransportType)>;
 
         ServiceBuilder()
@@ -168,25 +169,31 @@ namespace gayrpc { namespace utils {
             mTransportTypeConfig(TransportType::Binary)
         {}
 
-        ServiceBuilder<RpcServiceType>& buildInboundInterceptor(const InterceptorBuilder& builder)
+        ServiceBuilder& configureTcpService(TcpService::Ptr tcpService)
+        {
+            wrapper::BaseListenerBuilder<ServiceBuilder>::configureService(tcpService);
+            return *this;
+        }
+
+        ServiceBuilder& buildInboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mInboundInterceptors);
             return *this;
         }
 
-        ServiceBuilder<RpcServiceType>& buildOutboundInterceptor(const InterceptorBuilder& builder)
+        ServiceBuilder& buildOutboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
             return *this;
         }
 
-        ServiceBuilder<RpcServiceType>& configureCreator(ServiceCreator<RpcServiceType> creator)
+        ServiceBuilder& addServiceCreator(ServiceCreator creator)
         {
-            mCreator = creator;
+            mCreators.push_back(creator);
             return *this;
         }
 
-        ServiceBuilder<RpcServiceType>&    configureTransportType(BuildTransportTypeSet builder)
+        ServiceBuilder&    configureTransportType(BuildTransportTypeSet builder)
         {
             BuildTransportType buildTransportType(&mTransportTypeConfig);
             builder(buildTransportType);
@@ -195,9 +202,9 @@ namespace gayrpc { namespace utils {
 
         void    asyncRun()
         {
-            auto connectionOptions = wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>::getConnectionOptions();
+            auto connectionOptions = wrapper::BaseListenerBuilder<ServiceBuilder>::getConnectionOptions();
             connectionOptions.push_back(AddSocketOption::AddEnterCallback(
-                [creator = mCreator,
+                [creators = mCreators,
                 inboundInterceptors = mInboundInterceptors,
                 outboundInterceptors = mOutboundInterceptors,
                 transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr & session) {
@@ -205,7 +212,7 @@ namespace gayrpc { namespace utils {
                     {
                     case TransportType::Binary:
                         OnBinaryConnectionEnter(session,
-                            creator,
+                            creators,
                             inboundInterceptors,
                             outboundInterceptors);
                         break;
@@ -213,7 +220,7 @@ namespace gayrpc { namespace utils {
                         brynet::net::http::HttpService::setup(session,
                             [=](const brynet::net::http::HttpSession::Ptr & httpSession) {
                                 OnHTTPConnectionEnter(httpSession, 
-                                    creator, 
+                                    creators,
                                     inboundInterceptors,
                                     outboundInterceptors);
                             });
@@ -226,7 +233,7 @@ namespace gayrpc { namespace utils {
                     }
                 }));
 
-            wrapper::BaseListenerBuilder<ServiceBuilder<RpcServiceType>>::asyncRun(connectionOptions);
+            wrapper::BaseListenerBuilder<ServiceBuilder>::asyncRun(connectionOptions);
         }
 
     private:
@@ -239,7 +246,7 @@ namespace gayrpc { namespace utils {
     private:
         std::vector<UnaryServerInterceptor>     mInboundInterceptors;
         std::vector<UnaryServerInterceptor>     mOutboundInterceptors;
-        ServiceCreator<RpcServiceType>          mCreator;
+        std::vector<ServiceCreator>             mCreators;
         TransportTypeConfig                     mTransportTypeConfig;
     };
 
@@ -284,6 +291,12 @@ namespace gayrpc { namespace utils {
         ClientBuilder& buildOutboundInterceptor(const InterceptorBuilder& builder)
         {
             buildInterceptor(builder, mOutboundInterceptors);
+            return *this;
+        }
+
+        ClientBuilder& configureTcpService(TcpService::Ptr tcpService)
+        {
+            wrapper::BaseConnectionBuilder<ClientBuilder>::configureService(tcpService);
             return *this;
         }
 

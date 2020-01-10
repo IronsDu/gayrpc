@@ -55,6 +55,8 @@ namespace gayrpc { namespace core {
             return mContext;
         }
 
+        virtual void    install() = 0;
+
     private:
         const ServiceContext                mContext;
     };

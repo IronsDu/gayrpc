@@ -193,7 +193,13 @@ namespace test {
         {
         }
 
-        virtual void onClose() {}
+        virtual void onClose() override {}
+
+        virtual void install() override
+        {
+            auto sharedThis = std::static_pointer_cast<EchoServerService>(shared_from_this());
+            EchoServerService::Install(sharedThis);
+        }
 
         static bool Install(const EchoServerService::PTR& service);
 
@@ -337,7 +343,11 @@ namespace test {
                     });
         };
 
-        return rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
+        if(!rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(echo_service_ServiceID::EchoServer)))
+        {
+            throw std::runtime_error(std::string("register service:")+ EchoServerService::GetServiceTypeName()+" type handler failed");
+        }
+        return true;
     }
     
 }
