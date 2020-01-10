@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     auto service = TcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
-    auto serviceBuild = ServiceBuilder<EchoServerService>();
+    auto serviceBuild = ServiceBuilder();
     serviceBuild.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
             buildInterceptors.addInterceptor(counter);
         })
@@ -67,8 +67,8 @@ int main(int argc, char **argv)
                 session->setHeartBeat(std::chrono::seconds(10));
             })
         })
-        .configureService(service)
-        .configureCreator([](gayrpc::core::ServiceContext&& context) {
+        .configureTcpService(service)
+        .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
             return std::make_shared<MyService>(std::move(context));
         })
         .configureListen([argv](wrapper::BuildListenConfig listenConfig) {
