@@ -231,17 +231,24 @@ namespace gayrpc { namespace core {
             const auto sequenceID = meta.response_info().sequence_id();
             if (meta.response_info().timeout())
             {
-                std::lock_guard<std::mutex> lck(mStubMapGruad);
-
-                mStubHandleMap.erase(sequenceID);
-
-                const auto it = mTimeoutHandleMap.find(sequenceID);
-                if (it == mTimeoutHandleMap.end())
+                TIMEOUT_CALLBACK timeoutHandler;
                 {
-                    return;
+                    std::lock_guard<std::mutex> lck(mStubMapGruad);
+
+                    mStubHandleMap.erase(sequenceID);
+
+                    const auto it = mTimeoutHandleMap.find(sequenceID);
+                    if (it == mTimeoutHandleMap.end())
+                    {
+                        return;
+                    }
+                    timeoutHandler = std::move((*it).second);
+                    mTimeoutHandleMap.erase(it);
                 }
-                (*it).second();
-                mTimeoutHandleMap.erase(it);
+                if(timeoutHandler)
+                {
+                    timeoutHandler();
+                }
 
                 return;
             }
@@ -258,7 +265,7 @@ namespace gayrpc { namespace core {
                     throw std::runtime_error("not found response seq id:" +
                         std::to_string(sequenceID));
                 }
-                handle = (*it).second;
+                handle = std::move(it->second);
                 mStubHandleMap.erase(it);
             }
             handle(std::move(meta), data, mInboundInterceptor, std::forward<InterceptorContextType>(context));
