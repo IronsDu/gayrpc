@@ -49,26 +49,24 @@ namespace gayrpc { namespace core {
 
         void    handleRpcMsg(RpcMeta&& meta, const std::string_view & data, InterceptorContextType&& context)
         {
-            ServiceHandler handler;
+            std::shared_lock<std::shared_mutex> lock(mMutex);
+
+            const auto it = mTypeHandlers.find(meta.type());
+            if (it == mTypeHandlers.end())
             {
-                std::shared_lock<std::shared_mutex> lock(mMutex);
-                auto it = mTypeHandlers.find(meta.type());
-                if (it == mTypeHandlers.end())
-                {
-                    throw std::runtime_error("not found type handle of type:"
-                                             + std::to_string(meta.type()));
-                }
-                auto& serviceMap = (*it).second;
-                auto serviceIt = serviceMap.find(meta.service_id());
-                if (serviceIt == serviceMap.end())
-                {
-                    throw std::runtime_error("not found service handle of id:"
-                                             + std::to_string(meta.service_id()));
-                }
-                handler = (*serviceIt).second;
+                throw std::runtime_error("not found type handle of type:"
+                                         + std::to_string(meta.type()));
             }
 
-            handler(std::forward<RpcMeta>(meta), data, std::forward<InterceptorContextType>(context));
+            const auto& serviceMap = (*it).second;
+            const auto serviceIt = serviceMap.find(meta.service_id());
+            if (serviceIt == serviceMap.end())
+            {
+                throw std::runtime_error("not found service handle of id:"
+                                         + std::to_string(meta.service_id()));
+            }
+
+            (serviceIt->second)(std::forward<RpcMeta>(meta), data, std::forward<InterceptorContextType>(context));
         }
 
     private:
