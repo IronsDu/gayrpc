@@ -23,7 +23,7 @@ class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
     BenchmarkClient(EchoServerClient::PTR client,
-        brynet::base::WaitGroup::PTR wg,
+        brynet::base::WaitGroup::Ptr wg,
         int maxNum,
         LATENCY_PTR latency,
         std::string payload)
@@ -74,7 +74,7 @@ private:
 private:
     const int                                       maxRequestNum;
     const EchoServerClient::PTR                     mClient;
-    const brynet::base::WaitGroup::PTR              mWg;
+    const brynet::base::WaitGroup::Ptr              mWg;
     const std::string                               mPayload;
 
     int                                             mCurrentNum;
@@ -85,7 +85,7 @@ private:
 static std::atomic<int64_t> connectionCounter(0);
 
 static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
-    const brynet::base::WaitGroup::PTR& wg,
+    const brynet::base::WaitGroup::Ptr& wg,
     int maxRequestNum,
     LATENCY_PTR latency,
     std::string payload)
