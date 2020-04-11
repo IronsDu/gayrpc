@@ -27,6 +27,7 @@ namespace gayrpc { namespace core {
         {
             auto wrapper = [userInterceptor = *it](UnaryServerInterceptor nextInterceptor)
             {
+                auto nextInterceptorPtr = std::make_shared<UnaryServerInterceptor>(nextInterceptor);
                 return [=](
                         gayrpc::core::RpcMeta&& meta,
                         const google::protobuf::Message& message,
@@ -36,11 +37,11 @@ namespace gayrpc { namespace core {
                     return userInterceptor(
                                 std::move(meta),
                                 message,
-                                [=, next = std::move(next)](gayrpc::core::RpcMeta&& meta,
+                                [nextInterceptorPtr, next = std::move(next)](gayrpc::core::RpcMeta&& meta,
                                     const google::protobuf::Message& message,
                                     InterceptorContextType&& context) mutable
                                 {
-                                    return nextInterceptor(std::move(meta),
+                                    return (*nextInterceptorPtr)(std::move(meta),
                                                            message,
                                                            std::move(next),
                                                            std::move(context));
