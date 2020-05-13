@@ -188,5 +188,5 @@ service EchoServer {
 https://github.com/IronsDu/gayrpc/tree/master/src/gayrpc/protocol
 
 ## 注意点
-* RPC核心并不依赖通信采用的协议,而且网络传输可以是TCP、UDP、WebSocket等等，抑或消息队列等等。
+* RPC核心并不依赖通信采用的协议,而且网络传输可以是TCP、UDP、WebSocket等等，亦或消息队列等等。
 * RPC服务方的reply顺序与客户端的调用顺序无关,也就是可能后发起的请求先得到返回.
