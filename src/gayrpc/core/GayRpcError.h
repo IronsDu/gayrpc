@@ -4,7 +4,7 @@
 #include <string>
 #include <optional>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
     typedef int32_t ErrorCode;
 
@@ -52,4 +52,4 @@ namespace gayrpc { namespace core {
         bool        mTimeout = false;
     };
 
-} }
+}

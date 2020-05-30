@@ -9,9 +9,8 @@
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcError.h>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
-    using namespace google::protobuf::util;
     // 构造用于RPC请求的Meta对象
     inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
         ServiceIDType serviceID,
@@ -38,6 +37,8 @@ namespace gayrpc { namespace core {
         const UnaryServerInterceptor& inboundInterceptor,
         InterceptorContextType&& context)
     {
+        using namespace google::protobuf::util;
+
         Response response;
         switch (meta.encoding())
         {
@@ -73,13 +74,14 @@ namespace gayrpc { namespace core {
                 meta.response_info().reason());
         }
         return inboundInterceptor(
-            std::move(meta),
-            response,
-            [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
-                handle(response, error);
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-            }, 
-            std::forward<InterceptorContextType>(context));
+                std::move(meta),
+                response,
+                [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context)
+                {
+                    handle(response, error);
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                },
+                std::forward<InterceptorContextType>(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数
@@ -91,6 +93,8 @@ namespace gayrpc { namespace core {
         UnaryHandler&& handler,
         InterceptorContextType&& context)
     {
+        using namespace google::protobuf::util;
+
         switch (meta.encoding())
         {
         case RpcMeta::BINARY:
@@ -122,4 +126,4 @@ namespace gayrpc { namespace core {
         return inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
     }
 
-} }
+}

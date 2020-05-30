@@ -288,7 +288,7 @@ public:
         std::unique_lock<std::mutex> waiter(*mutex);
         bool success = cond->wait_for(waiter, timeout, [&ready]() { return ready; } );
         if (success)
-            return std::move(value);
+            return value;
         else
             throw std::runtime_error("Future wait_for timeout");
      }
@@ -410,7 +410,7 @@ public:
             });
         }
 
-        return std::move(nextFuture);
+        return nextFuture;
     }
 
     //2. F return another future type
@@ -641,7 +641,7 @@ WhenAll(InputIterator first, InputIterator last) {
         return MakeReadyFuture(std::vector<TryT>());
 
     struct AllContext {
-        AllContext(int n) : results(n) {}
+        explicit AllContext(int n) : results(n) {}
         ~AllContext() {
             // I think this line is useless.
             // pm.SetValue(std::move(results));
@@ -681,7 +681,7 @@ WhenAny(InputIterator first, InputIterator last) {
     }
 
     struct AnyContext {
-        AnyContext() {};
+        AnyContext() = default;;
         Promise<std::pair<size_t, TryT>> pm;
         std::atomic<bool> done{false};
     };
@@ -716,7 +716,7 @@ WhenN(size_t N, InputIterator first, InputIterator last) {
     }
 
     struct NContext {
-        NContext(size_t _needs) : needs(_needs) {}
+        explicit NContext(size_t _needs) : needs(_needs) {}
         Promise<std::vector<std::pair<size_t, TryT>>> pm;
 
         std::mutex mutex;
@@ -762,7 +762,7 @@ WhenIfAny(InputIterator first, InputIterator last,
     const size_t nFutures = std::distance(first, last);
 
     struct IfAnyContext {
-        IfAnyContext() {};
+        IfAnyContext() = default;;
         Promise<std::pair<size_t, TryT>> pm;
         std::atomic<size_t> returned {0};  // including fail response, eg, cond(rsp) == false
         std::atomic<bool> done{false};
@@ -821,7 +821,7 @@ WhenIfN(size_t N, InputIterator first, InputIterator last,
     }
 
     struct IfNContext {
-        IfNContext(size_t _needs) : needs(_needs) {}
+        explicit IfNContext(size_t _needs) : needs(_needs) {}
         Promise<std::vector<std::pair<size_t, TryT>>> pm;
 
         std::mutex mutex;

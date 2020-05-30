@@ -7,18 +7,18 @@
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
     template<typename... Interceptors>
     UnaryServerInterceptor makeInterceptor(Interceptors... interceptors)
     {
         std::vector<UnaryServerInterceptor> userInterceptors{ interceptors... };
 
-        UnaryServerInterceptor combinationInterceptor = [](
-                gayrpc::core::RpcMeta&& meta,
-                const google::protobuf::Message& message,
-                UnaryHandler&& next,
-                InterceptorContextType&& context)
+        UnaryServerInterceptor combinationInterceptor = []
+                (gayrpc::core::RpcMeta&& meta,
+                 const google::protobuf::Message& message,
+                 UnaryHandler&& next,
+                 InterceptorContextType&& context)
         {
             return next(std::move(meta), message, std::move(context));
         };
@@ -35,18 +35,18 @@ namespace gayrpc { namespace core {
                         InterceptorContextType&& context) mutable
                 {
                     return userInterceptor(
-                                std::move(meta),
-                                message,
-                                [nextInterceptorPtr, next = std::move(next)](gayrpc::core::RpcMeta&& meta,
-                                    const google::protobuf::Message& message,
-                                    InterceptorContextType&& context) mutable
-                                {
-                                    return (*nextInterceptorPtr)(std::move(meta),
-                                                           message,
-                                                           std::move(next),
-                                                           std::move(context));
-                                },
-                                std::move(context));
+                            std::move(meta),
+                            message,
+                            [nextInterceptorPtr, next = std::move(next)](gayrpc::core::RpcMeta&& meta,
+                                                                         const google::protobuf::Message& message,
+                                                                         InterceptorContextType&& context) mutable
+                            {
+                                return (*nextInterceptorPtr)(std::move(meta),
+                                                             message,
+                                                             std::move(next),
+                                                             std::move(context));
+                            },
+                            std::move(context));
                 };
             };
             combinationInterceptor = wrapper(combinationInterceptor);
@@ -55,4 +55,4 @@ namespace gayrpc { namespace core {
         return combinationInterceptor;
     }
 
-} }
+}

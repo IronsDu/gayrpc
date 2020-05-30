@@ -93,7 +93,7 @@ namespace gayrpc { namespace utils {
         };
     }
 
-    static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::PTR& handleManager,
+    static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::Ptr& handleManager,
         uint64_t seq_id)
     {
         gayrpc::core::RpcMeta timeoutMeta;
@@ -120,7 +120,7 @@ namespace gayrpc { namespace utils {
 
     // 由eventLoop线程处理超时检测
     static auto withTimeoutCheck(const brynet::net::EventLoop::Ptr& eventLoop,
-        const gayrpc::core::RpcTypeHandleManager::PTR& handleManager)
+        const gayrpc::core::RpcTypeHandleManager::Ptr& handleManager)
     {
         return [eventLoop, handleManager](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,

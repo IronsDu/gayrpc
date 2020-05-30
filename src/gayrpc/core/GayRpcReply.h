@@ -9,7 +9,7 @@
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
     class BaseReply
     {
@@ -42,11 +42,12 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_failed(false);
             meta.mutable_response_info()->set_timeout(false);
 
-            mOutboundInterceptor(std::move(meta), 
-                response, 
-                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+            mOutboundInterceptor(std::move(meta),
+                response,
+                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context)
+                {
                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-                }, 
+                },
                 std::forward<InterceptorContextType>(context));
         }
 
@@ -73,13 +74,13 @@ namespace gayrpc { namespace core {
             meta.mutable_response_info()->set_reason(reason);
             meta.mutable_response_info()->set_timeout(false);
 
-            Response response;
-            mOutboundInterceptor(std::move(meta), 
-                response, 
-                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-                }, 
-                std::forward<InterceptorContextType>(context));
+            mOutboundInterceptor(std::move(meta),
+                                 Response{},
+                                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context)
+                                 {
+                                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                                 },
+                                 std::forward<InterceptorContextType>(context));
         }
 
     private:
@@ -92,7 +93,7 @@ namespace gayrpc { namespace core {
     class TemplateReply : public BaseReply
     {
     public:
-        typedef std::shared_ptr<TemplateReply<T>> PTR;
+        typedef std::shared_ptr<TemplateReply<T>> Ptr;
 
         TemplateReply(RpcMeta&& meta,
             UnaryServerInterceptor&& outboundInterceptor)
@@ -101,15 +102,15 @@ namespace gayrpc { namespace core {
         {
         }
 
-        void    reply(const T& response, InterceptorContextType&& context = InterceptorContextType())
+        void    reply(const T& response, InterceptorContextType&& context = InterceptorContextType{})
         {
             BaseReply::reply(response, std::forward<InterceptorContextType>(context));
         }
 
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType())
+        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType{})
         {
             BaseReply::error<T>(errorCode, reason, std::forward<InterceptorContextType>(context));
         }
     };
 
-} }
+}

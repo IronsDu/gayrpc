@@ -10,7 +10,7 @@
 
 // 实现协议解析和序列化
 
-namespace gayrpc { namespace protocol {
+namespace gayrpc::protocol {
 
     using namespace gayrpc::core;
     using namespace brynet::base;
@@ -49,7 +49,8 @@ namespace gayrpc { namespace protocol {
                 std::shared_ptr<google::protobuf::Message> msg;
                 msg.reset(message.New());
                 msg->CopyFrom(message);
-                session->getEventLoop()->runAsyncFunctor([meta, msg, session]() {
+                session->getEventLoop()->runAsyncFunctor([meta, msg, session]()
+                {
                     // 实际的发送
                     AutoMallocPacket<4096> bpw(true, true);
                     serializeProtobufPacket(bpw,
@@ -61,7 +62,7 @@ namespace gayrpc { namespace protocol {
             }
         }
 
-        static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
+        static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
             const char* buffer,
             size_t len)
         {
@@ -111,11 +112,11 @@ namespace gayrpc { namespace protocol {
             const std::string& meta,
             const std::string& data)
         {
-            SerializeProtobufPacket protobufPacket;
+            SerializeProtobufPacket protobufPacket{};
             protobufPacket.head.meta_size = meta.size();
             protobufPacket.head.data_size = data.size();
 
-            OpPacket opPacket;
+            OpPacket opPacket{};
             opPacket.head.op = OpCodeProtobuf;
             opPacket.head.data_len = sizeof(protobufPacket.head.meta_size) +
                 sizeof(protobufPacket.head.data_size) +
@@ -158,7 +159,7 @@ namespace gayrpc { namespace protocol {
             {
                 uint32_t   meta_size;    // 4 bytes
                 uint64_t   data_size;    // 8 bytes
-            }head;
+            }head{};
 
             std::string_view    meta_view;
             std::string_view    data_view;
@@ -188,7 +189,7 @@ namespace gayrpc { namespace protocol {
             while (len > processLen)
             {
                 BasePacketReader bpr(buffer + processLen, len - processLen);
-                OpPacket opPacket;
+                OpPacket opPacket{};
 
                 constexpr auto HEAD_LEN =
                     sizeof(opPacket.head.data_len) +
@@ -260,4 +261,4 @@ namespace gayrpc { namespace protocol {
         }
     };
     
-} }
+}

@@ -3,7 +3,6 @@
 
 #include <brynet/net/EventLoop.hpp>
 #include <brynet/net/TcpService.hpp>
-#include <brynet/net/ListenThread.hpp>
 #include <brynet/base/AppStatus.hpp>
 #include <gayrpc/utils/UtilsWrapper.h>
 #include "./pb/echo_service.gayrpc.h"
@@ -29,7 +28,7 @@ public:
     }
 
     void Echo(const EchoRequest& request, 
-        const EchoReply::PTR& replyObj,
+        const EchoReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         EchoResponse response;
@@ -39,7 +38,7 @@ public:
     }
 
     void Login(const LoginRequest& request,
-        const LoginReply::PTR& replyObj,
+        const LoginReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         LoginResponse response;
@@ -70,7 +69,6 @@ static auto auth(RpcMeta&& meta,
     UnaryHandler&& next,
     InterceptorContextType&& context)
 {
-    // auth ¥¶¿Ì
     if (true) {
         return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
     }

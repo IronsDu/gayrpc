@@ -26,7 +26,7 @@ public:
     }
 
     void Echo(const EchoRequest& request,
-        const EchoReply::PTR& replyObj,
+        const EchoReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         EchoResponse response;
@@ -36,7 +36,7 @@ public:
     }
 
     void Login(const LoginRequest& request,
-        const LoginReply::PTR& replyObj,
+        const LoginReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         LoginResponse response;
@@ -50,7 +50,7 @@ public:
     }
 };
 
-static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
+static void sendEchoRequest(const dodo::test::EchoServerClient::Ptr& client)
 {
     // 发送RPC请求
     EchoRequest request;
@@ -66,7 +66,7 @@ static void sendEchoRequest(dodo::test::EchoServerClient::PTR client)
         });
 }
 
-static void OnConnection(dodo::test::EchoServerClient::PTR client, size_t batchNum)
+static void OnConnection(const dodo::test::EchoServerClient::Ptr& client, size_t batchNum)
 {
     gayrpc::core::ServiceContext context(client->getTypeHandleManager(), client->getInInterceptor(), client->getOutInterceptor());
     auto service = std::make_shared< MyService>(std::move(context));
@@ -92,7 +92,7 @@ int main(int argc, char **argv)
     auto connector = AsyncConnector::Create();
     connector->startWorkerThread();
     auto clientNum = std::atoi(argv[3]);
-    size_t batchNum = static_cast<size_t>(std::atoi(argv[5]));
+    auto batchNum = static_cast<size_t>(std::atoi(argv[5]));
 
     mainLoop = std::make_shared<brynet::net::EventLoop>();
     
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
                     ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
                     ConnectOption::WithTimeout(std::chrono::seconds(10)),
                 })
-                .asyncConnect<EchoServerClient>([=](dodo::test::EchoServerClient::PTR client) {
+                .asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
                     OnConnection(client, batchNum);
                 });
 

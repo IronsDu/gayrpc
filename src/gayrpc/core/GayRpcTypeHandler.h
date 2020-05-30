@@ -12,13 +12,13 @@
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/gayrpc_meta.pb.h>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
     // 管理不同类型RPC消息(REQUEST和Response)以及不同服务的处理器
     class RpcTypeHandleManager : public std::enable_shared_from_this<RpcTypeHandleManager>
     {
     public:
-        using PTR = std::shared_ptr<RpcTypeHandleManager>;
+        using Ptr = std::shared_ptr<RpcTypeHandleManager>;
         using ServiceHandler = std::function<void(RpcMeta&&, const std::string_view& body, InterceptorContextType&&)>;
         using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
@@ -74,4 +74,4 @@ namespace gayrpc { namespace core {
         std::shared_mutex                           mMutex;
     };
 
-} }
+}

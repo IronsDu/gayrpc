@@ -1,23 +1,26 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include <gayrpc/core/GayRpcTypeHandler.h>
 #include <gayrpc/core/GayRpcType.h>
 
-namespace gayrpc { namespace core {
+namespace gayrpc::core {
 
     class ServiceContext final
     {
     public:
-        ServiceContext(RpcTypeHandleManager::PTR typeHandleManager, const UnaryServerInterceptor& inInterceptor, const UnaryServerInterceptor& outInterceptor)
+        ServiceContext(RpcTypeHandleManager::Ptr typeHandleManager,
+                UnaryServerInterceptor  inInterceptor,
+                UnaryServerInterceptor  outInterceptor)
             :
-            mTypeHandleManager(typeHandleManager),
-            mInInterceptor(inInterceptor),
-            mOutInterceptor(outInterceptor)
+            mTypeHandleManager(std::move(typeHandleManager)),
+            mInInterceptor(std::move(inInterceptor)),
+            mOutInterceptor(std::move(outInterceptor))
         {}
 
-        const RpcTypeHandleManager::PTR&    getTypeHandleManager() const
+        const RpcTypeHandleManager::Ptr&    getTypeHandleManager() const
         {
             return mTypeHandleManager;
         }
@@ -33,7 +36,7 @@ namespace gayrpc { namespace core {
         }
 
     private:
-        const RpcTypeHandleManager::PTR     mTypeHandleManager;
+        const RpcTypeHandleManager::Ptr     mTypeHandleManager;
         const UnaryServerInterceptor        mInInterceptor;
         const UnaryServerInterceptor        mOutInterceptor;
     };
@@ -61,4 +64,4 @@ namespace gayrpc { namespace core {
         const ServiceContext                mContext;
     };
 
-} }
+}

@@ -49,7 +49,7 @@ namespace test {
     class EchoServerClient : public BaseClient
     {
     public:
-        using PTR = std::shared_ptr<EchoServerClient>;
+        using Ptr = std::shared_ptr<EchoServerClient>;
         using WeakPtr = std::weak_ptr<EchoServerClient>;
 
         using EchoHandle = std::function<void(const dodo::test::EchoResponse&, std::optional<gayrpc::core::RpcError>)>;
@@ -77,7 +77,7 @@ namespace test {
         void Echo(const dodo::test::EchoRequest& request,
             const EchoHandle& handle,
             std::chrono::seconds timeout, 
-            BaseClient::TIMEOUT_CALLBACK&& timeoutCallback)
+            BaseClient::TimeoutCallback&& timeoutCallback)
         {
             call<dodo::test::EchoResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
@@ -90,7 +90,7 @@ namespace test {
         void Login(const dodo::test::LoginRequest& request,
             const LoginHandle& handle,
             std::chrono::seconds timeout, 
-            BaseClient::TIMEOUT_CALLBACK&& timeoutCallback)
+            BaseClient::TimeoutCallback&& timeoutCallback)
         {
             call<dodo::test::LoginResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
@@ -109,7 +109,7 @@ namespace test {
 
             Echo(request, 
                 [promise](const dodo::test::EchoResponse& response,
-                    std::optional<gayrpc::core::RpcError> error) mutable {
+                    const std::optional<gayrpc::core::RpcError>& error) mutable {
                     promise.SetValue(std::make_pair(response, error));
                 },
                 timeout,
@@ -131,7 +131,7 @@ namespace test {
 
             Login(request, 
                 [promise](const dodo::test::LoginResponse& response,
-                    std::optional<gayrpc::core::RpcError> error) mutable {
+                    const std::optional<gayrpc::core::RpcError>& error) mutable {
                     promise.SetValue(std::make_pair(response, error));
                 },
                 timeout,
@@ -148,21 +148,21 @@ namespace test {
         
 
     public:
-        static PTR Create(const RpcTypeHandleManager::PTR& rpcHandlerManager,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor)
+        static Ptr Create(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
+                          const UnaryServerInterceptor& inboundInterceptor,
+                          const UnaryServerInterceptor& outboundInterceptor)
         {
             class make_shared_enabler : public EchoServerClient
             {
             public:
-                make_shared_enabler(const RpcTypeHandleManager::PTR& rpcHandlerManager,
+                make_shared_enabler(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
                     const UnaryServerInterceptor& inboundInterceptor,
                     const UnaryServerInterceptor& outboundInterceptor)
                     : 
                     EchoServerClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor) {}
             };
 
-            auto client = PTR(new make_shared_enabler(rpcHandlerManager, inboundInterceptor, outboundInterceptor));
+            auto client = std::make_shared<make_shared_enabler>(rpcHandlerManager, inboundInterceptor, outboundInterceptor);
             client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
 
             return client;
@@ -180,7 +180,7 @@ namespace test {
     class EchoServerService : public BaseService
     {
     public:
-        using PTR = std::shared_ptr<EchoServerService>;
+        using Ptr = std::shared_ptr<EchoServerService>;
         using WeakPtr = std::weak_ptr<EchoServerService>;
 
         using EchoReply = TemplateReply<dodo::test::EchoResponse>;
@@ -189,19 +189,17 @@ namespace test {
 
         using BaseService::BaseService;
 
-        virtual ~EchoServerService()
-        {
-        }
+        ~EchoServerService() override = default;
 
-        virtual void onClose() override {}
+        void onClose() override {}
 
-        virtual void install() override
+        void install() override
         {
             auto sharedThis = std::static_pointer_cast<EchoServerService>(shared_from_this());
             EchoServerService::Install(sharedThis);
         }
 
-        static bool Install(const EchoServerService::PTR& service);
+        static bool Install(const EchoServerService::Ptr& service);
 
         static  std::string GetServiceTypeName()
         {
@@ -209,10 +207,10 @@ namespace test {
         }
     private:
         virtual void Echo(const dodo::test::EchoRequest& request, 
-            const dodo::test::EchoServerService::EchoReply::PTR& replyObj,
+            const dodo::test::EchoServerService::EchoReply::Ptr& replyObj,
             InterceptorContextType&&) = 0;
         virtual void Login(const dodo::test::LoginRequest& request, 
-            const dodo::test::EchoServerService::LoginReply::PTR& replyObj,
+            const dodo::test::EchoServerService::LoginReply::Ptr& replyObj,
             InterceptorContextType&&) = 0;
         
 
@@ -220,7 +218,7 @@ namespace test {
 
         static auto Echo_stub(RpcMeta&& meta,
             const std::string_view& data,
-            const EchoServerService::PTR& service,
+            const EchoServerService::Ptr& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor,
             InterceptorContextType&& context)
@@ -237,7 +235,7 @@ namespace test {
 
         static auto Login_stub(RpcMeta&& meta,
             const std::string_view& data,
-            const EchoServerService::PTR& service,
+            const EchoServerService::Ptr& service,
             const UnaryServerInterceptor& inboundInterceptor,
             const UnaryServerInterceptor& outboundInterceptor,
             InterceptorContextType&& context)
@@ -255,7 +253,7 @@ namespace test {
         
     };
 
-    inline bool EchoServerService::Install(const EchoServerService::PTR& service)
+    inline bool EchoServerService::Install(const EchoServerService::Ptr& service)
     {
         auto rpcTypeHandleManager = service->getServiceContext().getTypeHandleManager();
         auto inboundInterceptor = service->getServiceContext().getInInterceptor();
@@ -263,7 +261,7 @@ namespace test {
 
         using EchoServerServiceRequestHandler = std::function<InterceptorReturnType(RpcMeta&&,
             const std::string_view& data,
-            const EchoServerService::PTR&,
+            const EchoServerService::Ptr&,
             const UnaryServerInterceptor&,
             const UnaryServerInterceptor&,
             InterceptorContextType&& context)>;
@@ -287,7 +285,7 @@ namespace test {
             serviceHandlerMapByStr,
             inboundInterceptor,
             outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) {
-            
+
             if (meta.type() != RpcMeta::REQUEST)
             {
                 throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
@@ -310,7 +308,7 @@ namespace test {
                     auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
                     if (it == serviceHandlerMapById.end())
                     {
-                        throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
+                        throw std::runtime_error(std::string("not found handle, method:") + std::to_string(meta.request_info().intmethod()));
                     }
                     handler = (*it).second;
                 }
@@ -325,13 +323,15 @@ namespace test {
                 return;
             }
 
-            handler(std::move(meta),
-                data,
-                service,
-                inboundInterceptor,
-                outboundInterceptor,
-                std::move(context))
-                .Then([=](std::optional<std::string> err) {
+            auto tmpMeta = meta;
+            handler(std::move(tmpMeta),
+                    data,
+                    service,
+                    inboundInterceptor,
+                    outboundInterceptor,
+                    std::move(context))
+                    .Then([=](std::optional<std::string> err)
+                    {
                         if (err)
                         {
                             auto tmpMeta = meta;

@@ -16,17 +16,17 @@ using namespace brynet::net;
 using namespace dodo::benchmark;
 using namespace gayrpc::utils;
 
-typedef std::vector<std::chrono::nanoseconds> LATENTY_TYPE;
-typedef std::shared_ptr<LATENTY_TYPE> LATENCY_PTR;
+typedef std::vector<std::chrono::nanoseconds> LatencyType;
+typedef std::shared_ptr<LatencyType> LatencyPtr;
 
 class BenchmarkClient : public std::enable_shared_from_this<BenchmarkClient>
 {
 public:
-    BenchmarkClient(EchoServerClient::PTR client,
-        brynet::base::WaitGroup::Ptr wg,
-        int maxNum,
-        LATENCY_PTR latency,
-        std::string payload)
+    BenchmarkClient(EchoServerClient::Ptr client,
+                    brynet::base::WaitGroup::Ptr wg,
+                    int maxNum,
+                    LatencyPtr latency,
+                    std::string payload)
         :
         maxRequestNum(maxNum),
         mClient(std::move(client)),
@@ -44,7 +44,12 @@ public:
         request.set_message(mPayload);
 
         mRequestTime = std::chrono::steady_clock::now();
-        mClient->Echo(request, std::bind(&BenchmarkClient::onEchoResponse, shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+        mClient->Echo(request,
+                      [sharedThis = shared_from_this(), this](const EchoResponse& response,
+                                                              std::optional<gayrpc::core::RpcError> error)
+                      {
+                          onEchoResponse(response, std::move(error));
+                      });
     }
 
 private:
@@ -73,22 +78,22 @@ private:
 
 private:
     const int                                       maxRequestNum;
-    const EchoServerClient::PTR                     mClient;
+    const EchoServerClient::Ptr                     mClient;
     const brynet::base::WaitGroup::Ptr              mWg;
     const std::string                               mPayload;
 
     int                                             mCurrentNum;
-    LATENCY_PTR                                     mLatency;
+    LatencyPtr                                     mLatency;
     std::chrono::steady_clock::time_point           mRequestTime;
 };
 
 static std::atomic<int64_t> connectionCounter(0);
 
-static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
-    const brynet::base::WaitGroup::Ptr& wg,
-    int maxRequestNum,
-    LATENCY_PTR latency,
-    std::string payload)
+static void onConnection(const dodo::benchmark::EchoServerClient::Ptr& client,
+                         const brynet::base::WaitGroup::Ptr& wg,
+                         int maxRequestNum,
+                         const LatencyPtr& latency,
+                         const std::string& payload)
 {
     connectionCounter++;
     std::cout << "connection counter is:" << connectionCounter << std::endl;
@@ -96,20 +101,20 @@ static void onConnection(dodo::benchmark::EchoServerClient::PTR client,
     b->sendRequest();
 }
 
-static void outputLatency(int realyTotalRequestNum,
-    const std::vector<LATENCY_PTR>& latencyArray,
+static void outputLatency(int totalRequestNum,
+    const std::vector<LatencyPtr>& latencyArray,
     std::chrono::steady_clock::time_point startTime)
 {
     auto nowTime = std::chrono::steady_clock::now();
 
-    std::chrono::nanoseconds totalLatenty = std::chrono::nanoseconds::zero();
-    LATENTY_TYPE tmp1;
+    std::chrono::nanoseconds totalLatency = std::chrono::nanoseconds::zero();
+    LatencyType tmp1;
 
     for (auto& v : latencyArray)
     {
         for (auto& latency : *v)
         {
-            totalLatenty += latency;
+            totalLatency += latency;
             tmp1.push_back(latency);
         }
     }
@@ -122,26 +127,31 @@ static void outputLatency(int realyTotalRequestNum,
         << std::endl;
 
     std::cout << "took "
-        << costTime.count()
-        << "ms, for "
-        << realyTotalRequestNum
+              << costTime.count()
+              << "ms, for "
+              << totalRequestNum
         << " requests"
         << std::endl;
 
+    auto second = std::chrono::duration_cast<std::chrono::seconds>(costTime).count();
+    if(second == 0)
+    {
+        second = 1;
+    }
     std::cout << "throughput  (TPS):"
-        << (realyTotalRequestNum / (std::chrono::duration_cast<std::chrono::seconds>(costTime)).count())
+        << (totalRequestNum / second)
         << std::endl;
 
     std::cout << "mean:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(totalLatenty).count() / realyTotalRequestNum)
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(totalLatency).count() / totalRequestNum)
         << " ms ,"
-        << (totalLatenty.count() / realyTotalRequestNum)
+        << (totalLatency.count() / totalRequestNum)
         << " ns"
         << std::endl;
 
     if (tmp1.empty())
     {
-        std::cout << "latenty is empty" << std::endl;
+        std::cout << "latency is empty" << std::endl;
         return;
     }
 
@@ -200,12 +210,12 @@ int main(int argc, char **argv)
     connector->startWorkerThread();
     auto clientNum = std::stoi(argv[3]);
     auto maxRequestNumEveryClient = std::stoi(argv[4]) / clientNum;
-    auto realyTotalRequestNum = maxRequestNumEveryClient * clientNum;
+    auto totalRequestNum = maxRequestNumEveryClient * clientNum;
     auto payload = std::string(std::stoi(argv[5]), 'a');
 
     auto wg = brynet::base::WaitGroup::Create();
 
-    std::vector<LATENCY_PTR> latencyArray;
+    std::vector<LatencyPtr> latencyArray;
 
     auto startTime = std::chrono::steady_clock::now();
 
@@ -229,14 +239,14 @@ int main(int argc, char **argv)
 
         try
         {
-            auto latency = std::make_shared<LATENTY_TYPE>();
+            auto latency = std::make_shared<LatencyType>();
             latencyArray.push_back(latency);
 
             b.configureConnectOptions({
                     ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
                     ConnectOption::WithTimeout(std::chrono::seconds(10))
                 })
-                .asyncConnect<EchoServerClient>([=](EchoServerClient::PTR client) {
+                .asyncConnect<EchoServerClient>([=](const EchoServerClient::Ptr & client) {
                     onConnection(client, wg, maxRequestNumEveryClient, latency, payload);
                 });
         }
@@ -248,7 +258,7 @@ int main(int argc, char **argv)
     
     wg->wait(std::chrono::seconds(100));
 
-    outputLatency(realyTotalRequestNum, latencyArray, startTime);
+    outputLatency(totalRequestNum, latencyArray, startTime);
 
     return 0;
 }
