@@ -17,8 +17,8 @@ public:
         dodo::test::EchoServerService(std::move(context))
     {}
 
-    virtual void Echo(const dodo::test::EchoRequest& request,
-        const dodo::test::EchoServerService::EchoReply::PTR& replyObj,
+    void Echo(const dodo::test::EchoRequest& request,
+        const dodo::test::EchoServerService::EchoReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         receivedString = request.message();
@@ -27,8 +27,8 @@ public:
         replyObj->reply(response, std::move(context));
     }
 
-    virtual void Login(const dodo::test::LoginRequest& request,
-        const dodo::test::EchoServerService::LoginReply::PTR& replyObj,
+    void Login(const dodo::test::LoginRequest& request,
+        const dodo::test::EchoServerService::LoginReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         ;
@@ -71,7 +71,7 @@ TEST_CASE("rpc are computed", "[rpc]")
 
     std::string expectedResponse;
     client->Echo(request,
-        [&](const dodo::test::EchoResponse& response, std::optional<gayrpc::core::RpcError>) {
+        [&](const dodo::test::EchoResponse& response, const std::optional<gayrpc::core::RpcError>&) {
             expectedResponse = response.message();
         });
 
@@ -95,11 +95,9 @@ TEST_CASE("rpc are computed", "[rpc]")
     auto service = std::make_shared<MyService>(std::move(serviceContext));
     dodo::test::EchoServerService::Install(service);
 
-    InterceptorContextType context;
-    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, InterceptorContextType{});
     REQUIRE(service->receivedString == hello);
-
-    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, InterceptorContextType{});
     REQUIRE(expectedResponse == world);
 }
 
@@ -137,7 +135,7 @@ TEST_CASE("sync rpc are computed", "[sync_rpc]")
     std::string expectedResponse;
     client
         ->SyncEcho(request, std::chrono::seconds(10))
-        .Then([&](std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>> result) {
+        .Then([&](const std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>& result) {
             expectedResponse = result.first.message();
         });
 
@@ -161,11 +159,9 @@ TEST_CASE("sync rpc are computed", "[sync_rpc]")
     auto service = std::make_shared<MyService>(std::move(serviceContext));
     dodo::test::EchoServerService::Install(service);
 
-    InterceptorContextType context;
-    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, InterceptorContextType{});
     REQUIRE(service->receivedString == hello);
-
-    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, InterceptorContextType{});
     REQUIRE(expectedResponse == world);
 }
 
@@ -228,9 +224,7 @@ TEST_CASE("err rpc are computed", "[check_err]")
     auto service = std::make_shared<MyService>(std::move(serviceContext));
     dodo::test::EchoServerService::Install(service);
 
-    InterceptorContextType context;
-    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, std::move(context));
-
-    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, std::move(context));
+    rpcHandlerManager->handleRpcMsg(std::move(requestMeta), requestBody, InterceptorContextType{});
+    rpcHandlerManager->handleRpcMsg(std::move(responseMeta), responseBody, InterceptorContextType{});
     REQUIRE(err == "some err");
 }

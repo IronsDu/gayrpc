@@ -3,7 +3,6 @@
 
 #include <brynet/net/EventLoop.hpp>
 #include <brynet/net/TcpService.hpp>
-#include <brynet/net/ListenThread.hpp>
 #include <brynet/base/AppStatus.hpp>
 
 #include <gayrpc/utils/UtilsWrapper.h>
@@ -27,7 +26,7 @@ public:
     {}
 
     void Echo(const EchoRequest& request, 
-        const EchoReply::PTR& replyObj,
+        const EchoReply::Ptr& replyObj,
         InterceptorContextType&& context) override
     {
         EchoResponse response;

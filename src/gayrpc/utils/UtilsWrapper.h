@@ -10,6 +10,7 @@
 #include <brynet/net/http/HttpParser.hpp>
 #include <brynet/net/wrapper/ServiceBuilder.hpp>
 #include <brynet/net/wrapper/ConnectionBuilder.hpp>
+#include <utility>
 
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcType.h>
@@ -19,7 +20,7 @@
 #include <gayrpc/utils/UtilsInterceptor.h>
 #include <gayrpc/protocol/BinaryProtocol.h>
 
-namespace gayrpc { namespace utils {
+namespace gayrpc::utils {
 
     using namespace gayrpc::core;
     using namespace brynet::net;
@@ -31,7 +32,7 @@ namespace gayrpc { namespace utils {
 
     static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& session,
         const std::vector<ServiceCreator>& serverCreators,
-        std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
+        const std::vector<UnaryServerInterceptor>&  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
@@ -50,10 +51,12 @@ namespace gayrpc { namespace utils {
                 inboundInterceptor = makeInterceptor(userInBoundInterceptor);
             }
             // 出站拦截器
-            userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
+            userOutBoundInterceptor.emplace_back(gayrpc::utils::withSessionBinarySender(session));
             UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
-            ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
+            ServiceContext serviceContext(rpcHandlerManager,
+                    std::move(inboundInterceptor),
+                    std::move(outBoundInterceptor));
             auto service = serverCreator(std::move(serviceContext));
 
             session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
@@ -65,7 +68,7 @@ namespace gayrpc { namespace utils {
 
     static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
         const std::vector<ServiceCreator>& serverCreators,
-        std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
+        const std::vector<UnaryServerInterceptor>&  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
@@ -83,8 +86,8 @@ namespace gayrpc { namespace utils {
                 inboundInterceptor = makeInterceptor(userInBoundInterceptor);
             }
             // 出站拦截器	
-            userOutBoundInterceptor.push_back(withProtectedCall());
-            userOutBoundInterceptor.push_back(withHttpSessionSender(httpSession));
+            userOutBoundInterceptor.emplace_back(withProtectedCall());
+            userOutBoundInterceptor.emplace_back(withHttpSessionSender(httpSession));
             UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
             ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
@@ -102,7 +105,7 @@ namespace gayrpc { namespace utils {
         {
         }
 
-        void    addInterceptor(UnaryServerInterceptor interceptor)
+        void    addInterceptor(const UnaryServerInterceptor& interceptor)
         {
             mInterceptors->push_back(interceptor);
         }
@@ -171,7 +174,7 @@ namespace gayrpc { namespace utils {
 
         ServiceBuilder& configureTcpService(TcpService::Ptr tcpService)
         {
-            wrapper::BaseListenerBuilder<ServiceBuilder>::configureService(tcpService);
+            wrapper::BaseListenerBuilder<ServiceBuilder>::configureService(std::move(tcpService));
             return *this;
         }
 
@@ -187,13 +190,13 @@ namespace gayrpc { namespace utils {
             return *this;
         }
 
-        ServiceBuilder& addServiceCreator(ServiceCreator creator)
+        ServiceBuilder& addServiceCreator(const ServiceCreator& creator)
         {
             mCreators.push_back(creator);
             return *this;
         }
 
-        ServiceBuilder&    configureTransportType(BuildTransportTypeSet builder)
+        ServiceBuilder&    configureTransportType(const BuildTransportTypeSet& builder)
         {
             BuildTransportType buildTransportType(&mTransportTypeConfig);
             builder(buildTransportType);
@@ -237,7 +240,8 @@ namespace gayrpc { namespace utils {
         }
 
     private:
-        void buildInterceptor(const InterceptorBuilder& builder, std::vector<UnaryServerInterceptor>& result)
+        static void buildInterceptor(const InterceptorBuilder& builder,
+                std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);
@@ -252,7 +256,7 @@ namespace gayrpc { namespace utils {
 
     template<typename RpcClientType>
     static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr &session,
-        std::vector<UnaryServerInterceptor>  userInBoundInterceptor,
+        const std::vector<UnaryServerInterceptor>&  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor,
         const RpcClientCallback<RpcClientType> &callback)
     {
@@ -268,14 +272,17 @@ namespace gayrpc { namespace utils {
             inboundInterceptor = makeInterceptor(userInBoundInterceptor);
         }
         // 出站拦截器
-        userOutBoundInterceptor.push_back(gayrpc::utils::withSessionBinarySender(session));
+        userOutBoundInterceptor.emplace_back(gayrpc::utils::withSessionBinarySender(session));
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
         // 注册RPC客户端
-        auto client = RpcClientType::Create(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
-        client->setNetworkThreadChecker([session]() {
-                return session->getEventLoop()->isInLoopThread();
-            });
+        auto client = RpcClientType::Create(rpcHandlerManager,
+                std::move(inboundInterceptor),
+                std::move(outBoundInterceptor));
+        client->setNetworkThreadChecker([session]()
+                                        {
+                                            return session->getEventLoop()->isInLoopThread();
+                                        });
         callback(client);
     }
 
@@ -296,7 +303,7 @@ namespace gayrpc { namespace utils {
 
         ClientBuilder& configureTcpService(TcpService::Ptr tcpService)
         {
-            wrapper::BaseConnectionBuilder<ClientBuilder>::configureService(tcpService);
+            wrapper::BaseConnectionBuilder<ClientBuilder>::configureService(std::move(tcpService));
             return *this;
         }
 
@@ -321,7 +328,8 @@ namespace gayrpc { namespace utils {
         }
 
     protected:
-        void buildInterceptor(const InterceptorBuilder& builder, std::vector<UnaryServerInterceptor>& result)
+        static void buildInterceptor(const InterceptorBuilder& builder,
+                std::vector<UnaryServerInterceptor>& result)
         {
             BuildInterceptor buildInterceptor(&result);
             builder(buildInterceptor);
@@ -332,4 +340,4 @@ namespace gayrpc { namespace utils {
         std::vector<UnaryServerInterceptor>     mOutboundInterceptors;
     };
 
-} }
+}

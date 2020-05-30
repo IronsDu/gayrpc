@@ -8,7 +8,7 @@
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
 
-namespace gayrpc { namespace protocol {
+namespace gayrpc::protocol {
 
     using namespace gayrpc::core;
     using namespace brynet::base;
@@ -16,7 +16,7 @@ namespace gayrpc { namespace protocol {
     class http
     {
     public:
-        static void handleHttpPacket(const gayrpc::core::RpcTypeHandleManager::PTR& rpcHandlerManager,
+        static void handleHttpPacket(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
             const brynet::net::http::HTTPParser& httpParser,
             const brynet::net::http::HttpSession::Ptr& session)
         {
@@ -41,11 +41,11 @@ namespace gayrpc { namespace protocol {
             brynet::net::http::HttpResponse httpResponse;
             httpResponse.setStatus(brynet::net::http::HttpResponse::HTTP_RESPONSE_STATUS::OK);
             httpResponse.setContentType("application/json");
-            httpResponse.setBody(jsonMsg.c_str());
+            httpResponse.setBody(jsonMsg);
 
             auto result = httpResponse.getResult();
             httpSession->send(result.c_str(), result.size(), nullptr);
         }
     };
     
-} }
+}

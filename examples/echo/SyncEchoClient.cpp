@@ -11,7 +11,7 @@ using namespace brynet;
 using namespace brynet::net;
 using namespace dodo::test;
 
-static EchoServerClient::PTR createEchoClient(const TcpConnection::Ptr& session)
+static EchoServerClient::Ptr createEchoClient(const TcpConnection::Ptr& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
     session->setDataCallback([rpcHandlerManager](const char* buffer,
