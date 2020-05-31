@@ -82,7 +82,7 @@ namespace gayrpc::protocol {
                     InterceptorContextType context;
                     try
                     {
-                        rpcHandlerManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(meta),
+                        rpcHandlerManager->handleRpcMsg(std::move(meta),
                                                         msg.data_view,
                                                         std::move(context));
                     }

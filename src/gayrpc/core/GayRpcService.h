@@ -46,7 +46,7 @@ namespace gayrpc::core {
     public:
         explicit BaseService(ServiceContext&& context)
             :
-            mContext(std::forward<ServiceContext>(context))
+            mContext(std::move(context))
         {
         }
         virtual ~BaseService() = default;

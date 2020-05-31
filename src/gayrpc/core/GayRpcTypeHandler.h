@@ -31,7 +31,7 @@ namespace gayrpc::core {
             {
                 return false;
             }
-            serviceMap[serviceID] = std::forward<ServiceHandler>(handle);
+            serviceMap[serviceID] = std::move(handle);
             return true;
         }
 
@@ -66,7 +66,7 @@ namespace gayrpc::core {
                                          + std::to_string(meta.service_id()));
             }
 
-            (serviceIt->second)(std::forward<RpcMeta>(meta), data, std::forward<InterceptorContextType>(context));
+            (serviceIt->second)(std::move(meta), data, std::move(context));
         }
 
     private:
