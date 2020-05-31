@@ -22,7 +22,7 @@ class MyService : public EchoServerService
 public:
     explicit MyService(gayrpc::core::ServiceContext&& context)
         :
-        EchoServerService(std::forward<gayrpc::core::ServiceContext>(context))
+        EchoServerService(std::move(context))
     {}
 
     void Echo(const EchoRequest& request, 
@@ -32,7 +32,7 @@ public:
         EchoResponse response;
         response.set_message(request.message());
 
-        replyObj->reply(response, std::forward<InterceptorContextType>(context));
+        replyObj->reply(response, std::move(context));
     }
 };
 
@@ -42,7 +42,7 @@ static auto counter(RpcMeta&& meta,
                     InterceptorContextType&& context)
 {
     count++;
-    return next(std::forward<RpcMeta>(meta), message, std::forward<InterceptorContextType>(context));
+    return next(std::move(meta), message, std::move(context));
 }
 
 int main(int argc, char **argv)

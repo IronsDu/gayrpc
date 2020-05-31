@@ -16,8 +16,8 @@ namespace gayrpc::core {
     public:
         BaseReply(RpcMeta&& meta, UnaryServerInterceptor&& outboundInterceptor)
             :
-            mRequestMeta(std::forward<RpcMeta>(meta)),
-            mOutboundInterceptor(std::forward<UnaryServerInterceptor>(outboundInterceptor))
+            mRequestMeta(std::move(meta)),
+            mOutboundInterceptor(std::move(outboundInterceptor))
         {
         }
 
@@ -48,7 +48,7 @@ namespace gayrpc::core {
                 {
                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
-                std::forward<InterceptorContextType>(context));
+                std::move(context));
         }
 
         template<typename Response>
@@ -80,7 +80,7 @@ namespace gayrpc::core {
                                  {
                                      return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                                  },
-                                 std::forward<InterceptorContextType>(context));
+                                 std::move(context));
         }
 
     private:
@@ -104,12 +104,12 @@ namespace gayrpc::core {
 
         void    reply(const T& response, InterceptorContextType&& context = InterceptorContextType{})
         {
-            BaseReply::reply(response, std::forward<InterceptorContextType>(context));
+            BaseReply::reply(response, std::move(context));
         }
 
         void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType{})
         {
-            BaseReply::error<T>(errorCode, reason, std::forward<InterceptorContextType>(context));
+            BaseReply::error<T>(errorCode, reason, std::move(context));
         }
     };
 

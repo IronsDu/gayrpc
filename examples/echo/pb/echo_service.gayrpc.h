@@ -52,8 +52,8 @@ namespace test {
         using Ptr = std::shared_ptr<EchoServerClient>;
         using WeakPtr = std::weak_ptr<EchoServerClient>;
 
-        using EchoHandle = std::function<void(const dodo::test::EchoResponse&, std::optional<gayrpc::core::RpcError>)>;
-        using LoginHandle = std::function<void(const dodo::test::LoginResponse&, std::optional<gayrpc::core::RpcError>)>;
+        using EchoHandle = std::function<void(const dodo::test::EchoResponse&, const std::optional<gayrpc::core::RpcError>&)>;
+        using LoginHandle = std::function<void(const dodo::test::LoginResponse&, const std::optional<gayrpc::core::RpcError>&)>;
         
 
     public:

@@ -26,9 +26,9 @@ namespace gayrpc { namespace utils {
             InterceptorContextType&& context) mutable {
                 if(eventLoop->isInLoopThread())
                 {
-                    return next(std::forward<gayrpc::core::RpcMeta>(meta),
+                    return next(std::move(meta),
                          message,
-                         std::forward<InterceptorContextType>(context));
+                         std::move(context));
                 }
                 else
                 {
@@ -38,12 +38,12 @@ namespace gayrpc { namespace utils {
                     msg->CopyFrom(message);
 
                     eventLoop->runAsyncFunctor([=,
-                        meta = std::forward<gayrpc::core::RpcMeta>(meta),
-                        context = std::forward<InterceptorContextType>(context),
-                        next = std::forward<gayrpc::core::UnaryHandler>(next)]() mutable {
-                            next(std::forward<gayrpc::core::RpcMeta>(meta),
+                        meta = std::move(meta),
+                        context = std::move(context),
+                        next = std::move(next)]() mutable {
+                            next(std::move(meta),
                                 *msg,
-                                std::forward<InterceptorContextType>(context))
+                                std::move(context))
                                 .Then([=](std::optional<std::string> err) mutable {
                                     promise.SetValue(err);
                                 });
@@ -61,9 +61,9 @@ namespace gayrpc { namespace utils {
             InterceptorContextType&& context) {
             try
             {
-                return next(std::forward<gayrpc::core::RpcMeta>(meta),
+                return next(std::move(meta),
                      message,
-                     std::forward<InterceptorContextType>(context));
+                     std::move(context));
             }
             catch (const std::exception& e)
             {
@@ -87,9 +87,9 @@ namespace gayrpc { namespace utils {
             gayrpc::core::UnaryHandler&& next,
             InterceptorContextType&& context) {
             gayrpc::protocol::binary::send(meta, message, weakSession);
-            return next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::move(meta),
                  message,
-                 std::forward<InterceptorContextType>(context));
+                 std::move(context));
         };
     }
 
@@ -104,7 +104,7 @@ namespace gayrpc { namespace utils {
         InterceptorContextType context;
         try
         {
-            handleManager->handleRpcMsg(std::forward<gayrpc::core::RpcMeta>(timeoutMeta),
+            handleManager->handleRpcMsg(std::move(timeoutMeta),
                                         "",
                                         std::move(context));
         }
@@ -138,9 +138,9 @@ namespace gayrpc { namespace utils {
                     });
             }
 
-            return next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::move(meta),
                  message,
-                 std::forward<InterceptorContextType>(context));
+                 std::move(context));
         };
     }
 
@@ -152,9 +152,9 @@ namespace gayrpc { namespace utils {
             InterceptorContextType&& context) {
             gayrpc::protocol::http::send(meta, message, httpSession);
             httpSession->postShutdown();
-            return next(std::forward<gayrpc::core::RpcMeta>(meta),
+            return next(std::move(meta),
                  message,
-                 std::forward<InterceptorContextType>(context));
+                 std::move(context));
         };
     }
 

@@ -81,7 +81,7 @@ namespace gayrpc::core {
                     handle(response, error);
                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
-                std::forward<InterceptorContextType>(context));
+                std::move(context));
     }
 
     // 解析Request然后(通过拦截器)调用服务处理函数
@@ -123,7 +123,7 @@ namespace gayrpc::core {
                                      + typeid(RequestType).name());
         }
 
-        return inboundInterceptor(std::move(meta), request, std::move(handler), std::forward<InterceptorContextType>(context));
+        return inboundInterceptor(std::move(meta), request, std::move(handler), std::move(context));
     }
 
 }

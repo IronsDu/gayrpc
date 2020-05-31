@@ -32,9 +32,9 @@ public:
         mClient(std::move(client)),
         mWg(std::move(wg)),
         mPayload(std::move(payload)),
+        mCurrentNum(0),
         mLatency(std::move(latency))
     {
-        mCurrentNum = 0;
     }
 
     void sendRequest()
@@ -46,7 +46,7 @@ public:
         mRequestTime = std::chrono::steady_clock::now();
         mClient->Echo(request,
                       [sharedThis = shared_from_this(), this](const EchoResponse& response,
-                                                              std::optional<gayrpc::core::RpcError> error)
+                                                              const std::optional<gayrpc::core::RpcError>& error)
                       {
                           onEchoResponse(response, std::move(error));
                       });
@@ -110,9 +110,9 @@ static void outputLatency(int totalRequestNum,
     std::chrono::nanoseconds totalLatency = std::chrono::nanoseconds::zero();
     LatencyType tmp1;
 
-    for (auto& v : latencyArray)
+    for (const auto& v : latencyArray)
     {
-        for (auto& latency : *v)
+        for (const auto& latency : *v)
         {
             totalLatency += latency;
             tmp1.push_back(latency);
@@ -221,8 +221,10 @@ int main(int argc, char **argv)
 
     auto b = ClientBuilder();
     b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+            (void)buildInterceptors;
         })
         .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
+            (void)buildInterceptors;
         })
         .configureConnectionOptions({
             brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),

@@ -68,6 +68,7 @@ int main(int argc, char **argv)
         auto result = responseFuture.Wait();
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
+        (void)error;
 
         std::cout << "echo message:" << response.message() << std::endl;
     }
@@ -80,6 +81,7 @@ int main(int argc, char **argv)
         auto result = responseFuture.Wait();
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
+        (void)error;
 
         std::cout << "login message:" << response.message() << std::endl;
     }
