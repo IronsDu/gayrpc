@@ -67,13 +67,14 @@ namespace gayrpc::utils {
     }
 
     static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
+                                      brynet::net::http::HttpSessionHandlers& handlers,
         const std::vector<ServiceCreator>& serverCreators,
         const std::vector<UnaryServerInterceptor>&  userInBoundInterceptor,
         std::vector<UnaryServerInterceptor>  userOutBoundInterceptor)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
-        httpSession->setHttpCallback([=](const brynet::net::http::HTTPParser & httpParser,
+        handlers.setHttpCallback([=](const brynet::net::http::HTTPParser & httpParser,
             const brynet::net::http::HttpSession::Ptr & session) {
                 gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
             });
@@ -221,11 +222,13 @@ namespace gayrpc::utils {
                         break;
                     case TransportType::HTTP:
                         brynet::net::http::HttpService::setup(session,
-                            [=](const brynet::net::http::HttpSession::Ptr & httpSession) {
-                                OnHTTPConnectionEnter(httpSession, 
-                                    creators,
-                                    inboundInterceptors,
-                                    outboundInterceptors);
+                            [=](const brynet::net::http::HttpSession::Ptr & httpSession,
+                                    brynet::net::http::HttpSessionHandlers& handlers) {
+                                OnHTTPConnectionEnter(httpSession,
+                                                      handlers,
+                                                      creators,
+                                                      inboundInterceptors,
+                                                      outboundInterceptors);
                             });
                         break;
                     default:
