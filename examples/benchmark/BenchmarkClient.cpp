@@ -126,9 +126,9 @@ static void outputLatency(int totalRequestNum,
         << connectionCounter
         << std::endl;
 
-    std::cout << "took "
+    std::cout << "cost "
               << costTime.count()
-              << "ms, for "
+              << " ms for "
               << totalRequestNum
         << " requests"
         << std::endl;
@@ -138,13 +138,13 @@ static void outputLatency(int totalRequestNum,
     {
         second = 1;
     }
-    std::cout << "throughput  (TPS):"
+    std::cout << "throughput(TPS):"
         << (totalRequestNum / second)
         << std::endl;
 
     std::cout << "mean:"
         << (std::chrono::duration_cast<std::chrono::milliseconds>(totalLatency).count() / totalRequestNum)
-        << " ms ,"
+        << " ms, "
         << (totalLatency.count() / totalRequestNum)
         << " ns"
         << std::endl;
@@ -157,21 +157,21 @@ static void outputLatency(int totalRequestNum,
 
     std::cout << "median:"
         << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size() / 2]).count())
-        << " ms ,"
+        << " ms, "
         << (tmp1[tmp1.size() / 2].count())
         << " ns"
         << std::endl;
 
     std::cout << "max:"
         << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[tmp1.size() - 1]).count())
-        << " ms ,"
+        << " ms, "
         << (tmp1[tmp1.size() - 1].count())
         << " ns"
         << std::endl;
 
     std::cout << "min:"
         << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[0]).count())
-        << " ms ,"
+        << " ms, "
         << (tmp1[0].count())
         << " ns"
         << std::endl;
@@ -182,15 +182,10 @@ static void outputLatency(int totalRequestNum,
         p99Index = 1;
     }
 
-    std::chrono::nanoseconds p99Total = std::chrono::nanoseconds::zero();
-    for (size_t i = 0; i < p99Index; i++)
-    {
-        p99Total += tmp1[i];
-    }
     std::cout << "p99:"
-        << (std::chrono::duration_cast<std::chrono::milliseconds>(p99Total).count() / p99Index)
-        << " ms ,"
-        << (p99Total.count() / p99Index)
+        << (std::chrono::duration_cast<std::chrono::milliseconds>(tmp1[p99Index]).count())
+        << " ms, "
+        << (tmp1[p99Index].count())
         << " ns"
         << std::endl;
 }

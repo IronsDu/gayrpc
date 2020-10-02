@@ -49,13 +49,13 @@ https://github.com/IronsDu/gayrpc/tree/master/examples
 Latency(single threaded):
 ```sh
 connection num:1000
-took 13285ms, for 3000000 requests
-throughput  (TPS):230769
-mean:3 ms ,3920200 ns
-median:3 ms ,3050227 ns
-max:40 ms ,40070708 ns
-min:0 ms ,15601 ns
-p99:3 ms ,3757835 ns
+cost 16491 ms for 3000000 requests
+throughput(TPS):187500
+mean:5 ms, 5274983 ns
+median:5 ms, 5132642 ns
+max:57 ms, 57525470 ns
+min:0 ms, 17231 ns
+p99:19 ms, 19198630 ns
 ```
 
 Throughput(two threaded):
