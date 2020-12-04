@@ -14,9 +14,8 @@ using namespace dodo::test;
 static EchoServerClient::Ptr createEchoClient(const TcpConnection::Ptr& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](const char* buffer,
-        size_t len) {
-        return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
+    session->setDataCallback([rpcHandlerManager](brynet::base::BasePacketReader& reader) {
+        return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
     });
 
     // 入站拦截器

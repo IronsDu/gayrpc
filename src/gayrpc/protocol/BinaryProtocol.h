@@ -37,7 +37,7 @@ namespace gayrpc::protocol {
             if (session->getEventLoop()->isInLoopThread())
             {
                 // 实际的发送
-                AutoMallocPacket<4096> bpw(true, true);
+                AutoMallocPacket<4096> bpw(false, true);
                 serializeProtobufPacket(bpw,
                     meta.SerializeAsString(),
                     message.SerializeAsString());
@@ -52,7 +52,7 @@ namespace gayrpc::protocol {
                 session->getEventLoop()->runAsyncFunctor([meta, msg, session]()
                 {
                     // 实际的发送
-                    AutoMallocPacket<4096> bpw(true, true);
+                    AutoMallocPacket<4096> bpw(false, true);
                     serializeProtobufPacket(bpw,
                         meta.SerializeAsString(),
                         msg->SerializeAsString());
@@ -62,9 +62,8 @@ namespace gayrpc::protocol {
             }
         }
 
-        static size_t binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
-            const char* buffer,
-            size_t len)
+        static void binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
+                                         brynet::base::BasePacketReader& reader)
         {
             auto opHandle = [rpcHandlerManager](const OpPacket& opPacket) {
                 if (opPacket.head.op != OpCode::OpCodeProtobuf)
@@ -105,7 +104,7 @@ namespace gayrpc::protocol {
                 return true;
             };
 
-            return parseOpPacket(buffer, len, opHandle);
+            parseOpPacket(reader, opHandle);
         }
 
         static void serializeProtobufPacket(BasePacketWriter& bpw,
@@ -180,15 +179,14 @@ namespace gayrpc::protocol {
 
         // 解析网络消息中的OpPacket
         template<typename OpPacketHandler>
-        static size_t parseOpPacket(const char* buffer,
-            size_t len,
+        static void parseOpPacket(brynet::base::BasePacketReader& reader,
             const OpPacketHandler& handler)
         {
             size_t processLen = 0;
 
-            while (len > processLen)
+            while (reader.size() > processLen)
             {
-                BasePacketReader bpr(buffer + processLen, len - processLen);
+                BasePacketReader bpr(reader.begin() + processLen, reader.size() - processLen);
                 OpPacket opPacket{};
 
                 constexpr auto HEAD_LEN =
@@ -208,14 +206,14 @@ namespace gayrpc::protocol {
                     break;
                 }
 
-                opPacket.data = bpr.getBuffer() + bpr.getPos();
+                opPacket.data = bpr.begin() + bpr.currentPos();
                 handler(opPacket);
                 bpr.addPos(opPacket.head.data_len);
 
                 processLen += (HEAD_LEN + opPacket.head.data_len);
             }
-
-            return processLen;
+            reader.addPos(processLen);
+            reader.savePos();
         }
 
         // 解析OpPacket中的protobuf packet
@@ -246,12 +244,12 @@ namespace gayrpc::protocol {
                 return false;
             }
 
-            protobufPacket.meta_view = std::string_view(bpr.getBuffer() + bpr.getPos(),
+            protobufPacket.meta_view = std::string_view(bpr.begin() + bpr.currentPos(),
                                                    protobufPacket.head.meta_size);
 
             bpr.addPos(protobufPacket.head.meta_size);
 
-            protobufPacket.data_view = std::string_view(bpr.getBuffer() + bpr.getPos(),
+            protobufPacket.data_view = std::string_view(bpr.begin() + bpr.currentPos(),
                                                         protobufPacket.head.data_size);
             bpr.addPos(protobufPacket.head.data_size);
 

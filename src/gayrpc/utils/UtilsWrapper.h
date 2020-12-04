@@ -37,10 +37,9 @@ namespace gayrpc::utils {
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
-        session->setDataCallback([=](const char* buffer,
-            size_t len) {
+        session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
                 // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
-                return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
+                return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
             });
 
         for (const auto& serverCreator : serverCreators)
@@ -264,9 +263,8 @@ namespace gayrpc::utils {
         const RpcClientCallback<RpcClientType> &callback)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
-        session->setDataCallback([=](const char *buffer,
-            size_t len) {
-            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, buffer, len);
+        session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
+            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
         });
 
         // 入站拦截器
