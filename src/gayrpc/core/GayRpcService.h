@@ -20,17 +20,17 @@ namespace gayrpc::core {
             mOutInterceptor(std::move(outInterceptor))
         {}
 
-        const RpcTypeHandleManager::Ptr&    getTypeHandleManager() const
+        [[nodiscard]] const RpcTypeHandleManager::Ptr&    getTypeHandleManager() const
         {
             return mTypeHandleManager;
         }
 
-        const UnaryServerInterceptor&       getInInterceptor() const
+        [[nodiscard]] const UnaryServerInterceptor&       getInInterceptor() const
         {
             return mInInterceptor;
         }
 
-        const UnaryServerInterceptor&       getOutInterceptor() const
+        [[nodiscard]] const UnaryServerInterceptor&       getOutInterceptor() const
         {
             return mOutInterceptor;
         }

@@ -51,8 +51,7 @@ namespace gayrpc::core {
             break;
         case RpcMeta::JSON:
             {
-                auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response);
-                if (!s.ok())
+                if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response); !s.ok())
                 {
                     throw std::runtime_error(std::string("parse json response failed:")
                                              + s.error_message().as_string()
@@ -106,8 +105,7 @@ namespace gayrpc::core {
             break;
         case RpcMeta::JSON:
             {
-                auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request);
-                if (!s.ok())
+                if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request); !s.ok())
                 {
                     throw std::runtime_error(std::string("parse json request failed:")
                                              + s.error_message().as_string()

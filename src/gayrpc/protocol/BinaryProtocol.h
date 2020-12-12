@@ -66,14 +66,16 @@ namespace gayrpc::protocol {
         static void binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
                                          brynet::base::BasePacketReader& reader)
         {
-            auto opHandle = [rpcHandlerManager](const OpPacket& opPacket) {
+            auto opHandle = [rpcHandlerManager](const OpPacket& opPacket)
+            {
                 if (opPacket.head.op != static_cast<OpCodeType>(OpCode::OpCodeProtobuf))
                 {
                     // only support protobuf binary protocol
                     return false;
                 }
 
-                auto pbPacketHandle = [rpcHandlerManager](const ProtobufPacket& msg) {
+                auto pbPacketHandle = [rpcHandlerManager](const ProtobufPacket& msg)
+                {
                     gayrpc::core::RpcMeta meta;
                     if (!meta.ParseFromArray(msg.meta_view.data(), static_cast<int>(msg.meta_view.size())))
                     {

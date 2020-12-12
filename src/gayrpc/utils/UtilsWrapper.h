@@ -37,16 +37,18 @@ namespace gayrpc::utils {
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
-        session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
-                // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
-                return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
-            });
+        session->setDataCallback([=](brynet::base::BasePacketReader& reader)
+        {
+            // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
+            return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
+        });
 
         for (const auto& serverCreator : serverCreators)
         {
             // 入站拦截器
             UnaryServerInterceptor inboundInterceptor = makeInterceptor();
-            if (!userInBoundInterceptor.empty()) {
+            if (!userInBoundInterceptor.empty())
+            {
                 inboundInterceptor = makeInterceptor(userInBoundInterceptor);
             }
             // 出站拦截器
@@ -58,9 +60,10 @@ namespace gayrpc::utils {
                     std::move(outBoundInterceptor));
             auto service = serverCreator(std::move(serviceContext));
 
-            session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
+            session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session)
+            {
                     service->onClose();
-                });
+            });
             service->install();
         }
     }
@@ -74,7 +77,8 @@ namespace gayrpc::utils {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
         handlers.setHttpCallback([=](const brynet::net::http::HTTPParser & httpParser,
-            const brynet::net::http::HttpSession::Ptr & session) {
+                                    const brynet::net::http::HttpSession::Ptr & session)
+            {
                 gayrpc::protocol::http::handleHttpPacket(rpcHandlerManager, httpParser, session);
             });
 
@@ -82,7 +86,8 @@ namespace gayrpc::utils {
         {
             // 入站拦截器
             UnaryServerInterceptor inboundInterceptor = makeInterceptor();
-            if (!userInBoundInterceptor.empty()) {
+            if (!userInBoundInterceptor.empty())
+            {
                 inboundInterceptor = makeInterceptor(userInBoundInterceptor);
             }
             // 出站拦截器	
@@ -210,7 +215,8 @@ namespace gayrpc::utils {
                 [creators = mCreators,
                 inboundInterceptors = mInboundInterceptors,
                 outboundInterceptors = mOutboundInterceptors,
-                transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr & session) {
+                transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr & session)
+                {
                     switch (transportType)
                     {
                     case TransportType::Binary:
@@ -234,7 +240,6 @@ namespace gayrpc::utils {
                         throw std::runtime_error(
                             std::string("not support transport type:") 
                             + std::to_string(static_cast<int>(transportType)));
-                        break;
                     }
                 }));
 
@@ -263,13 +268,15 @@ namespace gayrpc::utils {
         const RpcClientCallback<RpcClientType> &callback)
     {
         auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
-        session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
+        session->setDataCallback([=](brynet::base::BasePacketReader& reader)
+        {
             return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
         });
 
         // 入站拦截器
         UnaryServerInterceptor inboundInterceptor = makeInterceptor();
-        if (!userInBoundInterceptor.empty()) {
+        if (!userInBoundInterceptor.empty())
+        {
             inboundInterceptor = makeInterceptor(userInBoundInterceptor);
         }
         // 出站拦截器
@@ -313,12 +320,13 @@ namespace gayrpc::utils {
         {
             auto inboundInterceptors = mInboundInterceptors;
             auto outboundInterceptors = mOutboundInterceptors;
-            auto enterCallback = [=] (const brynet::net::TcpConnection::Ptr& session) {
-                OnBinaryRpcClient<RpcClientType>(session,
-                    inboundInterceptors,
-                    outboundInterceptors,
-                    callback);
-            };
+            auto enterCallback = [=] (const brynet::net::TcpConnection::Ptr& session)
+                    {
+                        OnBinaryRpcClient<RpcClientType>(session,
+                            inboundInterceptors,
+                            outboundInterceptors,
+                            callback);
+                    };
 
             auto connectionOptions = wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectionOptions();
             connectionOptions.push_back(AddSocketOption::AddEnterCallback(enterCallback));

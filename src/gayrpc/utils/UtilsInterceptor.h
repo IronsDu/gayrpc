@@ -23,7 +23,8 @@ namespace gayrpc { namespace utils {
         return [=](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
-            InterceptorContextType&& context) mutable {
+            InterceptorContextType&& context) mutable
+            {
                 if(eventLoop->isInLoopThread())
                 {
                     return next(std::move(meta),
@@ -38,13 +39,16 @@ namespace gayrpc { namespace utils {
                     msg->CopyFrom(message);
 
                     eventLoop->runAsyncFunctor([=,
+                        msg = std::move(msg),
                         meta = std::move(meta),
                         context = std::move(context),
-                        next = std::move(next)]() mutable {
+                        next = std::move(next)]() mutable
+                        {
                             next(std::move(meta),
                                 *msg,
                                 std::move(context))
-                                .Then([=](std::optional<std::string> err) mutable {
+                                .Then([=](std::optional<std::string> err) mutable
+                                {
                                     promise.SetValue(err);
                                 });
                         });
@@ -58,39 +62,39 @@ namespace gayrpc { namespace utils {
         return [](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
-            InterceptorContextType&& context) {
-            try
+            InterceptorContextType&& context)
             {
-                return next(std::move(meta),
-                     message,
-                     std::move(context));
-            }
-            catch (const std::exception& e)
-            {
-                std::cout << e.what() << std::endl;
-                return ananas::MakeReadyFuture(std::optional<std::string>(e.what()));
-            }
-            catch (...)
-            {
-                std::cout << "unknow exception" << std::endl;
-                return ananas::MakeReadyFuture(std::optional<std::string>("unknow exception"));
-            }
-
-            return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-        };
+                try
+                {
+                    return next(std::move(meta),
+                         message,
+                         std::move(context));
+                }
+                catch (const std::exception& e)
+                {
+                    std::cout << e.what() << std::endl;
+                    return ananas::MakeReadyFuture(std::optional<std::string>(e.what()));
+                }
+                catch (...)
+                {
+                    std::cout << "unknown exception" << std::endl;
+                    return ananas::MakeReadyFuture(std::optional<std::string>("unknown exception"));
+                }
+            };
     }
 
     static auto withSessionBinarySender(std::weak_ptr<brynet::net::TcpConnection> weakSession)
     {
-        return [weakSession](gayrpc::core::RpcMeta&& meta,
+        return [weakSession = std::move(weakSession)](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
-            InterceptorContextType&& context) {
-            gayrpc::protocol::binary::send(meta, message, weakSession);
-            return next(std::move(meta),
-                 message,
-                 std::move(context));
-        };
+            InterceptorContextType&& context)
+            {
+                gayrpc::protocol::binary::send(meta, message, weakSession);
+                return next(std::move(meta),
+                     message,
+                     std::move(context));
+            };
     }
 
     static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::Ptr& handleManager,
@@ -125,23 +129,21 @@ namespace gayrpc { namespace utils {
         return [eventLoop, handleManager](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
-            InterceptorContextType&& context) {
-
-            if (meta.has_request_info() && meta.request_info().timeout() > 0)
+            InterceptorContextType&& context)
             {
-                auto seqID = meta.request_info().sequence_id();
-                auto timeoutSecond = meta.request_info().timeout();
+                if (meta.has_request_info() && meta.request_info().timeout() > 0)
+                {
+                    eventLoop->runAfter(std::chrono::seconds(meta.request_info().timeout()),
+                        [seqID = meta.request_info().sequence_id(), handleManager]()
+                        {
+                            causeTimeout(handleManager, seqID);
+                        });
+                }
 
-                eventLoop->runAfter(std::chrono::seconds(timeoutSecond),
-                    [seqID, handleManager]() {
-                        causeTimeout(handleManager, seqID);
-                    });
-            }
-
-            return next(std::move(meta),
-                 message,
-                 std::move(context));
-        };
+                return next(std::move(meta),
+                     message,
+                     std::move(context));
+            };
     }
 
     static auto withHttpSessionSender(const brynet::net::http::HttpSession::Ptr& httpSession)
@@ -149,13 +151,14 @@ namespace gayrpc { namespace utils {
         return [httpSession](gayrpc::core::RpcMeta&& meta,
             const google::protobuf::Message& message,
             gayrpc::core::UnaryHandler&& next,
-            InterceptorContextType&& context) {
-            gayrpc::protocol::http::send(meta, message, httpSession);
-            httpSession->postShutdown();
-            return next(std::move(meta),
-                 message,
-                 std::move(context));
-        };
+            InterceptorContextType&& context)
+            {
+                gayrpc::protocol::http::send(meta, message, httpSession);
+                httpSession->postShutdown();
+                return next(std::move(meta),
+                     message,
+                     std::move(context));
+            };
     }
 
 } }

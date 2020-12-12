@@ -26,12 +26,12 @@ namespace gayrpc::core {
         {
         }
 
-        const std::chrono::steady_clock::time_point& getEndTime() const
+        [[nodiscard]] const std::chrono::steady_clock::time_point& getEndTime() const
         {
             return mEndTime;
         }
 
-        uint64_t    getSeqID() const
+        [[nodiscard]] uint64_t    getSeqID() const
         {
             return mSeqID;
         }
@@ -84,8 +84,8 @@ namespace gayrpc::core {
         {
             std::vector< TimeoutCallback>  callbacks;
             {
-                std::lock_guard<std::mutex> lck(mStubMapGuard);
                 const auto now = std::chrono::steady_clock::now();
+                std::lock_guard<std::mutex> lck(mStubMapGuard);
                 while (!mWaitResponseTimerQueue.empty())
                 {
                     const auto& head = mWaitResponseTimerQueue.top();
@@ -93,11 +93,10 @@ namespace gayrpc::core {
                     {
                         break;
                     }
-                    const auto it = mTimeoutHandleMap.find(head.getSeqID());
-                    if (it != mTimeoutHandleMap.end())
+                    if (const auto it = mTimeoutHandleMap.find(head.getSeqID()); it != mTimeoutHandleMap.end())
                     {
-                        callbacks.push_back((*it).second);
-                        mTimeoutHandleMap.erase(head.getSeqID());
+                        callbacks.push_back(std::move((*it).second));
+                        mTimeoutHandleMap.erase(it);
                         mStubHandleMap.erase(head.getSeqID());
                     }
                     mWaitResponseTimerQueue.pop();
@@ -218,12 +217,11 @@ namespace gayrpc::core {
         void    installResponseStub(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcTypeHandleManager,
             ServiceIDType serviceID)
         {
-            auto sharedThis = shared_from_this();
-            auto responseStub = [sharedThis](RpcMeta&& meta,
+            auto responseStub = [sharedThis = shared_from_this(), this](RpcMeta&& meta,
                                              const std::string_view & data,
                                              InterceptorContextType&& context)
             {
-                sharedThis->processRpcResponse(std::move(meta), data, std::move(context));
+                processRpcResponse(std::move(meta), data, std::move(context));
                 return true;
             };
             rpcTypeHandleManager->registerTypeHandle(RpcMeta::RESPONSE, responseStub, serviceID);
@@ -270,7 +268,7 @@ namespace gayrpc::core {
 
                 mTimeoutHandleMap.erase(sequenceID);
 
-                auto it = mStubHandleMap.find(sequenceID);
+                const auto it = mStubHandleMap.find(sequenceID);
                 if (it == mStubHandleMap.end())
                 {
                     throw std::runtime_error("not found response seq id:" +
