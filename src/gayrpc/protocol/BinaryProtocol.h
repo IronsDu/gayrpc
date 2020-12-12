@@ -3,10 +3,11 @@
 #include <string>
 #include <string_view>
 
-#include <gayrpc/core/GayRpcTypeHandler.h>
 #include <brynet/base/Packet.hpp>
 #include <brynet/net/TcpConnection.hpp>
 #include <brynet/net/EventLoop.hpp>
+
+#include <gayrpc/core/GayRpcTypeHandler.h>
 
 // 实现协议解析和序列化
 
@@ -18,8 +19,8 @@ namespace gayrpc::protocol {
     class binary
     {
     public:
-        typedef uint32_t OpCodeType;
-        enum OpCode : OpCodeType
+        using OpCodeType = uint32_t;
+        enum class OpCode : OpCodeType
         {
             OpCodeProtobuf = 1,
         };
@@ -49,7 +50,7 @@ namespace gayrpc::protocol {
                 std::shared_ptr<google::protobuf::Message> msg;
                 msg.reset(message.New());
                 msg->CopyFrom(message);
-                session->getEventLoop()->runAsyncFunctor([meta, msg, session]()
+                session->getEventLoop()->runAsyncFunctor([meta, msg = std::move(msg), session]()
                 {
                     // 实际的发送
                     AutoMallocPacket<4096> bpw(false, true);
@@ -66,8 +67,9 @@ namespace gayrpc::protocol {
                                          brynet::base::BasePacketReader& reader)
         {
             auto opHandle = [rpcHandlerManager](const OpPacket& opPacket) {
-                if (opPacket.head.op != OpCode::OpCodeProtobuf)
+                if (opPacket.head.op != static_cast<OpCodeType>(OpCode::OpCodeProtobuf))
                 {
+                    // only support protobuf binary protocol
                     return false;
                 }
 
@@ -78,6 +80,7 @@ namespace gayrpc::protocol {
                         std::cerr << "parse RpcMeta protobuf failed" << std::endl;
                         return;
                     }
+
                     InterceptorContextType context;
                     try
                     {
@@ -107,31 +110,6 @@ namespace gayrpc::protocol {
             parseOpPacket(reader, opHandle);
         }
 
-        static void serializeProtobufPacket(BasePacketWriter& bpw,
-            const std::string& meta,
-            const std::string& data)
-        {
-            SerializeProtobufPacket protobufPacket{};
-            protobufPacket.head.meta_size = meta.size();
-            protobufPacket.head.data_size = data.size();
-
-            OpPacket opPacket{};
-            opPacket.head.op = OpCodeProtobuf;
-            opPacket.head.data_len = sizeof(protobufPacket.head.meta_size) +
-                sizeof(protobufPacket.head.data_size) +
-                protobufPacket.head.meta_size +
-                protobufPacket.head.data_size;
-
-            bpw.writeUINT64(opPacket.head.data_len);
-            bpw.writeUINT32(opPacket.head.op);
-
-            bpw.writeUINT32(protobufPacket.head.meta_size);
-            bpw.writeUINT64(protobufPacket.head.data_size);
-
-            bpw.writeBinary(meta);
-            bpw.writeBinary(data);
-        }
-
     private:
 
         // 基于[len, op] 的消息包格式
@@ -141,9 +119,9 @@ namespace gayrpc::protocol {
             struct
             {
                 // data部分的长度
-                uint64_t     data_len;
+               uint64_t     data_len;
                 // opcode
-                OpCodeType     op;
+                OpCodeType  op;
             }head;
 
             // data部分
@@ -164,15 +142,23 @@ namespace gayrpc::protocol {
             std::string_view    data_view;
         };
 
-        struct SerializeProtobufPacket
+        static void serializeProtobufPacket(BasePacketWriter& bpw,
+                                            const std::string& meta,
+                                            const std::string& data)
         {
-            // header部分
-            struct
-            {
-                uint32_t   meta_size;    // 4 bytes
-                uint64_t   data_size;    // 8 bytes
-            }head;
-        };
+            auto bodyLen =  sizeof(ProtobufPacket::head.meta_size)
+                            + sizeof(ProtobufPacket::head.data_size)
+                            + meta.size()
+                            + data.size();
+
+            bpw.writeUINT64(bodyLen);
+            bpw.writeUINT32(static_cast<OpCodeType>(OpCode::OpCodeProtobuf));
+
+            bpw.writeUINT32(meta.size());
+            bpw.writeUINT64(data.size());
+            bpw.writeBinary(meta);
+            bpw.writeBinary(data);
+        }
 
         using ProtobufPacketHandler = std::function<void(const ProtobufPacket&)>;
         using OpPacketHandler = std::function<bool(const OpPacket&)>;
@@ -182,38 +168,23 @@ namespace gayrpc::protocol {
         static void parseOpPacket(brynet::base::BasePacketReader& reader,
             const OpPacketHandler& handler)
         {
-            size_t processLen = 0;
-
-            while (reader.size() > processLen)
+            while (reader.enough(sizeof(OpPacket::head.data_len)+sizeof(OpPacket::head.op)))
             {
-                BasePacketReader bpr(reader.begin() + processLen, reader.size() - processLen);
                 OpPacket opPacket{};
+                opPacket.head.data_len = reader.readUINT64();
+                opPacket.head.op = reader.readUINT32();
 
-                constexpr auto HEAD_LEN =
-                    sizeof(opPacket.head.data_len) +
-                    sizeof(opPacket.head.op);
-
-                if (bpr.getLeft() < HEAD_LEN)
+                if (!reader.enough(opPacket.head.data_len))
                 {
                     break;
                 }
 
-                opPacket.head.data_len = bpr.readUINT64();
-                opPacket.head.op = bpr.readUINT32();
-
-                if (bpr.getLeft() < opPacket.head.data_len)
-                {
-                    break;
-                }
-
-                opPacket.data = bpr.begin() + bpr.currentPos();
+                opPacket.data = reader.currentBuffer();
                 handler(opPacket);
-                bpr.addPos(opPacket.head.data_len);
 
-                processLen += (HEAD_LEN + opPacket.head.data_len);
+                reader.addPos(opPacket.head.data_len);
+                reader.savePos();
             }
-            reader.addPos(processLen);
-            reader.savePos();
         }
 
         // 解析OpPacket中的protobuf packet
@@ -222,14 +193,10 @@ namespace gayrpc::protocol {
             const ProtobufPacketHandler& handler)
         {
             BasePacketReader bpr(opPacket.data, opPacket.head.data_len);
-
             ProtobufPacket protobufPacket;
 
-            constexpr auto HEAD_LEN =
-                sizeof(protobufPacket.head.meta_size) +
-                sizeof(protobufPacket.head.data_size);
-
-            if (bpr.getLeft() < HEAD_LEN)
+            if (!bpr.enough(sizeof(protobufPacket.head.meta_size) +
+                            sizeof(protobufPacket.head.data_size)))
             {
                 return false;
             }
@@ -237,20 +204,16 @@ namespace gayrpc::protocol {
             protobufPacket.head.meta_size = bpr.readUINT32();
             protobufPacket.head.data_size = bpr.readUINT64();
 
-            if (bpr.getLeft() !=
-                (protobufPacket.head.meta_size +
-                    protobufPacket.head.data_size))
+            if (!bpr.enough(protobufPacket.head.meta_size +
+                           protobufPacket.head.data_size))
             {
                 return false;
             }
 
-            protobufPacket.meta_view = std::string_view(bpr.begin() + bpr.currentPos(),
-                                                   protobufPacket.head.meta_size);
-
+            protobufPacket.meta_view = std::string_view(bpr.currentBuffer(), protobufPacket.head.meta_size);
             bpr.addPos(protobufPacket.head.meta_size);
 
-            protobufPacket.data_view = std::string_view(bpr.begin() + bpr.currentPos(),
-                                                        protobufPacket.head.data_size);
+            protobufPacket.data_view = std::string_view(bpr.currentBuffer(), protobufPacket.head.data_size);
             bpr.addPos(protobufPacket.head.data_size);
 
             handler(protobufPacket);

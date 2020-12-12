@@ -43,8 +43,7 @@ namespace gayrpc::protocol {
             httpResponse.setContentType("application/json");
             httpResponse.setBody(jsonMsg);
 
-            auto result = httpResponse.getResult();
-            httpSession->send(result.c_str(), result.size(), nullptr);
+            httpSession->send(httpResponse.getResult(), nullptr);
         }
     };
     
