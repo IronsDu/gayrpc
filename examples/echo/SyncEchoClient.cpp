@@ -1,9 +1,8 @@
-#include <iostream>
-
-#include <brynet/net/wrapper/ConnectionBuilder.hpp>
-
 #include <gayrpc/protocol/BinaryProtocol.h>
 #include <gayrpc/utils/UtilsInterceptor.h>
+
+#include <brynet/net/wrapper/ConnectionBuilder.hpp>
+#include <iostream>
 
 #include "./pb/echo_service.gayrpc.h"
 
@@ -23,18 +22,19 @@ static EchoServerClient::Ptr createEchoClient(const TcpConnection::Ptr& session)
 
     // 出站拦截器
     auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<TcpConnection>(session)),
-        gayrpc::utils::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
+                                                             gayrpc::utils::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
 
     // 注册RPC客户端
     auto client = EchoServerClient::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
     return client;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc != 3)
     {
-        std::cerr << "Usage: <host> <port>\n" << std::endl;
+        std::cerr << "Usage: <host> <port>\n"
+                  << std::endl;
         exit(-1);
     }
 
@@ -45,16 +45,14 @@ int main(int argc, char **argv)
     connector->startWorkerThread();
 
     auto session = brynet::net::wrapper::ConnectionBuilder()
-        .configureService(service)
-        .configureConnector(connector)
-        .configureConnectOptions( {
-                ConnectOption::WithAddr(argv[1], atoi(argv[2])),
-                ConnectOption::WithTimeout(std::chrono::seconds(10)),
-        })
-        .configureConnectionOptions({
-            brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)
-        })
-        .syncConnect();
+                           .configureService(service)
+                           .configureConnector(connector)
+                           .configureConnectOptions({
+                                   ConnectOption::WithAddr(argv[1], atoi(argv[2])),
+                                   ConnectOption::WithTimeout(std::chrono::seconds(10)),
+                           })
+                           .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)})
+                           .syncConnect();
     auto client = createEchoClient(session);
 
     {
@@ -67,7 +65,7 @@ int main(int argc, char **argv)
         auto result = responseFuture.Wait();
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
-        (void)error;
+        (void) error;
 
         std::cout << "echo message:" << response.message() << std::endl;
     }
@@ -80,7 +78,7 @@ int main(int argc, char **argv)
         auto result = responseFuture.Wait();
         const auto& response = result.Value().first;
         const auto& error = result.Value().second;
-        (void)error;
+        (void) error;
 
         std::cout << "login message:" << response.message() << std::endl;
     }

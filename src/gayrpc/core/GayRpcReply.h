@@ -1,116 +1,114 @@
 #pragma once
 
+#include <gayrpc/core/GayRpcType.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
+
 #include <atomic>
-#include <string>
-#include <unordered_map>
 #include <functional>
 #include <memory>
-
-#include <gayrpc/core/gayrpc_meta.pb.h>
-#include <gayrpc/core/GayRpcType.h>
+#include <string>
+#include <unordered_map>
 
 namespace gayrpc::core {
 
-    class BaseReply
+class BaseReply
+{
+public:
+    BaseReply(RpcMeta&& meta, UnaryServerInterceptor&& outboundInterceptor)
+        : mRequestMeta(std::move(meta)),
+          mOutboundInterceptor(std::move(outboundInterceptor))
     {
-    public:
-        BaseReply(RpcMeta&& meta, UnaryServerInterceptor&& outboundInterceptor)
-            :
-            mRequestMeta(std::move(meta)),
-            mOutboundInterceptor(std::move(outboundInterceptor))
+    }
+
+    virtual ~BaseReply() = default;
+
+    void reply(const google::protobuf::Message& response, InterceptorContextType&& context)
+    {
+        if (mReplyFlag.test_and_set())
         {
+            throw std::runtime_error("already reply");
         }
 
-        virtual ~BaseReply() = default;
-
-        void    reply(const google::protobuf::Message& response, InterceptorContextType&& context)
+        if (!mRequestMeta.request_info().expect_response())
         {
-            if (mReplyFlag.test_and_set())
-            {
-                throw std::runtime_error("already reply");
-            }
+            return;
+        }
 
-            if (!mRequestMeta.request_info().expect_response())
-            {
-                return;
-            }
+        RpcMeta meta;
+        meta.set_type(RpcMeta::RESPONSE);
+        meta.set_service_id(mRequestMeta.service_id());
+        meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
+        meta.mutable_response_info()->set_failed(false);
+        meta.mutable_response_info()->set_timeout(false);
 
-            RpcMeta meta;
-            meta.set_type(RpcMeta::RESPONSE);
-            meta.set_service_id(mRequestMeta.service_id());
-            meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
-            meta.mutable_response_info()->set_failed(false);
-            meta.mutable_response_info()->set_timeout(false);
-
-            mOutboundInterceptor(std::move(meta),
+        mOutboundInterceptor(
+                std::move(meta),
                 response,
-                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context)
-                {
+                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 std::move(context));
-        }
+    }
 
-        template<typename Response>
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context)
-        {
-            if (mReplyFlag.test_and_set())
-            {
-                throw std::runtime_error("already reply");
-            }
-
-            if (!mRequestMeta.request_info().expect_response())
-            {
-                return;
-            }
-
-            RpcMeta meta;
-            meta.set_type(RpcMeta::RESPONSE);
-            meta.set_encoding(RpcMeta_DataEncodingType_BINARY);
-            meta.set_service_id(mRequestMeta.service_id());
-            meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
-            meta.mutable_response_info()->set_failed(true);
-            meta.mutable_response_info()->set_error_code(errorCode);
-            meta.mutable_response_info()->set_reason(reason);
-            meta.mutable_response_info()->set_timeout(false);
-
-            mOutboundInterceptor(std::move(meta),
-                                 Response{},
-                                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context)
-                                 {
-                                     return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-                                 },
-                                 std::move(context));
-        }
-
-    private:
-        const RpcMeta                   mRequestMeta;
-        const UnaryServerInterceptor    mOutboundInterceptor;
-        std::atomic_flag                mReplyFlag = ATOMIC_FLAG_INIT;
-    };
-
-    template<typename T>
-    class TemplateReply : public BaseReply
+    template<typename Response>
+    void error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context)
     {
-    public:
-        typedef std::shared_ptr<TemplateReply<T>> Ptr;
-
-        TemplateReply(RpcMeta&& meta,
-            UnaryServerInterceptor&& outboundInterceptor)
-            :
-            BaseReply(std::move(meta), std::move(outboundInterceptor))
+        if (mReplyFlag.test_and_set())
         {
+            throw std::runtime_error("already reply");
         }
 
-        void    reply(const T& response, InterceptorContextType&& context = InterceptorContextType{})
+        if (!mRequestMeta.request_info().expect_response())
         {
-            BaseReply::reply(response, std::move(context));
+            return;
         }
 
-        void    error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType{})
-        {
-            BaseReply::error<T>(errorCode, reason, std::move(context));
-        }
-    };
+        RpcMeta meta;
+        meta.set_type(RpcMeta::RESPONSE);
+        meta.set_encoding(RpcMeta_DataEncodingType_BINARY);
+        meta.set_service_id(mRequestMeta.service_id());
+        meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
+        meta.mutable_response_info()->set_failed(true);
+        meta.mutable_response_info()->set_error_code(errorCode);
+        meta.mutable_response_info()->set_reason(reason);
+        meta.mutable_response_info()->set_timeout(false);
 
-}
+        mOutboundInterceptor(
+                std::move(meta),
+                Response{},
+                [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                },
+                std::move(context));
+    }
+
+private:
+    const RpcMeta mRequestMeta;
+    const UnaryServerInterceptor mOutboundInterceptor;
+    std::atomic_flag mReplyFlag = ATOMIC_FLAG_INIT;
+};
+
+template<typename T>
+class TemplateReply : public BaseReply
+{
+public:
+    typedef std::shared_ptr<TemplateReply<T>> Ptr;
+
+    TemplateReply(RpcMeta&& meta,
+                  UnaryServerInterceptor&& outboundInterceptor)
+        : BaseReply(std::move(meta), std::move(outboundInterceptor))
+    {
+    }
+
+    void reply(const T& response, InterceptorContextType&& context = InterceptorContextType{})
+    {
+        BaseReply::reply(response, std::move(context));
+    }
+
+    void error(int32_t errorCode, const std::string& reason, InterceptorContextType&& context = InterceptorContextType{})
+    {
+        BaseReply::error<T>(errorCode, reason, std::move(context));
+    }
+};
+
+}// namespace gayrpc::core

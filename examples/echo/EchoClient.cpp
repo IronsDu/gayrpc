@@ -1,11 +1,10 @@
+#include <gayrpc/utils/UtilsWrapper.h>
+
+#include <brynet/base/AppStatus.hpp>
+#include <brynet/net/AsyncConnector.hpp>
+#include <brynet/net/TcpService.hpp>
 #include <iostream>
 #include <string>
-
-#include <brynet/net/TcpService.hpp>
-#include <brynet/net/AsyncConnector.hpp>
-#include <brynet/base/AppStatus.hpp>
-
-#include <gayrpc/utils/UtilsWrapper.h>
 
 #include "./pb/echo_service.gayrpc.h"
 
@@ -20,14 +19,13 @@ class MyService : public EchoServerService
 {
 public:
     explicit MyService(gayrpc::core::ServiceContext&& context)
-        :
-        EchoServerService(std::move(context))
+        : EchoServerService(std::move(context))
     {
     }
 
     void Echo(const EchoRequest& request,
-        const EchoReply::Ptr& replyObj,
-        InterceptorContextType&& context) override
+              const EchoReply::Ptr& replyObj,
+              InterceptorContextType&& context) override
     {
         EchoResponse response;
         response.set_message(request.message());
@@ -36,15 +34,15 @@ public:
     }
 
     void Login(const LoginRequest& request,
-        const LoginReply::Ptr& replyObj,
-        InterceptorContextType&& context) override
+               const LoginReply::Ptr& replyObj,
+               InterceptorContextType&& context) override
     {
         LoginResponse response;
         response.set_message(request.message());
         replyObj->reply(response, std::move(context));
     }
 
-    void    onClose() override
+    void onClose() override
     {
         std::cout << "closed" << std::endl;
     }
@@ -55,21 +53,21 @@ static void sendEchoRequest(const dodo::test::EchoServerClient::Ptr& client)
     // 发送RPC请求
     EchoRequest request;
     request.set_message("hello");
-    client->Echo(request, [client](const EchoResponse & response,
-        std::optional<gayrpc::core::RpcError> error) {
-            if (error)
-            {
-                std::cout << "reason:" << error->reason() << std::endl;
-                return;
-            }
-            sendEchoRequest(client);
-        });
+    client->Echo(request, [client](const EchoResponse& response,
+                                   std::optional<gayrpc::core::RpcError> error) {
+        if (error)
+        {
+            std::cout << "reason:" << error->reason() << std::endl;
+            return;
+        }
+        sendEchoRequest(client);
+    });
 }
 
 static void OnConnection(const dodo::test::EchoServerClient::Ptr& client, size_t batchNum)
 {
     gayrpc::core::ServiceContext context(client->getTypeHandleManager(), client->getInInterceptor(), client->getOutInterceptor());
-    auto service = std::make_shared< MyService>(std::move(context));
+    auto service = std::make_shared<MyService>(std::move(context));
     dodo::test::EchoServerService::Install(service);
 
     for (size_t i = 0; i < batchNum; i++)
@@ -78,7 +76,7 @@ static void OnConnection(const dodo::test::EchoServerClient::Ptr& client, size_t
     }
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc != 6)
     {
@@ -95,34 +93,31 @@ int main(int argc, char **argv)
     auto batchNum = static_cast<size_t>(std::atoi(argv[5]));
 
     mainLoop = std::make_shared<brynet::net::EventLoop>();
-    
+
     auto b = ClientBuilder();
     b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
-                //buildInterceptors.addInterceptor(gayrpc::utils::withEventLoop(mainLoop));
+         //buildInterceptors.addInterceptor(gayrpc::utils::withEventLoop(mainLoop));
+     })
+            .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
-        .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
-            })
-        .configureConnectionOptions({
-            brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
-                session->setHeartBeat(std::chrono::seconds(10));
-            })
-        })
-        .configureConnector(connector)
-        .configureService(service);
+            .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
+                                         brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
+                                             session->setHeartBeat(std::chrono::seconds(10));
+                                         })})
+            .configureConnector(connector)
+            .configureService(service);
 
     for (int i = 0; i < clientNum; i++)
     {
         try
         {
             b.configureConnectOptions({
-                    ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
-                    ConnectOption::WithTimeout(std::chrono::seconds(10)),
-                })
-                .asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
-                    OnConnection(client, batchNum);
-                });
-
+                                              ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
+                                              ConnectOption::WithTimeout(std::chrono::seconds(10)),
+                                      })
+                    .asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
+                        OnConnection(client, batchNum);
+                    });
         }
         catch (std::runtime_error& e)
         {
@@ -133,7 +128,7 @@ int main(int argc, char **argv)
     while (true)
     {
         mainLoop->loop(1000);
-        if(brynet::base::app_kbhit() > 0)
+        if (brynet::base::app_kbhit() > 0)
         {
             break;
         }

@@ -1,55 +1,53 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
 #include <optional>
+#include <string>
 
 namespace gayrpc::core {
 
-    typedef int32_t ErrorCode;
+typedef int32_t ErrorCode;
 
-    // 封装RPC 远端返回的错误类型,rpc.call 本身的错误则由异常提供
-    class RpcError
+// 封装RPC 远端返回的错误类型,rpc.call 本身的错误则由异常提供
+class RpcError
+{
+public:
+    RpcError()
+        : mErrorCode(0)
+    {}
+
+    RpcError(ErrorCode errorCode,
+             std::string reason)
+        : mErrorCode(errorCode),
+          mReason(std::move(reason))
+    {}
+
+    virtual ~RpcError() = default;
+
+    void setTimeout()
     {
-    public:
-        RpcError()
-            :
-            mErrorCode(0)
-        {}
+        mTimeout = true;
+    }
 
-        RpcError(ErrorCode errorCode,
-            std::string reason)
-            :
-            mErrorCode(errorCode),
-            mReason(std::move(reason))
-        {}
+    bool timeout() const
+    {
+        return mTimeout;
+    }
 
-        virtual ~RpcError() = default;
+    ErrorCode code() const
+    {
+        return mErrorCode;
+    }
 
-        void        setTimeout()
-        {
-            mTimeout = true;
-        }
+    const std::string& reason() const
+    {
+        return mReason;
+    }
 
-        bool        timeout() const
-        {
-            return mTimeout;
-        }
+private:
+    ErrorCode mErrorCode;
+    std::string mReason;
+    bool mTimeout = false;
+};
 
-        ErrorCode   code() const
-        {
-            return mErrorCode;
-        }
-
-        const std::string& reason() const
-        {
-            return mReason;
-        }
-
-    private:
-        ErrorCode   mErrorCode;
-        std::string mReason;
-        bool        mTimeout = false;
-    };
-
-}
+}// namespace gayrpc::core
