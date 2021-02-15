@@ -17,7 +17,7 @@ namespace gayrpc { namespace utils {
 using namespace gayrpc::core;
 
 // 一些辅助型拦截器
-
+#if false
 static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
 {
     return [=](gayrpc::core::RpcMeta&& meta,
@@ -53,6 +53,7 @@ static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
         }
     };
 }
+#endif
 
 static auto withProtectedCall()
 {
@@ -79,7 +80,7 @@ static auto withProtectedCall()
     };
 }
 
-static auto withSessionBinarySender(std::weak_ptr<brynet::net::TcpConnection> weakSession)
+static auto withSessionBinarySender(std::weak_ptr<bsio::net::TcpSession> weakSession)
 {
     return [weakSession = std::move(weakSession)](gayrpc::core::RpcMeta&& meta,
                                                   const google::protobuf::Message& message,
@@ -117,6 +118,7 @@ static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::Ptr& handleMa
     }
 }
 
+#if false
 // 由eventLoop线程处理超时检测
 static auto withTimeoutCheck(const brynet::net::EventLoop::Ptr& eventLoop,
                              const gayrpc::core::RpcTypeHandleManager::Ptr& handleManager)
@@ -138,15 +140,16 @@ static auto withTimeoutCheck(const brynet::net::EventLoop::Ptr& eventLoop,
                     std::move(context));
     };
 }
+#endif
 
-static auto withHttpSessionSender(const brynet::net::http::HttpSession::Ptr& httpSession)
+static auto withHttpSessionSender(const bsio::net::http::HttpSession::Ptr& httpSession)
 {
     return [httpSession](gayrpc::core::RpcMeta&& meta,
                          const google::protobuf::Message& message,
                          gayrpc::core::UnaryHandler&& next,
                          InterceptorContextType&& context) {
         gayrpc::protocol::http::send(meta, message, httpSession);
-        httpSession->postShutdown();
+        httpSession->shutdown(asio::ip::tcp::socket::shutdown_receive);
         return next(std::move(meta),
                     message,
                     std::move(context));

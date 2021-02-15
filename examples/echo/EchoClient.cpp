@@ -1,19 +1,15 @@
 #include <gayrpc/utils/UtilsWrapper.h>
 
-#include <brynet/base/AppStatus.hpp>
-#include <brynet/net/AsyncConnector.hpp>
-#include <brynet/net/TcpService.hpp>
+#include <bsio/Bsio.hpp>
+#include <bsio/net/wrapper/ConnectorBuilder.hpp>
 #include <iostream>
 #include <string>
 
 #include "./pb/echo_service.gayrpc.h"
 
-using namespace brynet;
-using namespace brynet::net;
+using namespace bsio::net;
 using namespace gayrpc::utils;
 using namespace dodo::test;
-
-static brynet::net::EventLoop::Ptr mainLoop;
 
 class MyService : public EchoServerService
 {
@@ -84,15 +80,11 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    auto service = TcpService::Create();
-    service->startWorkerThread(static_cast<size_t>(std::atoi(argv[4])));
+    IoContextThreadPool::Ptr ioContextPool = IoContextThreadPool::Make(1, 1);
+    ioContextPool->start(1);
 
-    auto connector = AsyncConnector::Create();
-    connector->startWorkerThread();
     auto clientNum = std::atoi(argv[3]);
     auto batchNum = static_cast<size_t>(std::atoi(argv[5]));
-
-    mainLoop = std::make_shared<brynet::net::EventLoop>();
 
     auto b = ClientBuilder();
     b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
@@ -100,21 +92,18 @@ int main(int argc, char** argv)
      })
             .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
-            .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                                         brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
-                                             session->setHeartBeat(std::chrono::seconds(10));
-                                         })})
-            .configureConnector(connector)
-            .configureService(service);
+            .WithConnector(TcpConnector(ioContextPool))
+            .WithRecvBufferSize(1024 * 1024);
 
     for (int i = 0; i < clientNum; i++)
     {
         try
         {
-            b.configureConnectOptions({
-                                              ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
-                                              ConnectOption::WithTimeout(std::chrono::seconds(10)),
-                                      })
+            b.WithEndpoint(asio::ip::tcp::endpoint(asio::ip::address_v4::from_string(argv[1]), std::atoi(argv[2])))
+                    .WithTimeout(std::chrono::seconds(10))
+                    .WithFailedHandler([]() {
+                        std::cout << "connect failed" << std::endl;
+                    })
                     .asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
                         OnConnection(client, batchNum);
                     });
@@ -125,13 +114,16 @@ int main(int argc, char** argv)
         }
     }
 
-    while (true)
+    WrapperIoContext mainLoop(1);
+
+    asio::signal_set sig(mainLoop.context(), SIGINT, SIGTERM);
+    sig.async_wait([&](const asio::error_code& err, int signal) {
+        mainLoop.stop();
+    });
+
+    for (; !mainLoop.context().stopped();)
     {
-        mainLoop->loop(1000);
-        if (brynet::base::app_kbhit() > 0)
-        {
-            break;
-        }
+        mainLoop.context().run_one_for(std::chrono::seconds(1));
     }
 
     return 0;

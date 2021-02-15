@@ -4,21 +4,21 @@
 #include <gayrpc/core/gayrpc_meta.pb.h>
 #include <google/protobuf/util/json_util.h>
 
-#include <brynet/net/http/HttpFormat.hpp>
-#include <brynet/net/http/HttpService.hpp>
+#include <bsio/net/http/HttpFormat.hpp>
+#include <bsio/net/http/HttpService.hpp>
 #include <string>
 
 namespace gayrpc::protocol {
 
 using namespace gayrpc::core;
-using namespace brynet::base;
+using namespace bsio::base;
 
 class http
 {
 public:
     static void handleHttpPacket(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
-                                 const brynet::net::http::HTTPParser& httpParser,
-                                 const brynet::net::http::HttpSession::Ptr& session)
+                                 const bsio::net::http::HTTPParser& httpParser,
+                                 const bsio::net::http::HttpSession::Ptr& session)
     {
         (void) session;
         RpcMeta meta;
@@ -33,13 +33,13 @@ public:
 
     static void send(const gayrpc::core::RpcMeta& meta,
                      const google::protobuf::Message& message,
-                     const brynet::net::http::HttpSession::Ptr& httpSession)
+                     const bsio::net::http::HttpSession::Ptr& httpSession)
     {
         std::string jsonMsg;
         google::protobuf::util::MessageToJsonString(message, &jsonMsg);
 
-        brynet::net::http::HttpResponse httpResponse;
-        httpResponse.setStatus(brynet::net::http::HttpResponse::HTTP_RESPONSE_STATUS::OK);
+        bsio::net::http::HttpResponse httpResponse;
+        httpResponse.setStatus(bsio::net::http::HttpResponse::HTTP_RESPONSE_STATUS::OK);
         httpResponse.setContentType("application/json");
         httpResponse.setBody(jsonMsg);
 

@@ -2,9 +2,8 @@
 
 #include <gayrpc/core/GayRpcTypeHandler.h>
 
-#include <brynet/base/Packet.hpp>
-#include <brynet/net/EventLoop.hpp>
-#include <brynet/net/TcpConnection.hpp>
+#include <bsio/base/Packet.hpp>
+#include <bsio/net/wrapper/AcceptorBuilder.hpp>
 #include <string>
 #include <string_view>
 
@@ -13,7 +12,7 @@
 namespace gayrpc::protocol {
 
 using namespace gayrpc::core;
-using namespace brynet::base;
+using namespace bsio::base;
 
 class binary
 {
@@ -26,7 +25,7 @@ public:
 
     static void send(const gayrpc::core::RpcMeta& meta,
                      const google::protobuf::Message& message,
-                     const std::weak_ptr<brynet::net::TcpConnection>& weakSession)
+                     const std::weak_ptr<bsio::net::TcpSession>& weakSession)
     {
         auto session = weakSession.lock();
         if (session == nullptr)
@@ -34,35 +33,37 @@ public:
             return;
         }
 
-        if (session->getEventLoop()->isInLoopThread())
+        // TODO::session->getEventLoop()->isInLoopThread()
+        if (true)
         {
+            //TODO:: bpw on heap
             // 实际的发送
             AutoMallocPacket<4096> bpw(false, true);
             serializeProtobufPacket(bpw,
                                     meta.SerializeAsString(),
                                     message.SerializeAsString());
 
-            session->send(bpw.getData(), bpw.getPos());
+            session->send(std::string(bpw.getData(), bpw.getPos()));
         }
         else
         {
             std::shared_ptr<google::protobuf::Message> msg;
             msg.reset(message.New());
             msg->CopyFrom(message);
-            session->getEventLoop()->runAsyncFunctor([meta, msg = std::move(msg), session]() {
+            session->dispatch([meta, msg = std::move(msg), session]() {
                 // 实际的发送
                 AutoMallocPacket<4096> bpw(false, true);
                 serializeProtobufPacket(bpw,
                                         meta.SerializeAsString(),
                                         msg->SerializeAsString());
 
-                session->send(bpw.getData(), bpw.getPos());
+                session->send(std::string(bpw.getData(), bpw.getPos()));
             });
         }
     }
 
     static void binaryPacketHandle(const gayrpc::core::RpcTypeHandleManager::Ptr& rpcHandlerManager,
-                                   brynet::base::BasePacketReader& reader)
+                                   BasePacketReader& reader)
     {
         auto opHandle = [rpcHandlerManager](const OpPacket& opPacket) {
             if (opPacket.head.op != static_cast<OpCodeType>(OpCode::OpCodeProtobuf))
@@ -159,7 +160,7 @@ private:
 
     // 解析网络消息中的OpPacket
     template<typename OpPacketHandler>
-    static void parseOpPacket(brynet::base::BasePacketReader& reader,
+    static void parseOpPacket(BasePacketReader& reader,
                               const OpPacketHandler& handler)
     {
         while (reader.enough(sizeof(OpPacket::head.data_len) + sizeof(OpPacket::head.op)))

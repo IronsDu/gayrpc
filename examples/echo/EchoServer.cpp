@@ -1,15 +1,14 @@
 #include <gayrpc/utils/UtilsWrapper.h>
 
 #include <atomic>
-#include <brynet/base/AppStatus.hpp>
-#include <brynet/net/EventLoop.hpp>
-#include <brynet/net/TcpService.hpp>
+#include <bsio/Bsio.hpp>
 #include <iostream>
 
 #include "./pb/echo_service.gayrpc.h"
 
-using namespace brynet;
-using namespace brynet::net;
+using namespace asio;
+using namespace asio::ip;
+using namespace bsio::net;
 using namespace gayrpc::core;
 using namespace dodo::test;
 using namespace gayrpc::utils;
@@ -71,7 +70,7 @@ static auto auth(RpcMeta&& meta,
 {
     if (true)
     {
-        return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
+        //return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
     }
 
     return next(std::move(meta), message, std::move(context));
@@ -85,8 +84,16 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    auto service = TcpService::Create();
-    service->startWorkerThread(std::atoi(argv[2]));
+    auto ioContextThreadPool = IoContextThreadPool::Make(std::atoi(argv[2]), 1);
+    ioContextThreadPool->start(1);
+
+    IoContextThread listenContextWrapper(1);
+    listenContextWrapper.start(1);
+
+    TcpAcceptor::Ptr acceptor = TcpAcceptor::Make(
+            listenContextWrapper.context(),
+            ioContextThreadPool,
+            ip::tcp::endpoint(ip::tcp::v4(), std::atoi(argv[1])));
 
     auto serviceBuild = ServiceBuilder();
     serviceBuild.buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
@@ -97,32 +104,28 @@ int main(int argc, char** argv)
                 buildInterceptors.addInterceptor(auth);
                 buildInterceptors.addInterceptor(gayrpc::utils::withProtectedCall());
             })
-            .configureConnectionOptions({AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                                         AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
-                                             session->setHeartBeat(std::chrono::seconds(10));
-                                         })})
-            .configureTcpService(service)
+            .WithAcceptor(acceptor)
+            .WithRecvBufferSize(1024 * 1024)
             .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
                 return std::make_shared<MyService>(std::move(context));
-            })
-            .configureListen([=](wrapper::BuildListenConfig listenConfig) {
-                listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
             })
             .configureTransportType([](BuildTransportType buildTransportType) {
                 buildTransportType.setType(TransportType::Binary);
             })
             .asyncRun();
 
-    EventLoop mainLoop;
+    WrapperIoContext mainLoop(1);
+
+    asio::signal_set sig(mainLoop.context(), SIGINT, SIGTERM);
+    sig.async_wait([&](const asio::error_code& err, int signal) {
+        mainLoop.stop();
+    });
     std::atomic<int64_t> tmp(0);
-    while (true)
+
+    for (; !mainLoop.context().stopped();)
     {
-        mainLoop.loop(1000);
-        std::cout << "count is:" << (count - tmp) << std::endl;
+        mainLoop.context().run_one_for(std::chrono::seconds(1));
+        std::cout << "count :" << (count - tmp) << std::endl;
         tmp.store(count);
-        if (brynet::base::app_kbhit() > 0)
-        {
-            break;
-        }
     }
 }

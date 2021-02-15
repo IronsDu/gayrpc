@@ -1,19 +1,21 @@
 #include <gayrpc/protocol/BinaryProtocol.h>
 #include <gayrpc/utils/UtilsInterceptor.h>
 
-#include <brynet/net/wrapper/ConnectionBuilder.hpp>
+#include <bsio/Bsio.hpp>
+#include <bsio/net/wrapper/ConnectorBuilder.hpp>
 #include <iostream>
+#include <utility>
 
 #include "./pb/echo_service.gayrpc.h"
 
-using namespace brynet;
-using namespace brynet::net;
+using namespace bsio::net;
+using namespace gayrpc::utils;
 using namespace dodo::test;
 
-static EchoServerClient::Ptr createEchoClient(const TcpConnection::Ptr& session)
+static EchoServerClient::Ptr createEchoClient(const bsio::net::TcpSession::Ptr& session)
 {
     auto rpcHandlerManager = std::make_shared<gayrpc::core::RpcTypeHandleManager>();
-    session->setDataCallback([rpcHandlerManager](brynet::base::BasePacketReader& reader) {
+    session->setDataHandler([rpcHandlerManager](const bsio::net::TcpSession::Ptr& session, bsio::base::BasePacketReader& reader) {
         return gayrpc::protocol::binary::binaryPacketHandle(rpcHandlerManager, reader);
     });
 
@@ -21,38 +23,50 @@ static EchoServerClient::Ptr createEchoClient(const TcpConnection::Ptr& session)
     auto inboundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withProtectedCall());
 
     // 出站拦截器
-    auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<TcpConnection>(session)),
-                                                             gayrpc::utils::withTimeoutCheck(session->getEventLoop(), rpcHandlerManager));
+    auto outBoundInterceptor = gayrpc::core::makeInterceptor(gayrpc::utils::withSessionBinarySender(std::weak_ptr<bsio::net::TcpSession>(session)));
 
     // 注册RPC客户端
     auto client = EchoServerClient::Create(rpcHandlerManager, inboundInterceptor, outBoundInterceptor);
     return client;
 }
 
+static bsio::net::TcpSession::Ptr syncConnect(TcpConnector connector, asio::ip::tcp::endpoint endpoint)
+{
+    auto sessionPromise = std::make_shared<std::promise<bsio::net::TcpSession::Ptr>>();
+    bsio::net::wrapper::TcpSessionConnectorBuilder builder;
+    builder.WithConnector(std::move(connector))
+            .WithEndpoint(std::move(endpoint))
+            .WithRecvBufferSize(1024)
+            .WithFailedHandler([sessionPromise]() {
+                sessionPromise->set_value(nullptr);
+            })
+            .WithTimeout(std::chrono::seconds(10))
+            .AddEnterCallback([sessionPromise](bsio::net::TcpSession::Ptr session) {
+                sessionPromise->set_value(session);
+            })
+            .asyncConnect();
+    auto future = sessionPromise->get_future();
+    if (future.wait_for(std::chrono::seconds(10)) != std::future_status::ready)
+    {
+        return nullptr;
+    }
+    return future.get();
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 3)
     {
-        std::cerr << "Usage: <host> <port>\n"
-                  << std::endl;
+        std::cerr << "Usage: <host> <port>" << std::endl;
         exit(-1);
     }
 
-    auto service = TcpService::Create();
-    service->startWorkerThread(1);
+    IoContextThreadPool::Ptr ioContextPool = IoContextThreadPool::Make(1, 1);
+    ioContextPool->start(1);
+    auto session = syncConnect(TcpConnector(ioContextPool),
+                               asio::ip::tcp::endpoint(
+                                       asio::ip::address_v4::from_string(argv[1]), std::atoi(argv[2])));
 
-    auto connector = AsyncConnector::Create();
-    connector->startWorkerThread();
-
-    auto session = brynet::net::wrapper::ConnectionBuilder()
-                           .configureService(service)
-                           .configureConnector(connector)
-                           .configureConnectOptions({
-                                   ConnectOption::WithAddr(argv[1], atoi(argv[2])),
-                                   ConnectOption::WithTimeout(std::chrono::seconds(10)),
-                           })
-                           .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)})
-                           .syncConnect();
     auto client = createEchoClient(session);
 
     {
@@ -60,7 +74,7 @@ int main(int argc, char** argv)
         request.set_message("sync echo test");
 
         // TODO::同步RPC可以简单的使用 future 实现timeout
-        // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
+        // Warning::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
         auto responseFuture = client->SyncEcho(request, std::chrono::seconds(10));
         auto result = responseFuture.Wait();
         const auto& response = result.Value().first;

@@ -1,16 +1,13 @@
-#include <iostream>
-#include <atomic>
-
-#include <brynet/net/EventLoop.hpp>
-#include <brynet/net/TcpService.hpp>
-#include <brynet/base/AppStatus.hpp>
-
 #include <gayrpc/utils/UtilsWrapper.h>
+
+#include <atomic>
+#include <iostream>
 
 #include "./pb/benchmark_service.gayrpc.h"
 
-using namespace brynet;
-using namespace brynet::net;
+using namespace asio;
+using namespace asio::ip;
+using namespace bsio::net;
 using namespace dodo::benchmark;
 using namespace gayrpc::core;
 using namespace gayrpc::utils;
@@ -21,13 +18,12 @@ class MyService : public EchoServerService
 {
 public:
     explicit MyService(gayrpc::core::ServiceContext&& context)
-        :
-        EchoServerService(std::move(context))
+        : EchoServerService(std::move(context))
     {}
 
-    void Echo(const EchoRequest& request, 
-        const EchoReply::Ptr& replyObj,
-        InterceptorContextType&& context) override
+    void Echo(const EchoRequest& request,
+              const EchoReply::Ptr& replyObj,
+              InterceptorContextType&& context) override
     {
         EchoResponse response;
         response.set_message(request.message());
@@ -45,7 +41,7 @@ static auto counter(RpcMeta&& meta,
     return next(std::move(meta), message, std::move(context));
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc != 3)
     {
@@ -53,40 +49,44 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
-    auto service = TcpService::Create();
-    service->startWorkerThread(std::thread::hardware_concurrency());
+    auto ioContextThreadPool = IoContextThreadPool::Make(std::atoi(argv[2]), 1);
+    ioContextThreadPool->start(1);
+
+    IoContextThread listenContextWrapper(1);
+    listenContextWrapper.start(1);
+
+    TcpAcceptor::Ptr acceptor = TcpAcceptor::Make(
+            listenContextWrapper.context(),
+            ioContextThreadPool,
+            ip::tcp::endpoint(ip::tcp::v4(), std::atoi(argv[1])));
 
     auto serviceBuild = ServiceBuilder();
     serviceBuild.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
-            buildInterceptors.addInterceptor(counter);
-        })
-        .configureConnectionOptions( {
-            AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
-                session->setHeartBeat(std::chrono::seconds(10));
+                    buildInterceptors.addInterceptor(counter);
+                })
+            .WithRecvBufferSize(1024 * 1024)
+            .WithAcceptor(acceptor)
+            .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
+                return std::make_shared<MyService>(std::move(context));
             })
-        })
-        .configureTcpService(service)
-        .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
-            return std::make_shared<MyService>(std::move(context));
-        })
-        .configureListen([argv](wrapper::BuildListenConfig listenConfig) {
-            listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
-        })
-        .asyncRun();
+            .configureTransportType([](BuildTransportType buildTransportType) {
+                buildTransportType.setType(TransportType::Binary);
+            })
+            .asyncRun();
 
-    EventLoop mainLoop;
+    WrapperIoContext mainLoop(1);
+
+    asio::signal_set sig(mainLoop.context(), SIGINT, SIGTERM);
+    sig.async_wait([&](const asio::error_code& err, int signal) {
+        mainLoop.stop();
+    });
+
     std::atomic<int64_t> tmp(0);
-
-    while (true)
+    for (; !mainLoop.context().stopped();)
     {
-        mainLoop.loop(1000);
-        std::cout << "count is:" << (count-tmp) << std::endl;
+        mainLoop.context().run_one_for(std::chrono::seconds(1));
+        std::cout << "count is:" << (count - tmp) << std::endl;
         tmp.store(count);
-        if (brynet::base::app_kbhit() > 0)
-        {
-            break;
-        }
     }
 
     return 0;
