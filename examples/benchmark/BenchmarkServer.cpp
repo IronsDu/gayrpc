@@ -1,11 +1,10 @@
-#include <iostream>
-#include <atomic>
+#include <gayrpc/utils/UtilsWrapper.h>
 
+#include <atomic>
+#include <brynet/base/AppStatus.hpp>
 #include <brynet/net/EventLoop.hpp>
 #include <brynet/net/TcpService.hpp>
-#include <brynet/base/AppStatus.hpp>
-
-#include <gayrpc/utils/UtilsWrapper.h>
+#include <iostream>
 
 #include "./pb/benchmark_service.gayrpc.h"
 
@@ -21,13 +20,12 @@ class MyService : public EchoServerService
 {
 public:
     explicit MyService(gayrpc::core::ServiceContext&& context)
-        :
-        EchoServerService(std::move(context))
+        : EchoServerService(std::move(context))
     {}
 
-    void Echo(const EchoRequest& request, 
-        const EchoReply::Ptr& replyObj,
-        InterceptorContextType&& context) override
+    void Echo(const EchoRequest& request,
+              const EchoReply::Ptr& replyObj,
+              InterceptorContextType&& context) override
     {
         EchoResponse response;
         response.set_message(request.message());
@@ -45,7 +43,7 @@ static auto counter(RpcMeta&& meta,
     return next(std::move(meta), message, std::move(context));
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc != 3)
     {
@@ -58,22 +56,15 @@ int main(int argc, char **argv)
 
     auto serviceBuild = ServiceBuilder();
     serviceBuild.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
-            buildInterceptors.addInterceptor(counter);
-        })
-        .configureConnectionOptions( {
-            AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-            AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
-                session->setHeartBeat(std::chrono::seconds(10));
+                    buildInterceptors.addInterceptor(counter);
+                })
+            .WithMaxRecvBufferSize(1024 * 1024)
+            .WithService(service)
+            .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
+                return std::make_shared<MyService>(std::move(context));
             })
-        })
-        .configureTcpService(service)
-        .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
-            return std::make_shared<MyService>(std::move(context));
-        })
-        .configureListen([argv](wrapper::BuildListenConfig listenConfig) {
-            listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
-        })
-        .asyncRun();
+            .WithAddr(false, "0.0.0.0", std::stoi(argv[1]))
+            .asyncRun();
 
     EventLoop mainLoop;
     std::atomic<int64_t> tmp(0);
@@ -81,7 +72,7 @@ int main(int argc, char **argv)
     while (true)
     {
         mainLoop.loop(1000);
-        std::cout << "count is:" << (count-tmp) << std::endl;
+        std::cout << "count is:" << (count - tmp) << std::endl;
         tmp.store(count);
         if (brynet::base::app_kbhit() > 0)
         {

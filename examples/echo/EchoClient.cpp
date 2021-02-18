@@ -95,29 +95,24 @@ int main(int argc, char** argv)
     mainLoop = std::make_shared<brynet::net::EventLoop>();
 
     auto b = ClientBuilder();
-    b.buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
-         //buildInterceptors.addInterceptor(gayrpc::utils::withEventLoop(mainLoop));
-     })
+    b.WithConnector(connector)
+            .WithService(service)
+            .buildInboundInterceptor([](BuildInterceptor buildInterceptors) {
+                //buildInterceptors.addInterceptor(gayrpc::utils::withEventLoop(mainLoop));
+            })
             .buildOutboundInterceptor([](BuildInterceptor buildInterceptors) {
             })
-            .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                                         brynet::net::AddSocketOption::AddEnterCallback([&](const TcpConnection::Ptr& session) {
-                                             session->setHeartBeat(std::chrono::seconds(10));
-                                         })})
-            .configureConnector(connector)
-            .configureService(service);
+            .WithMaxRecvBufferSize(1024 * 1024)
+            .WithAddr(argv[1], std::stoi(argv[2]))
+            .WithTimeout(std::chrono::seconds(10));
 
     for (int i = 0; i < clientNum; i++)
     {
         try
         {
-            b.configureConnectOptions({
-                                              ConnectOption::WithAddr(argv[1], std::stoi(argv[2])),
-                                              ConnectOption::WithTimeout(std::chrono::seconds(10)),
-                                      })
-                    .asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
-                        OnConnection(client, batchNum);
-                    });
+            b.asyncConnect<EchoServerClient>([=](const dodo::test::EchoServerClient::Ptr& client) {
+                OnConnection(client, batchNum);
+            });
         }
         catch (std::runtime_error& e)
         {

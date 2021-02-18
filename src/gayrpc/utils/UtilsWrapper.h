@@ -35,6 +35,7 @@ static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& sessi
                                     std::vector<UnaryServerInterceptor> userOutBoundInterceptor)
 {
     auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
+    std::vector<std::function<void(void)>> closedCallbacks;
 
     session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
         // 二进制协议解析器,在其中调用rpcHandlerManager->handleRpcMsg进入RPC核心处理
@@ -57,12 +58,17 @@ static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& sessi
                                       std::move(inboundInterceptor),
                                       std::move(outBoundInterceptor));
         auto service = serverCreator(std::move(serviceContext));
-
-        session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
+        closedCallbacks.emplace_back([=]() {
             service->onClose();
         });
         service->install();
     }
+    session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
+        for (const auto& callback : closedCallbacks)
+        {
+            callback();
+        }
+    });
 }
 
 static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& httpSession,
@@ -159,7 +165,7 @@ private:
 
 using InterceptorBuilder = std::function<void(BuildInterceptor)>;
 
-class ServiceBuilder : public wrapper::BaseListenerBuilder<ServiceBuilder>
+class ServiceBuilder
 {
 public:
     using Ptr = std::shared_ptr<ServiceBuilder>;
@@ -168,12 +174,44 @@ public:
     ServiceBuilder()
         : mTransportTypeConfig(TransportType::Binary)
     {}
+    virtual ~ServiceBuilder() = default;
 
-    ServiceBuilder& configureTcpService(TcpService::Ptr tcpService)
+    ServiceBuilder& WithService(TcpService::Ptr service)
     {
-        wrapper::BaseListenerBuilder<ServiceBuilder>::configureService(std::move(tcpService));
+        mBuilder.WithService(std::move(service));
         return *this;
     }
+
+    ServiceBuilder& WithAddr(bool ipV6, std::string ip, size_t port)
+    {
+        mBuilder.WithAddr(ipV6, std::move(ip), port);
+        return *this;
+    }
+
+    ServiceBuilder& WithReusePort()
+    {
+        mBuilder.WithReusePort();
+        return *this;
+    }
+
+    ServiceBuilder& AddSocketProcess(const ListenThread::TcpSocketProcessCallback& callback)
+    {
+        mBuilder.AddSocketProcess(callback);
+        return *this;
+    }
+
+    ServiceBuilder& WithMaxRecvBufferSize(size_t size)
+    {
+        mBuilder.WithMaxRecvBufferSize(size);
+        return *this;
+    }
+#ifdef BRYNET_USE_OPENSSL
+    ServiceBuilder& WithSSL(SSLHelper::Ptr sslHelper)
+    {
+        mBuilder.WithSSL(sslHelper);
+        return *this;
+    }
+#endif
 
     ServiceBuilder& buildInboundInterceptor(const InterceptorBuilder& builder)
     {
@@ -202,38 +240,36 @@ public:
 
     void asyncRun()
     {
-        auto connectionOptions = wrapper::BaseListenerBuilder<ServiceBuilder>::getConnectionOptions();
-        connectionOptions.push_back(AddSocketOption::AddEnterCallback(
-                [creators = mCreators,
-                 inboundInterceptors = mInboundInterceptors,
-                 outboundInterceptors = mOutboundInterceptors,
-                 transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr& session) {
-                    switch (transportType)
-                    {
-                        case TransportType::Binary:
-                            OnBinaryConnectionEnter(session,
-                                                    creators,
-                                                    inboundInterceptors,
-                                                    outboundInterceptors);
-                            break;
-                        case TransportType::HTTP:
-                            brynet::net::http::HttpService::setup(session,
-                                                                  [=](const brynet::net::http::HttpSession::Ptr& httpSession,
-                                                                      brynet::net::http::HttpSessionHandlers& handlers) {
-                                                                      OnHTTPConnectionEnter(httpSession,
-                                                                                            handlers,
-                                                                                            creators,
-                                                                                            inboundInterceptors,
-                                                                                            outboundInterceptors);
-                                                                  });
-                            break;
-                        default:
-                            throw std::runtime_error(
-                                    std::string("not support transport type:") + std::to_string(static_cast<int>(transportType)));
-                    }
-                }));
+        mBuilder.AddEnterCallback([creators = mCreators,
+                                   inboundInterceptors = mInboundInterceptors,
+                                   outboundInterceptors = mOutboundInterceptors,
+                                   transportType = mTransportTypeConfig.getType()](const brynet::net::TcpConnection::Ptr& session) {
+            switch (transportType)
+            {
+                case TransportType::Binary:
+                    OnBinaryConnectionEnter(session,
+                                            creators,
+                                            inboundInterceptors,
+                                            outboundInterceptors);
+                    break;
+                case TransportType::HTTP:
+                    brynet::net::http::HttpService::setup(session,
+                                                          [=](const brynet::net::http::HttpSession::Ptr& httpSession,
+                                                              brynet::net::http::HttpSessionHandlers& handlers) {
+                                                              OnHTTPConnectionEnter(httpSession,
+                                                                                    handlers,
+                                                                                    creators,
+                                                                                    inboundInterceptors,
+                                                                                    outboundInterceptors);
+                                                          });
+                    break;
+                default:
+                    throw std::runtime_error(
+                            std::string("not support transport type:") + std::to_string(static_cast<int>(transportType)));
+            }
+        });
 
-        wrapper::BaseListenerBuilder<ServiceBuilder>::asyncRun(connectionOptions);
+        mBuilder.asyncRun();
     }
 
 private:
@@ -249,6 +285,7 @@ private:
     std::vector<UnaryServerInterceptor> mOutboundInterceptors;
     std::vector<ServiceCreator> mCreators;
     TransportTypeConfig mTransportTypeConfig;
+    brynet::net::wrapper::ListenerBuilder mBuilder;
 };
 
 template<typename RpcClientType>
@@ -282,9 +319,60 @@ static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr& session,
     callback(client);
 }
 
-class ClientBuilder : public wrapper::BaseConnectionBuilder<ClientBuilder>
+class ClientBuilder
 {
 public:
+    ClientBuilder& WithService(TcpService::Ptr service)
+    {
+        mBuilder.WithService(std::move(service));
+        return *this;
+    }
+    virtual ~ClientBuilder() = default;
+
+    ClientBuilder& WithConnector(AsyncConnector::Ptr connector)
+    {
+        mBuilder.WithConnector(std::move(connector));
+        return *this;
+    }
+
+    ClientBuilder& WithAddr(std::string ip, size_t port)
+    {
+        mBuilder.WithAddr(std::move(ip), port);
+        return *this;
+    }
+
+    ClientBuilder& WithTimeout(std::chrono::nanoseconds timeout)
+    {
+        mBuilder.WithTimeout(timeout);
+        return *this;
+    }
+
+    ClientBuilder& AddSocketProcessCallback(const brynet::net::wrapper::ProcessTcpSocketCallback& callback)
+    {
+        mBuilder.AddSocketProcessCallback(callback);
+        return *this;
+    }
+
+    ClientBuilder& WithFailedCallback(brynet::net::wrapper::FailedCallback callback)
+    {
+        mBuilder.WithFailedCallback(std::move(callback));
+        return *this;
+    }
+
+    ClientBuilder& WithMaxRecvBufferSize(size_t size)
+    {
+        mBuilder.WithMaxRecvBufferSize(size);
+        return *this;
+    }
+
+#ifdef BRYNET_USE_OPENSSL
+    ClientBuilder& WithSSL()
+    {
+        mBuilder.WithSSL();
+        return *this;
+    }
+#endif
+
     ClientBuilder& buildInboundInterceptor(const InterceptorBuilder& builder)
     {
         buildInterceptor(builder, mInboundInterceptors);
@@ -294,12 +382,6 @@ public:
     ClientBuilder& buildOutboundInterceptor(const InterceptorBuilder& builder)
     {
         buildInterceptor(builder, mOutboundInterceptors);
-        return *this;
-    }
-
-    ClientBuilder& configureTcpService(TcpService::Ptr tcpService)
-    {
-        wrapper::BaseConnectionBuilder<ClientBuilder>::configureService(std::move(tcpService));
         return *this;
     }
 
@@ -315,12 +397,9 @@ public:
                                              callback);
         };
 
-        auto connectionOptions = wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectionOptions();
-        connectionOptions.push_back(AddSocketOption::AddEnterCallback(enterCallback));
-
-        wrapper::BaseConnectionBuilder<ClientBuilder>::asyncConnect(
-                wrapper::BaseConnectionBuilder<ClientBuilder>::getConnectOptions(),
-                connectionOptions);
+        auto builder = mBuilder;
+        builder.AddEnterCallback(enterCallback);
+        builder.asyncConnect();
     }
 
 protected:
@@ -334,6 +413,7 @@ protected:
 private:
     std::vector<UnaryServerInterceptor> mInboundInterceptors;
     std::vector<UnaryServerInterceptor> mOutboundInterceptors;
+    brynet::net::wrapper::ConnectionBuilder mBuilder;
 };
 
 }// namespace gayrpc::utils

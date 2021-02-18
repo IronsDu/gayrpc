@@ -45,13 +45,11 @@ int main(int argc, char** argv)
     connector->startWorkerThread();
 
     auto session = brynet::net::wrapper::ConnectionBuilder()
-                           .configureService(service)
-                           .configureConnector(connector)
-                           .configureConnectOptions({
-                                   ConnectOption::WithAddr(argv[1], atoi(argv[2])),
-                                   ConnectOption::WithTimeout(std::chrono::seconds(10)),
-                           })
-                           .configureConnectionOptions({brynet::net::AddSocketOption::WithMaxRecvBufferSize(1024 * 1024)})
+                           .WithService(service)
+                           .WithConnector(connector)
+                           .WithAddr(argv[1], atoi(argv[2]))
+                           .WithTimeout(std::chrono::seconds(10))
+                           .WithMaxRecvBufferSize(1024 * 1024)
                            .syncConnect();
     auto client = createEchoClient(session);
 
