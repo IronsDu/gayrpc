@@ -97,17 +97,12 @@ int main(int argc, char** argv)
                 buildInterceptors.addInterceptor(auth);
                 buildInterceptors.addInterceptor(gayrpc::utils::withProtectedCall());
             })
-            .configureConnectionOptions({AddSocketOption::WithMaxRecvBufferSize(1024 * 1024),
-                                         AddSocketOption::AddEnterCallback([](const TcpConnection::Ptr& session) {
-                                             session->setHeartBeat(std::chrono::seconds(10));
-                                         })})
-            .configureTcpService(service)
+            .WithMaxRecvBufferSize(1024 * 1024)
+            .WithService(service)
             .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
                 return std::make_shared<MyService>(std::move(context));
             })
-            .configureListen([=](wrapper::BuildListenConfig listenConfig) {
-                listenConfig.setAddr(false, "0.0.0.0", std::stoi(argv[1]));
-            })
+            .WithAddr(false, "0.0.0.0", std::stoi(argv[1]))
             .configureTransportType([](BuildTransportType buildTransportType) {
                 buildTransportType.setType(TransportType::Binary);
             })
