@@ -20,6 +20,12 @@ public:
     {
     }
 
+    BaseReply(RpcMeta meta, UnaryServerInterceptor outboundInterceptor)
+        : mRequestMeta(std::move(meta)),
+        mOutboundInterceptor(std::move(outboundInterceptor))
+    {
+    }
+
     virtual ~BaseReply() = default;
 
     void reply(const google::protobuf::Message& response, InterceptorContextType&& context)
@@ -96,6 +102,12 @@ public:
 
     TemplateReply(RpcMeta&& meta,
                   UnaryServerInterceptor&& outboundInterceptor)
+        : BaseReply(std::move(meta), std::move(outboundInterceptor))
+    {
+    }
+
+    TemplateReply(RpcMeta meta,
+        UnaryServerInterceptor outboundInterceptor)
         : BaseReply(std::move(meta), std::move(outboundInterceptor))
     {
     }

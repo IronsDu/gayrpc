@@ -5,111 +5,111 @@
 #ifndef DODO_TEST_ECHO_SERVICE_H
 #define DODO_TEST_ECHO_SERVICE_H
 
-#include <string_view>
-#include <string>
-#include <unordered_map>
-#include <memory>
-#include <cstdint>
-#include <future>
-#include <chrono>
-
+#include <ananas/future/Future.h>
+#include <gayrpc/core/GayRpcClient.h>
+#include <gayrpc/core/GayRpcError.h>
+#include <gayrpc/core/GayRpcReply.h>
+#include <gayrpc/core/GayRpcService.h>
+#include <gayrpc/core/GayRpcType.h>
+#include <gayrpc/core/GayRpcTypeHandler.h>
+#include <gayrpc/core/gayrpc_meta.pb.h>
 #include <google/protobuf/util/json_util.h>
 
-#include <gayrpc/core/gayrpc_meta.pb.h>
-#include "echo_service.pb.h"
+#include <chrono>
+#include <cstdint>
+#include <future>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <unordered_map>
 
-#include <gayrpc/core/GayRpcType.h>
-#include <gayrpc/core/GayRpcError.h>
-#include <gayrpc/core/GayRpcTypeHandler.h>
-#include <gayrpc/core/GayRpcClient.h>
-#include <gayrpc/core/GayRpcService.h>
-#include <gayrpc/core/GayRpcReply.h>
-#include <ananas/future/Future.h>
+#include "echo_service.pb.h"
 
 namespace dodo {
 namespace test {
 
-    using namespace gayrpc::core;
-    using namespace google::protobuf::util;
-    
-    enum class echo_service_ServiceID:uint32_t
+using namespace gayrpc::core;
+using namespace google::protobuf::util;
+
+enum class echo_service_ServiceID : uint32_t
+{
+    EchoServer,
+
+};
+
+
+enum class EchoServerMsgID : uint64_t
+{
+    Echo = 2333,
+    Login = 3333,
+
+};
+
+class EchoServerClient : public BaseClient
+{
+public:
+    using Ptr = std::shared_ptr<EchoServerClient>;
+    using WeakPtr = std::weak_ptr<EchoServerClient>;
+
+    using EchoHandle = std::function<void(const dodo::test::EchoResponse&, const std::optional<gayrpc::core::RpcError>&)>;
+    using LoginHandle = std::function<void(const dodo::test::LoginResponse&, const std::optional<gayrpc::core::RpcError>&)>;
+
+
+public:
+    void Echo(const dodo::test::EchoRequest& request,
+              const EchoHandle& handle = nullptr)
     {
-        EchoServer,
-        
-    };
-
-    
-    enum class EchoServerMsgID:uint64_t
+        call<dodo::test::EchoResponse>(request,
+                                       static_cast<uint32_t>(echo_service_ServiceID::EchoServer),
+                                       static_cast<uint64_t>(EchoServerMsgID::Echo),
+                                       handle);
+    }
+    void Login(const dodo::test::LoginRequest& request,
+               const LoginHandle& handle = nullptr)
     {
-        Echo = 2333,
-        Login = 3333,
-        
-    };
+        call<dodo::test::LoginResponse>(request,
+                                        static_cast<uint32_t>(echo_service_ServiceID::EchoServer),
+                                        static_cast<uint64_t>(EchoServerMsgID::Login),
+                                        handle);
+    }
 
-    class EchoServerClient : public BaseClient
+    void Echo(const dodo::test::EchoRequest& request,
+              const EchoHandle& handle,
+              std::chrono::seconds timeout,
+              BaseClient::TimeoutCallback&& timeoutCallback)
     {
-    public:
-        using Ptr = std::shared_ptr<EchoServerClient>;
-        using WeakPtr = std::weak_ptr<EchoServerClient>;
+        call<dodo::test::EchoResponse>(request,
+                                       static_cast<uint32_t>(echo_service_ServiceID::EchoServer),
+                                       static_cast<uint64_t>(EchoServerMsgID::Echo),
+                                       handle,
+                                       timeout,
+                                       std::move(timeoutCallback));
+    }
 
-        using EchoHandle = std::function<void(const dodo::test::EchoResponse&, const std::optional<gayrpc::core::RpcError>&)>;
-        using LoginHandle = std::function<void(const dodo::test::LoginResponse&, const std::optional<gayrpc::core::RpcError>&)>;
-        
+    void Login(const dodo::test::LoginRequest& request,
+               const LoginHandle& handle,
+               std::chrono::seconds timeout,
+               BaseClient::TimeoutCallback&& timeoutCallback)
+    {
+        call<dodo::test::LoginResponse>(request,
+                                        static_cast<uint32_t>(echo_service_ServiceID::EchoServer),
+                                        static_cast<uint64_t>(EchoServerMsgID::Login),
+                                        handle,
+                                        timeout,
+                                        std::move(timeoutCallback));
+    }
 
-    public:
-        void Echo(const dodo::test::EchoRequest& request,
-            const EchoHandle& handle = nullptr)
-        {
-            call<dodo::test::EchoResponse>(request, 
-                static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle);
-        }
-        void Login(const dodo::test::LoginRequest& request,
-            const LoginHandle& handle = nullptr)
-        {
-            call<dodo::test::LoginResponse>(request, 
-                static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Login), 
-                handle);
-        }
-        
-        void Echo(const dodo::test::EchoRequest& request,
-            const EchoHandle& handle,
-            std::chrono::seconds timeout, 
-            BaseClient::TimeoutCallback&& timeoutCallback)
-        {
-            call<dodo::test::EchoResponse>(request, 
-                static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle,
-                timeout,
-                std::move(timeoutCallback));
-        }
 
-        void Login(const dodo::test::LoginRequest& request,
-            const LoginHandle& handle,
-            std::chrono::seconds timeout, 
-            BaseClient::TimeoutCallback&& timeoutCallback)
-        {
-            call<dodo::test::LoginResponse>(request, 
-                static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
-                static_cast<uint64_t>(EchoServerMsgID::Login), 
-                handle,
-                timeout,
-                std::move(timeoutCallback));
-        }
-
-        
-        ananas::Future<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
+    ananas::Future<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
             const dodo::test::EchoRequest& request,
             std::chrono::seconds timeout)
-        {
-            ananas::Promise<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> promise;
+    {
+        ananas::Promise<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> promise;
 
-            Echo(request, 
+        Echo(
+                request,
                 [promise](const dodo::test::EchoResponse& response,
-                    const std::optional<gayrpc::core::RpcError>& error) mutable {
+                          const std::optional<gayrpc::core::RpcError>& error) mutable {
                     promise.SetValue(std::make_pair(response, error));
                 },
                 timeout,
@@ -120,18 +120,19 @@ namespace test {
                     promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
-            return promise.GetFuture();
-        }
+        return promise.GetFuture();
+    }
 
-        ananas::Future<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> SyncLogin(
+    ananas::Future<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> SyncLogin(
             const dodo::test::LoginRequest& request,
             std::chrono::seconds timeout)
-        {
-            ananas::Promise<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> promise;
+    {
+        ananas::Promise<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> promise;
 
-            Login(request, 
+        Login(
+                request,
                 [promise](const dodo::test::LoginResponse& response,
-                    const std::optional<gayrpc::core::RpcError>& error) mutable {
+                          const std::optional<gayrpc::core::RpcError>& error) mutable {
                     promise.SetValue(std::make_pair(response, error));
                 },
                 timeout,
@@ -142,216 +143,209 @@ namespace test {
                     promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
-            return promise.GetFuture();
-        }
+        return promise.GetFuture();
+    }
 
-        
 
-    public:
-        static Ptr Create(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
+public:
+    static Ptr Create(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
+                      const UnaryServerInterceptor& inboundInterceptor,
+                      const UnaryServerInterceptor& outboundInterceptor)
+    {
+        class make_shared_enabler : public EchoServerClient
+        {
+        public:
+            make_shared_enabler(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
+                                const UnaryServerInterceptor& inboundInterceptor,
+                                const UnaryServerInterceptor& outboundInterceptor)
+                : EchoServerClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor)
+            {}
+        };
+
+        auto client = std::make_shared<make_shared_enabler>(rpcHandlerManager, inboundInterceptor, outboundInterceptor);
+        client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
+
+        return client;
+    }
+
+    static std::string GetServiceTypeName()
+    {
+        return "dodo::test::EchoServer";
+    }
+
+private:
+    using BaseClient::BaseClient;
+};
+
+class EchoServerService : public BaseService
+{
+public:
+    using Ptr = std::shared_ptr<EchoServerService>;
+    using WeakPtr = std::weak_ptr<EchoServerService>;
+
+    using EchoReply = TemplateReply<dodo::test::EchoResponse>;
+    using LoginReply = TemplateReply<dodo::test::LoginResponse>;
+
+
+    using BaseService::BaseService;
+
+    ~EchoServerService() override = default;
+
+    void onClose() override
+    {}
+
+    void install() override
+    {
+        auto sharedThis = std::static_pointer_cast<EchoServerService>(shared_from_this());
+        EchoServerService::Install(sharedThis);
+    }
+
+    static bool Install(const EchoServerService::Ptr& service);
+
+    static std::string GetServiceTypeName()
+    {
+        return "dodo::test::EchoServer";
+    }
+
+private:
+    virtual void Echo(const dodo::test::EchoRequest& request,
+                      const dodo::test::EchoServerService::EchoReply::Ptr& replyObj,
+                      InterceptorContextType&&) = 0;
+    virtual void Login(const dodo::test::LoginRequest& request,
+                       const dodo::test::EchoServerService::LoginReply::Ptr& replyObj,
+                       InterceptorContextType&&) = 0;
+
+
+private:
+    static auto Echo_stub(RpcMeta&& meta,
+                          const std::string_view& data,
+                          const EchoServerService::Ptr& service,
                           const UnaryServerInterceptor& inboundInterceptor,
-                          const UnaryServerInterceptor& outboundInterceptor)
-        {
-            class make_shared_enabler : public EchoServerClient
-            {
-            public:
-                make_shared_enabler(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
-                    const UnaryServerInterceptor& inboundInterceptor,
-                    const UnaryServerInterceptor& outboundInterceptor)
-                    : 
-                    EchoServerClient(rpcHandlerManager, inboundInterceptor, outboundInterceptor) {}
-            };
-
-            auto client = std::make_shared<make_shared_enabler>(rpcHandlerManager, inboundInterceptor, outboundInterceptor);
-            client->installResponseStub(rpcHandlerManager, static_cast<uint32_t>(echo_service_ServiceID::EchoServer));
-
-            return client;
-        }
-
-        static  std::string GetServiceTypeName()
-        {
-            return "dodo::test::EchoServer";
-        }
-
-    private:
-        using BaseClient::BaseClient;
-    };
-
-    class EchoServerService : public BaseService
+                          const UnaryServerInterceptor& outboundInterceptor,
+                          InterceptorContextType&& context)
     {
-    public:
-        using Ptr = std::shared_ptr<EchoServerService>;
-        using WeakPtr = std::weak_ptr<EchoServerService>;
+        dodo::test::EchoRequest request;
+        return parseRequestWrapper(
+                request, std::move(meta), data, inboundInterceptor, [service, outboundInterceptor = outboundInterceptor, &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+                    auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
+                    service->Echo(request, replyObject, std::move(context));
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                },
+                std::move(context));
+    }
 
-        using EchoReply = TemplateReply<dodo::test::EchoResponse>;
-        using LoginReply = TemplateReply<dodo::test::LoginResponse>;
-        
-
-        using BaseService::BaseService;
-
-        ~EchoServerService() override = default;
-
-        void onClose() override {}
-
-        void install() override
-        {
-            auto sharedThis = std::static_pointer_cast<EchoServerService>(shared_from_this());
-            EchoServerService::Install(sharedThis);
-        }
-
-        static bool Install(const EchoServerService::Ptr& service);
-
-        static  std::string GetServiceTypeName()
-        {
-            return "dodo::test::EchoServer";
-        }
-    private:
-        virtual void Echo(const dodo::test::EchoRequest& request, 
-            const dodo::test::EchoServerService::EchoReply::Ptr& replyObj,
-            InterceptorContextType&&) = 0;
-        virtual void Login(const dodo::test::LoginRequest& request, 
-            const dodo::test::EchoServerService::LoginReply::Ptr& replyObj,
-            InterceptorContextType&&) = 0;
-        
-
-    private:
-
-        static auto Echo_stub(RpcMeta&& meta,
-            const std::string_view& data,
-            const EchoServerService::Ptr& service,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor,
-            InterceptorContextType&& context)
-        {
-            dodo::test::EchoRequest request;
-            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
-                outboundInterceptor = outboundInterceptor,
-                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
-                auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
-                service->Echo(request, replyObject, std::move(context));
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-            }, std::move(context));
-        }
-
-        static auto Login_stub(RpcMeta&& meta,
-            const std::string_view& data,
-            const EchoServerService::Ptr& service,
-            const UnaryServerInterceptor& inboundInterceptor,
-            const UnaryServerInterceptor& outboundInterceptor,
-            InterceptorContextType&& context)
-        {
-            dodo::test::LoginRequest request;
-            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
-                outboundInterceptor = outboundInterceptor,
-                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
-                auto replyObject = std::make_shared<LoginReply>(std::move(meta), std::move(outboundInterceptor));
-                service->Login(request, replyObject, std::move(context));
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
-            }, std::move(context));
-        }
-
-        
-    };
-
-    inline bool EchoServerService::Install(const EchoServerService::Ptr& service)
+    static auto Login_stub(RpcMeta&& meta,
+                           const std::string_view& data,
+                           const EchoServerService::Ptr& service,
+                           const UnaryServerInterceptor& inboundInterceptor,
+                           const UnaryServerInterceptor& outboundInterceptor,
+                           InterceptorContextType&& context)
     {
-        auto rpcTypeHandleManager = service->getServiceContext().getTypeHandleManager();
-        auto inboundInterceptor = service->getServiceContext().getInInterceptor();
-        auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
+        dodo::test::LoginRequest request;
+        return parseRequestWrapper(
+                request, std::move(meta), data, inboundInterceptor, [service, outboundInterceptor = outboundInterceptor, &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+                    auto replyObject = std::make_shared<LoginReply>(std::move(meta), std::move(outboundInterceptor));
+                    service->Login(request, replyObject, std::move(context));
+                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                },
+                std::move(context));
+    }
+};
 
-        using EchoServerServiceRequestHandler = std::function<InterceptorReturnType(RpcMeta&&,
-            const std::string_view& data,
-            const EchoServerService::Ptr&,
-            const UnaryServerInterceptor&,
-            const UnaryServerInterceptor&,
-            InterceptorContextType&& context)>;
+inline bool EchoServerService::Install(const EchoServerService::Ptr& service)
+{
+    auto rpcTypeHandleManager = service->getServiceContext().getTypeHandleManager();
+    auto inboundInterceptor = service->getServiceContext().getInInterceptor();
+    auto outboundInterceptor = service->getServiceContext().getOutInterceptor();
 
-        using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
-        using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
+    using EchoServerServiceRequestHandler = std::function<InterceptorReturnType(RpcMeta&&,
+                                                                                const std::string_view& data,
+                                                                                const EchoServerService::Ptr&,
+                                                                                const UnaryServerInterceptor&,
+                                                                                const UnaryServerInterceptor&,
+                                                                                InterceptorContextType&& context)>;
 
-        EchoServerServiceHandlerMapById serviceHandlerMapById = {
+    using EchoServerServiceHandlerMapById = std::unordered_map<uint64_t, EchoServerServiceRequestHandler>;
+    using EchoServerServiceHandlerMapByStr = std::unordered_map<std::string, EchoServerServiceRequestHandler>;
+
+    EchoServerServiceHandlerMapById serviceHandlerMapById = {
             {static_cast<uint64_t>(EchoServerMsgID::Echo), EchoServerService::Echo_stub},
             {static_cast<uint64_t>(EchoServerMsgID::Login), EchoServerService::Login_stub},
-            
-        };
-        EchoServerServiceHandlerMapByStr serviceHandlerMapByStr = {
+
+    };
+    EchoServerServiceHandlerMapByStr serviceHandlerMapByStr = {
             {"dodo.test.EchoServer.Echo", EchoServerService::Echo_stub},
             {"dodo.test.EchoServer.Login", EchoServerService::Login_stub},
-            
-        };
 
-        auto requestStub = [service,
-            serviceHandlerMapById,
-            serviceHandlerMapByStr,
-            inboundInterceptor,
-            outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) {
+    };
 
-            if (meta.type() != RpcMeta::REQUEST)
-            {
-                throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
-            }
-            
-            EchoServerServiceRequestHandler handler;
-            try
-            {
-                if (!meta.request_info().strmethod().empty())
-                {
-                    auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
-                    if (it == serviceHandlerMapByStr.end())
-                    {
-                        throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
-                    }
-                    handler = (*it).second;
-                }
-                else
-                {
-                    auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
-                    if (it == serviceHandlerMapById.end())
-                    {
-                        throw std::runtime_error(std::string("not found handle, method:") + std::to_string(meta.request_info().intmethod()));
-                    }
-                    handler = (*it).second;
-                }
-            }
-            catch (const std::exception& e)
-            {
-                auto tmpMeta = meta;
-                auto tmpOutboundInterceptor = outboundInterceptor;
-                BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
-                reply.error<RpcMeta>(0, e.what(), InterceptorContextType());
-
-                return;
-            }
-
-            auto tmpMeta = meta;
-            handler(std::move(tmpMeta),
-                    data,
-                    service,
-                    inboundInterceptor,
-                    outboundInterceptor,
-                    std::move(context))
-                    .Then([=](std::optional<std::string> err)
-                    {
-                        if (err)
-                        {
-                            auto tmpMeta = meta;
-                            auto tmpOutboundInterceptor = outboundInterceptor;
-                            BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
-                            // TODO::错误码0可能和业务层的错误码冲突!
-                            reply.error<RpcMeta>(0, err.value(), InterceptorContextType());
-                        }
-                    });
-        };
-
-        if(!rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(echo_service_ServiceID::EchoServer)))
+    auto requestStub = [service,
+                        serviceHandlerMapById,
+                        serviceHandlerMapByStr,
+                        inboundInterceptor,
+                        outboundInterceptor](RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) {
+        if (meta.type() != RpcMeta::REQUEST)
         {
-            throw std::runtime_error(std::string("register service:")+ EchoServerService::GetServiceTypeName()+" type handler failed");
+            throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
         }
-        return true;
+
+        const EchoServerServiceRequestHandler* handler;
+        try
+        {
+            throw std::runtime_error("test");
+            if (!meta.request_info().strmethod().empty())
+            {
+                auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
+                if (it == serviceHandlerMapByStr.end())
+                {
+                    throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
+                }
+                handler = &(*it).second;
+            }
+            else
+            {
+                auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
+                if (it == serviceHandlerMapById.end())
+                {
+                    throw std::runtime_error(std::string("not found handle, method:") + std::to_string(meta.request_info().intmethod()));
+                }
+                handler = &(*it).second;
+            }
+        }
+        catch (const std::exception& e)
+        {
+            BaseReply reply(meta, outboundInterceptor);
+            reply.error<RpcMeta>(0, e.what(), InterceptorContextType());
+            return;
+        }
+
+        // TODO::don't copy
+        auto errHandler = [=](std::optional<std::string> err) {
+            if (err)
+            {
+                BaseReply reply(meta, outboundInterceptor);
+                // TODO::错误码0可能和业务层的错误码冲突!
+                reply.error<RpcMeta>(0, err.value(), InterceptorContextType());
+            }
+        };
+
+        (*handler)(std::move(meta),
+                   data,
+                   service,
+                   inboundInterceptor,
+                   outboundInterceptor,
+                   std::move(context))
+                .Then(errHandler);
+    };
+
+    if (!rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(echo_service_ServiceID::EchoServer)))
+    {
+        throw std::runtime_error(std::string("register service:") + EchoServerService::GetServiceTypeName() + " type handler failed");
     }
-    
+    return true;
 }
+
 }
+}// namespace dodo::test
 
 #endif
-

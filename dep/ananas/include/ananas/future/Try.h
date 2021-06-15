@@ -25,6 +25,7 @@
 #include <exception>
 #include <stdexcept>
 #include <cassert>
+#include <type_traits>
 
 namespace ananas {
 
@@ -311,13 +312,29 @@ struct TryWrapper<Try<T>> {
 };
 
 
+#if (__cplusplus >= 201703L || \
+     (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+
+template<typename F, typename... Args>
+struct MyResultOf
+{
+    using type = std::invoke_result<F, Args...>::type;
+};
+#else
+template<typename F, typename... Args>
+struct MyResultOf
+{
+    using type = std::result_of<F(Args...)>::type;
+};
+#endif
+
 // Wrap function f(...) return by Try<T>
 template <typename F, typename... Args>
 typename std::enable_if<
-!std::is_same<typename std::result_of<F (Args...)>::type, void>::value,
-typename TryWrapper<typename std::result_of<F (Args...)>::type >::Type > ::type
+!std::is_same<typename MyResultOf<F, Args...>::type, void>::value,
+typename TryWrapper<typename MyResultOf<F, Args...>::type >::Type > ::type
 WrapWithTry(F&& f, Args&&... args) {
-    using Type = typename std::result_of<F(Args...)>::type;
+    using Type = typename MyResultOf<F, Args...>::type;
 
     try {
         return typename TryWrapper<Type>::Type(std::forward<F>(f)(std::forward<Args>(args)...));
@@ -329,7 +346,7 @@ WrapWithTry(F&& f, Args&&... args) {
 // Wrap void function f(...) return by Try<void>
 template <typename F, typename... Args>
 typename std::enable_if <
-std::is_same<typename std::result_of<F (Args...)>::type, void>::value,
+std::is_same<typename MyResultOf<F, Args...>::type, void>::value,
     Try<void>> ::type
 WrapWithTry(F&& f, Args&&... args) {
     try {
@@ -345,10 +362,10 @@ WrapWithTry(F&& f, Args&&... args) {
 // Wrap return value of function Type f(void) by Try<Type>
 template <typename F>
 typename std::enable_if<
-    !std::is_same<typename std::result_of<F ()>::type, void>::value,
-    typename TryWrapper<typename std::result_of<F ()>::type >::Type >::type
+    !std::is_same<typename MyResultOf<F>::type, void>::value,
+    typename TryWrapper<typename MyResultOf<F>::type >::Type >::type
     WrapWithTry(F&& f, Try<void>&& arg) {
-    using Type = typename std::result_of<F()>::type;
+    using Type = typename MyResultOf<F>::type;
 
     try {
         return typename TryWrapper<Type>::Type(std::forward<F>(f)());
@@ -360,8 +377,8 @@ typename std::enable_if<
 // Wrap return value of function void f(void) by Try<void>
 template <typename F>
 typename std::enable_if <
-    std::is_same<typename std::result_of<F ()>::type, void>::value,
-    Try<typename std::result_of<F ()>::type >>::type
+    std::is_same<typename MyResultOf<F>::type, void>::value,
+    Try<typename MyResultOf<F>::type >>::type
     WrapWithTry(F&& f, Try<void>&& arg) {
     try {
         std::forward<F>(f)();

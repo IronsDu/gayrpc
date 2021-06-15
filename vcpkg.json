@@ -1,0 +1,14 @@
+{
+	"name": "gayrpc",
+	"version-string": "0.0.1",
+	"dependencies": [{
+			"name": "brynet",
+			"version>=": "1.10.0"
+		},
+		{
+			"name": "protobuf",
+			"version>=": "3.15.8"
+		}
+	],
+	"builtin-baseline": "2b1f2ca96a0e4483f50ba605c4c6cc0243633c8d"
+}
