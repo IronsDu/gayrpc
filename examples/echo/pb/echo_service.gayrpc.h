@@ -292,24 +292,28 @@ inline bool EchoServerService::Install(const EchoServerService::Ptr& service)
         const EchoServerServiceRequestHandler* handler;
         try
         {
-            throw std::runtime_error("test");
             if (!meta.request_info().strmethod().empty())
             {
-                auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod());
-                if (it == serviceHandlerMapByStr.end())
+
+                if (const auto it = serviceHandlerMapByStr.find(meta.request_info().strmethod()); it == serviceHandlerMapByStr.end())
                 {
                     throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
                 }
-                handler = &(*it).second;
+                else
+                {
+                    handler = &(it->second);
+                }
             }
             else
             {
-                auto it = serviceHandlerMapById.find(meta.request_info().intmethod());
-                if (it == serviceHandlerMapById.end())
+                if (const auto it = serviceHandlerMapById.find(meta.request_info().intmethod()); it == serviceHandlerMapById.end())
                 {
                     throw std::runtime_error(std::string("not found handle, method:") + std::to_string(meta.request_info().intmethod()));
                 }
-                handler = &(*it).second;
+                else
+                {
+                    handler = &(it->second);
+                }
             }
         }
         catch (const std::exception& e)
@@ -319,11 +323,11 @@ inline bool EchoServerService::Install(const EchoServerService::Ptr& service)
             return;
         }
 
-        // TODO::don't copy
-        auto errHandler = [=](std::optional<std::string> err) {
+        // TODO::don't copy meta and outboundInterceptor
+        auto errHandler = [=](std::optional<std::string> err) mutable {
             if (err)
             {
-                BaseReply reply(meta, outboundInterceptor);
+                BaseReply reply(std::move(meta), std::move(outboundInterceptor));
                 // TODO::错误码0可能和业务层的错误码冲突!
                 reply.error<RpcMeta>(0, err.value(), InterceptorContextType());
             }

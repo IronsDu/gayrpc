@@ -20,9 +20,9 @@ public:
     {
     }
 
-    BaseReply(RpcMeta meta, UnaryServerInterceptor outboundInterceptor)
-        : mRequestMeta(std::move(meta)),
-        mOutboundInterceptor(std::move(outboundInterceptor))
+    BaseReply(const RpcMeta& meta, const UnaryServerInterceptor& outboundInterceptor)
+        : mRequestMeta(meta),
+          mOutboundInterceptor(outboundInterceptor)
     {
     }
 
@@ -106,9 +106,9 @@ public:
     {
     }
 
-    TemplateReply(RpcMeta meta,
-        UnaryServerInterceptor outboundInterceptor)
-        : BaseReply(std::move(meta), std::move(outboundInterceptor))
+    TemplateReply(const RpcMeta& meta,
+                  const UnaryServerInterceptor& outboundInterceptor)
+        : BaseReply(meta, outboundInterceptor)
     {
     }
 
