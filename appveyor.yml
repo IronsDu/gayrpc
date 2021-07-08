@@ -36,7 +36,7 @@ before_build:
   - protoc -I. -I../../src -IC:\Tools\vcpkg\installed\x86-windows\include --cpp_out=. echo_service.proto
   - cd %APPVEYOR_BUILD_FOLDER%
   - echo Running cmake...
-  - cmake -DCMAKE_GENERATOR_PLATFORM=%VS_PLATFORM% -DCMAKE_TOOLCHAIN_FILE=c:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake . -G "Visual Studio %VS_VERSION%"
+  - cmake -DCMAKE_GENERATOR_PLATFORM=%VS_PLATFORM% -DCMAKE_TOOLCHAIN_FILE=c:/Tools/vcpkg/scripts/buildsystems/vcpkg.cmake . -G "Visual Studio %VS_VERSION%" -DVCPKG_OVERLAY_PORTS="%APPVEYOR_BUILD_FOLDER%/vcpkg/overlay/folly"
 
 build:
   project: gayrpc.sln
