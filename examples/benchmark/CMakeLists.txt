@@ -9,10 +9,7 @@ BenchmarkClient.cpp
 ./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_client gayrpc ws2_32)
-  if(DEFINED ENV{APPVEYOR_CI})
-    target_link_libraries(benchmark_client protobuf::libprotobuf)
-  endif()
+  target_link_libraries(benchmark_client protobuf::libprotobuf gayrpc ws2_32)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_client gayrpc pthread protobuf)
@@ -23,10 +20,7 @@ BenchmarkServer.cpp
 ./pb/benchmark_service.pb.cc)
 
 if(WIN32)
-  target_link_libraries(benchmark_server gayrpc ws2_32)
-  if(DEFINED ENV{APPVEYOR_CI})
-    target_link_libraries(benchmark_server protobuf::libprotobuf)
-  endif()
+  target_link_libraries(benchmark_server protobuf::libprotobuf gayrpc ws2_32)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_server gayrpc pthread protobuf)

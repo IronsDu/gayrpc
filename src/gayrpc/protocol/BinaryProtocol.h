@@ -90,6 +90,10 @@ public:
                 {
                     std::cerr << "handle rpc cause exception:" << e.what() << std::endl;
                 }
+                catch (const std::exception& e)
+                {
+                    std::cerr << "handle rpc cause exception:" << e.what() << std::endl;
+                }
                 catch (...)
                 {
                     std::cerr << "handle rpc cause unknown exception" << std::endl;
@@ -162,9 +166,9 @@ private:
     static void parseOpPacket(brynet::base::BasePacketReader& reader,
                               const OpPacketHandler& handler)
     {
-        while (reader.enough(sizeof(OpPacket::head.data_len) + sizeof(OpPacket::head.op)))
+        OpPacket opPacket{};
+        while (reader.enough(sizeof(opPacket.head.data_len) + sizeof(opPacket.head.op)))
         {
-            OpPacket opPacket{};
             opPacket.head.data_len = reader.readUINT64();
             opPacket.head.op = reader.readUINT32();
 
