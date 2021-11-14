@@ -22,48 +22,59 @@
  * limitations under the License.
  */
 
+#include <cassert>
 #include <exception>
 #include <stdexcept>
-#include <cassert>
+#include <type_traits>
 
 namespace ananas {
 
-template <typename T>
-class Try {
-    enum class State {
+template<typename T>
+class Try
+{
+    enum class State
+    {
         None,
         Exception,
         Value,
     };
+
 public:
-    Try() : state_(State::None) {
+    Try()
+        : state_(State::None)
+    {
     }
 
-    Try(const T& t) :
-        state_(State::Value),
-        value_(t) {
+    Try(const T& t)
+        : state_(State::Value),
+          value_(t)
+    {
     }
 
-    Try(T&& t) :
-        state_(State::Value),
-        value_(std::move(t)) {
+    Try(T&& t)
+        : state_(State::Value),
+          value_(std::move(t))
+    {
     }
 
-    Try(std::exception_ptr e) :
-        state_(State::Exception),
-        exception_(std::move(e)) {
+    Try(std::exception_ptr e)
+        : state_(State::Exception),
+          exception_(std::move(e))
+    {
     }
 
     // move
-    Try(Try<T>&& t) :
-        state_(t.state_) {
+    Try(Try<T>&& t)
+        : state_(t.state_)
+    {
         if (state_ == State::Value)
-            new (&value_)T(std::move(t.value_));
+            new (&value_) T(std::move(t.value_));
         else if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(std::move(t.exception_));
+            new (&exception_) std::exception_ptr(std::move(t.exception_));
     }
 
-    Try<T>& operator=(Try<T>&& t) {
+    Try<T>& operator=(Try<T>&& t)
+    {
         if (this == &t)
             return *this;
 
@@ -71,23 +82,25 @@ public:
 
         state_ = t.state_;
         if (state_ == State::Value)
-            new (&value_)T(std::move(t.value_));
+            new (&value_) T(std::move(t.value_));
         else if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(std::move(t.exception_));
+            new (&exception_) std::exception_ptr(std::move(t.exception_));
 
         return *this;
     }
 
     // copy
-    Try(const Try<T>& t) :
-        state_(t.state_) {
+    Try(const Try<T>& t)
+        : state_(t.state_)
+    {
         if (state_ == State::Value)
-            new (&value_)T(t.value_);
+            new (&value_) T(t.value_);
         else if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(t.exception_);
+            new (&exception_) std::exception_ptr(t.exception_);
     }
 
-    Try<T>& operator=(const Try<T>& t) {
+    Try<T>& operator=(const Try<T>& t)
+    {
         if (this == &t)
             return *this;
 
@@ -95,14 +108,15 @@ public:
 
         state_ = t.state_;
         if (state_ == State::Value)
-            new (&value_)T(t.value_);
+            new (&value_) T(t.value_);
         else if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(t.exception_);
+            new (&exception_) std::exception_ptr(t.exception_);
 
         return *this;
     }
 
-    ~Try() {
+    ~Try()
+    {
         if (state_ == State::Exception)
             exception_.~exception_ptr();
         else if (state_ == State::Value)
@@ -110,67 +124,87 @@ public:
     }
 
     // implicity convertion
-    operator const T& () const & {
+    operator const T&() const&
+    {
         return Value();
     }
-    operator T& () & { return Value(); }
-    operator T&& () && { return std::move(Value()); }
+    operator T&() &
+    {
+        return Value();
+    }
+    operator T&&() &&
+    {
+        return std::move(Value());
+    }
 
     // get value
-    const T& Value() const & {
+    const T& Value() const&
+    {
         Check();
         return value_;
     }
 
-    T& Value() & {
+    T& Value() &
+    {
         Check();
         return value_;
     }
 
-    T&& Value() && {
+    T&& Value() &&
+    {
         Check();
         return std::move(value_);
     }
 
     // get exception
-    const std::exception_ptr& Exception() const & {
+    const std::exception_ptr& Exception() const&
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return exception_;
     }
 
-    std::exception_ptr& Exception() & {
+    std::exception_ptr& Exception() &
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return exception_;
     }
 
-    std::exception_ptr&& Exception() && {
+    std::exception_ptr&& Exception() &&
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return std::move(exception_);
     }
 
-    bool HasValue() const {
+    bool HasValue() const
+    {
         return state_ == State::Value;
     }
-    bool HasException() const {
+    bool HasException() const
+    {
         return state_ == State::Exception;
     }
 
-    const T& operator*() const {
+    const T& operator*() const
+    {
         return Value();
     }
-    T& operator*() {
+    T& operator*()
+    {
         return Value();
     }
 
-    struct UninitializedTry {};
+    struct UninitializedTry
+    {
+    };
 
-    void Check() const {
+    void Check() const
+    {
         if (state_ == State::Exception)
             std::rethrow_exception(exception_);
         else if (state_ == State::None)
@@ -178,8 +212,9 @@ public:
     }
 
     // Amazing! Thanks to folly
-    template <typename R>
-    R Get() {
+    template<typename R>
+    R Get()
+    {
         return std::forward<R>(Value());
     }
 
@@ -192,31 +227,37 @@ private:
 };
 
 
-template <>
-class Try<void> {
-    enum class State {
+template<>
+class Try<void>
+{
+    enum class State
+    {
         Exception,
         Value,
     };
 
 public:
-    Try() :
-        state_(State::Value) {
+    Try()
+        : state_(State::Value)
+    {
     }
 
-    explicit Try(std::exception_ptr e) :
-        state_(State::Exception),
-        exception_(std::move(e)) {
+    explicit Try(std::exception_ptr e)
+        : state_(State::Exception),
+          exception_(std::move(e))
+    {
     }
 
     // move
-    Try(Try<void>&& t) :
-        state_(t.state_) {
+    Try(Try<void>&& t)
+        : state_(t.state_)
+    {
         if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(std::move(t.exception_));
+            new (&exception_) std::exception_ptr(std::move(t.exception_));
     }
 
-    Try<void>& operator=(Try<void>&& t) {
+    Try<void>& operator=(Try<void>&& t)
+    {
         if (this == &t)
             return *this;
 
@@ -224,19 +265,21 @@ public:
 
         state_ = t.state_;
         if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(std::move(t.exception_));
+            new (&exception_) std::exception_ptr(std::move(t.exception_));
 
         return *this;
     }
 
     // copy
-    Try(const Try<void>& t) :
-        state_(t.state_) {
+    Try(const Try<void>& t)
+        : state_(t.state_)
+    {
         if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(t.exception_);
+            new (&exception_) std::exception_ptr(t.exception_);
     }
 
-    Try<void>& operator=(const Try<void>& t) {
+    Try<void>& operator=(const Try<void>& t)
+    {
         if (this == &t)
             return *this;
 
@@ -244,53 +287,61 @@ public:
 
         state_ = t.state_;
         if (state_ == State::Exception)
-            new (&exception_)std::exception_ptr(t.exception_);
+            new (&exception_) std::exception_ptr(t.exception_);
 
         return *this;
     }
 
-    ~Try() {
+    ~Try()
+    {
         if (state_ == State::Exception)
             exception_.~exception_ptr();
     }
 
     // get exception
-    const std::exception_ptr& Exception() const & {
+    const std::exception_ptr& Exception() const&
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return exception_;
     }
 
-    std::exception_ptr& Exception() & {
+    std::exception_ptr& Exception() &
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return exception_;
     }
 
-    std::exception_ptr&& Exception() && {
+    std::exception_ptr&& Exception() &&
+    {
         if (!HasException())
             throw std::runtime_error("Not exception state");
 
         return std::move(exception_);
     }
 
-    bool HasValue() const {
+    bool HasValue() const
+    {
         return state_ == State::Value;
     }
-    bool HasException() const {
+    bool HasException() const
+    {
         return state_ == State::Exception;
     }
 
-    void Check() const {
+    void Check() const
+    {
         if (state_ == State::Exception)
             std::rethrow_exception(exception_);
     }
 
     // Amazing! Thanks to folly
-    template <typename R>
-    R Get() {
+    template<typename R>
+    R Get()
+    {
         return std::forward<R>(*this);
     }
 
@@ -300,78 +351,111 @@ private:
 };
 
 // TryWrapper<T> : if T is Try type, then Type is T otherwise is Try<T>
-template <typename T>
-struct TryWrapper {
+template<typename T>
+struct TryWrapper
+{
     using Type = Try<T>;
 };
 
-template <typename T>
-struct TryWrapper<Try<T>> {
+template<typename T>
+struct TryWrapper<Try<T>>
+{
     using Type = Try<T>;
 };
 
+
+#if (__cplusplus >= 201703L || \
+     (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L))
+
+template<typename F, typename... Args>
+struct MyResultOf
+{
+    using type = std::invoke_result<F, Args...>::type;
+};
+#else
+template<typename F, typename... Args>
+struct MyResultOf
+{
+    using type = std::result_of<F(Args...)>::type;
+};
+#endif
 
 // Wrap function f(...) return by Try<T>
-template <typename F, typename... Args>
+template<typename F, typename... Args>
 typename std::enable_if<
-!std::is_same<typename std::result_of<F (Args...)>::type, void>::value,
-typename TryWrapper<typename std::result_of<F (Args...)>::type >::Type > ::type
-WrapWithTry(F&& f, Args&&... args) {
-    using Type = typename std::result_of<F(Args...)>::type;
+        !std::is_same<typename MyResultOf<F, Args...>::type, void>::value,
+        typename TryWrapper<typename MyResultOf<F, Args...>::type>::Type>::type
+WrapWithTry(F&& f, Args&&... args)
+{
+    using Type = typename MyResultOf<F, Args...>::type;
 
-    try {
+    try
+    {
         return typename TryWrapper<Type>::Type(std::forward<F>(f)(std::forward<Args>(args)...));
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         return typename TryWrapper<Type>::Type(std::current_exception());
     }
 }
 
 // Wrap void function f(...) return by Try<void>
-template <typename F, typename... Args>
-typename std::enable_if <
-std::is_same<typename std::result_of<F (Args...)>::type, void>::value,
-    Try<void>> ::type
-WrapWithTry(F&& f, Args&&... args) {
-    try {
+template<typename F, typename... Args>
+typename std::enable_if<
+        std::is_same<typename MyResultOf<F, Args...>::type, void>::value,
+        Try<void>>::type
+WrapWithTry(F&& f, Args&&... args)
+{
+    try
+    {
         std::forward<F>(f)(std::forward<Args>(args)...);
         return Try<void>();
-    } catch (std::exception& e) {
-        (void)e;
+    }
+    catch (std::exception& e)
+    {
+        (void) e;
         return Try<void>(std::current_exception());
     }
 }
 
 // f's arg is void, but return Type
 // Wrap return value of function Type f(void) by Try<Type>
-template <typename F>
+template<typename F>
 typename std::enable_if<
-    !std::is_same<typename std::result_of<F ()>::type, void>::value,
-    typename TryWrapper<typename std::result_of<F ()>::type >::Type >::type
-    WrapWithTry(F&& f, Try<void>&& arg) {
-    using Type = typename std::result_of<F()>::type;
+        !std::is_same<typename MyResultOf<F>::type, void>::value,
+        typename TryWrapper<typename MyResultOf<F>::type>::Type>::type
+WrapWithTry(F&& f, Try<void>&& arg)
+{
+    using Type = typename MyResultOf<F>::type;
 
-    try {
+    try
+    {
         return typename TryWrapper<Type>::Type(std::forward<F>(f)());
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         return typename TryWrapper<Type>::Type(std::current_exception());
     }
 }
 
 // Wrap return value of function void f(void) by Try<void>
-template <typename F>
-typename std::enable_if <
-    std::is_same<typename std::result_of<F ()>::type, void>::value,
-    Try<typename std::result_of<F ()>::type >>::type
-    WrapWithTry(F&& f, Try<void>&& arg) {
-    try {
+template<typename F>
+typename std::enable_if<
+        std::is_same<typename MyResultOf<F>::type, void>::value,
+        Try<typename MyResultOf<F>::type>>::type
+WrapWithTry(F&& f, Try<void>&& arg)
+{
+    try
+    {
         std::forward<F>(f)();
         return Try<void>();
-    } catch (std::exception& e) {
+    }
+    catch (std::exception& e)
+    {
         return Try<void>(std::current_exception());
     }
 }
 
-} // end namespace ananas
+}// end namespace ananas
 
 #endif
-

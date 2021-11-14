@@ -69,7 +69,7 @@ static auto auth(RpcMeta&& meta,
                  UnaryHandler&& next,
                  InterceptorContextType&& context)
 {
-    if (true)
+    if (false)
     {
         return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
     }
