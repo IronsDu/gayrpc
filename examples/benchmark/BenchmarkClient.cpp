@@ -46,13 +46,13 @@ public:
         mClient->Echo(request,
                       [sharedThis = shared_from_this(), this](const EchoResponse& response,
                                                               const std::optional<gayrpc::core::RpcError>& error) {
-                          onEchoResponse(response, std::move(error));
+                          onEchoResponse(response, error);
                       });
     }
 
 private:
     void onEchoResponse(const EchoResponse& response,
-                        std::optional<gayrpc::core::RpcError> error)
+                        const std::optional<gayrpc::core::RpcError>& error)
     {
         (void) response;
         mCurrentNum++;
@@ -223,7 +223,11 @@ int main(int argc, char** argv)
             })
             .WithMaxRecvBufferSize(1024 * 1024)
             .WithAddr(argv[1], std::stoi(argv[2]))
-            .WithTimeout(std::chrono::seconds(10));
+            .WithTimeout(std::chrono::seconds(10))
+            .WithFailedCallback([=]() {
+                std::cout << "connect " << argv[1] << ":" << argv[2]
+                          << " failed " << std::endl;
+            });
 
     for (int i = 0; i < clientNum; i++)
     {
