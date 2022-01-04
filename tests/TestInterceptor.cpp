@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN// This tells Catch to provide a main() - only do this in one cpp file
+#include <gayrpc/core/GayRpcHelper.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 
 #include <vector>
@@ -21,7 +22,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 *message,
                 [&v](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                     v++;
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 InterceptorContextType());
 
@@ -38,10 +39,10 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 std::move(meta),
                 *message,
                 [](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>("test"));
+                    return gayrpc::core::MakeReadyFuture(std::optional<std::string>("test"));
                 },
                 InterceptorContextType())
-                .Then([](std::optional<std::string> err) {
+                .thenValue([](std::optional<std::string> err) {
                     REQUIRE(err);
                     REQUIRE(err.value() == "test");
                 });
@@ -71,7 +72,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 *message,
                 [&vlist](const gayrpc::core::RpcMeta&, const google::protobuf::Message&, const InterceptorContextType& context) {
                     vlist.push_back(3);
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 InterceptorContextType());
 
@@ -87,7 +88,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 [&vlist](const gayrpc::core::RpcMeta& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                          InterceptorContextType&& context) {
                     vlist.push_back(1);
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 [&vlist](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                          InterceptorContextType&& context) {
@@ -103,7 +104,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                 *message,
                 [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                     vlist.push_back(3);
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 InterceptorContextType());
 
@@ -125,7 +126,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                         InterceptorContextType&& context) {
                         vlist.push_back(1);
                         tmpHandler = next;
-                        return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                        return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                     },
                     [&](gayrpc::core::RpcMeta&& meta, const google::protobuf::Message& message, gayrpc::core::UnaryHandler&& next,
                         InterceptorContextType&& context) {
@@ -139,7 +140,7 @@ TEST_CASE("interceptor are computed", "[interceptor]")
                     *message,
                     [&vlist](gayrpc::core::RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
                         vlist.push_back(3);
-                        return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                        return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
                     },
                     InterceptorContextType());
         }

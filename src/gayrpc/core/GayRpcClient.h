@@ -162,7 +162,7 @@ protected:
                 std::move(meta),
                 request,
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 InterceptorContextType{});
     }
@@ -204,7 +204,7 @@ protected:
                 std::move(meta),
                 request,
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 InterceptorContextType{});
     }

@@ -24,7 +24,6 @@
 #include <gayrpc/core/GayRpcClient.h>
 #include <gayrpc/core/GayRpcService.h>
 #include <gayrpc/core/GayRpcReply.h>
-#include <ananas/future/Future.h>
 
 namespace dodo {
 namespace test {
@@ -101,48 +100,48 @@ namespace test {
         }
 
         
-        ananas::Future<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
+        folly::Future<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
             const dodo::test::EchoRequest& request,
             std::chrono::seconds timeout)
         {
-            ananas::Promise<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>> promise;
+            auto promise = std::make_shared < folly::Promise<std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>>>();
 
             Echo(request, 
                 [promise](const dodo::test::EchoResponse& response,
                     const std::optional<gayrpc::core::RpcError>& error) mutable {
-                    promise.SetValue(std::make_pair(response, error));
+                    promise->setValue(std::make_pair(response, error));
                 },
                 timeout,
                 [promise]() mutable {
                     dodo::test::EchoResponse response;
                     gayrpc::core::RpcError error;
                     error.setTimeout();
-                    promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
+                    promise->setValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
-            return promise.GetFuture();
+            return promise->getFuture();
         }
 
-        ananas::Future<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> SyncLogin(
+        folly::Future<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> SyncLogin(
             const dodo::test::LoginRequest& request,
             std::chrono::seconds timeout)
         {
-            ananas::Promise<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>> promise;
+            auto promise = std::make_shared < folly::Promise<std::pair<dodo::test::LoginResponse, std::optional<gayrpc::core::RpcError>>>>();
 
             Login(request, 
                 [promise](const dodo::test::LoginResponse& response,
                     const std::optional<gayrpc::core::RpcError>& error) mutable {
-                    promise.SetValue(std::make_pair(response, error));
+                    promise->setValue(std::make_pair(response, error));
                 },
                 timeout,
                 [promise]() mutable {
                     dodo::test::LoginResponse response;
                     gayrpc::core::RpcError error;
                     error.setTimeout();
-                    promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
+                    promise->setValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
-            return promise.GetFuture();
+            return promise->getFuture();
         }
 
         
@@ -229,7 +228,7 @@ namespace test {
                 &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
                 service->Echo(request, replyObject, std::move(context));
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                return MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
 
@@ -246,7 +245,7 @@ namespace test {
                 &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<LoginReply>(std::move(meta), std::move(outboundInterceptor));
                 service->Login(request, replyObject, std::move(context));
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                return MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
 
@@ -330,7 +329,7 @@ namespace test {
                     inboundInterceptor,
                     outboundInterceptor,
                     std::move(context))
-                    .Then([=](std::optional<std::string> err)
+                    .thenValue([=](std::optional<std::string> err)
                     {
                         if (err)
                         {

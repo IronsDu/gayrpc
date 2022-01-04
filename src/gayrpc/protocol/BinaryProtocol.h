@@ -86,10 +86,6 @@ public:
                                                     msg.data_view,
                                                     std::move(context));
                 }
-                catch (const std::runtime_error& e)
-                {
-                    std::cerr << "handle rpc cause exception:" << e.what() << std::endl;
-                }
                 catch (const std::exception& e)
                 {
                     std::cerr << "handle rpc cause exception:" << e.what() << std::endl;

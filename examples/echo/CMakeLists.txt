@@ -10,6 +10,7 @@ EchoClient.cpp
 
 if(WIN32)
   target_link_libraries(echoclient protobuf::libprotobuf gayrpc ws2_32)
+  target_link_libraries(echoclient PRIVATE Folly::folly Folly::folly_deps Folly::follybenchmark Folly::folly_test_util)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(echoclient PRIVATE gayrpc pthread protobuf)
@@ -21,6 +22,7 @@ SyncEchoClient.cpp
 
 if(WIN32)
   target_link_libraries(sync_echoclient protobuf::libprotobuf gayrpc ws2_32)
+  target_link_libraries(sync_echoclient PRIVATE Folly::folly Folly::folly_deps Folly::follybenchmark Folly::folly_test_util)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(sync_echoclient PRIVATE gayrpc pthread protobuf)
@@ -32,6 +34,7 @@ EchoServer.cpp
 
 if(WIN32)
   target_link_libraries(echoserver protobuf::libprotobuf gayrpc ws2_32)
+  target_link_libraries(echoserver PRIVATE Folly::folly Folly::folly_deps Folly::follybenchmark Folly::folly_test_util)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(echoserver PRIVATE gayrpc pthread protobuf)

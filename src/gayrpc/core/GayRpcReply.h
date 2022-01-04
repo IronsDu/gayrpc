@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gayrpc/core/GayRpcHelper.h>
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/gayrpc_meta.pb.h>
 
@@ -45,7 +46,7 @@ public:
                 std::move(meta),
                 response,
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 std::move(context));
     }
@@ -63,24 +64,35 @@ public:
             return;
         }
 
+        ReplyError(mOutboundInterceptor, mRequestMeta.service_id(), mRequestMeta.request_info().sequence_id(), errorCode, reason, std::move(context));
+    }
+
+    static void ReplyError(const UnaryServerInterceptor& outboundInterceptor,
+                           ServiceIDType serviceId,
+                           uint64_t seqId,
+                           int32_t errorCode,
+                           const std::string& reason,
+                           InterceptorContextType&& context)
+    {
         RpcMeta meta;
         meta.set_type(RpcMeta::RESPONSE);
         meta.set_encoding(RpcMeta_DataEncodingType_BINARY);
-        meta.set_service_id(mRequestMeta.service_id());
-        meta.mutable_response_info()->set_sequence_id(mRequestMeta.request_info().sequence_id());
+        meta.set_service_id(serviceId);
+        meta.mutable_response_info()->set_sequence_id(seqId);
         meta.mutable_response_info()->set_failed(true);
         meta.mutable_response_info()->set_error_code(errorCode);
         meta.mutable_response_info()->set_reason(reason);
         meta.mutable_response_info()->set_timeout(false);
 
-        mOutboundInterceptor(
+        outboundInterceptor(
                 std::move(meta),
-                Response{},
+                RpcMeta{},
                 [](RpcMeta&&, const google::protobuf::Message&, InterceptorContextType&& context) {
-                    return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                    return MakeReadyFuture(std::optional<std::string>(std::nullopt));
                 },
                 std::move(context));
     }
+
 
 private:
     const RpcMeta mRequestMeta;

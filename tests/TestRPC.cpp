@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN// This tells Catch to provide a main() - only do this in one cpp file
+#include <gayrpc/core/GayRpcHelper.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 
 #include <vector>
@@ -206,7 +207,7 @@ TEST_CASE("err rpc are computed", "[check_err]")
                 const google::protobuf::Message& message,
                 gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context) {
-                return ananas::MakeReadyFuture(std::optional<std::string>("some err"));
+                return gayrpc::core::MakeReadyFuture(std::optional<std::string>("some err"));
                 ;
             },
             [&](gayrpc::core::RpcMeta&& meta,

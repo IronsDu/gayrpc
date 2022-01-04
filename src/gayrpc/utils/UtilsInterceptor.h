@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gayrpc/core/GayRpcHelper.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 #include <gayrpc/core/GayRpcType.h>
 #include <gayrpc/core/GayRpcTypeHandler.h>
@@ -32,11 +33,10 @@ static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
         }
         else
         {
-            ananas::Promise<std::optional<std::string>> promise;
-
             std::shared_ptr<google::protobuf::Message> msg(message.New());
             msg->CopyFrom(message);
 
+            auto promise = std::make_shared<folly::Promise<std::optional<std::string>>>();
             eventLoop->runAsyncFunctor([=,
                                         msg = std::move(msg),
                                         meta = std::move(meta),
@@ -44,12 +44,12 @@ static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
                                         next = std::move(next)]() mutable {
                 next(std::move(meta),
                      *msg,
-                     std::move(context))
-                        .Then([=](std::optional<std::string> err) mutable {
-                            promise.SetValue(err);
+                        std::move(context))
+                        .thenValue([=](std::optional<std::string> err) mutable {
+                            promise->setValue(err);
                         });
             });
-            return promise.GetFuture();
+            return promise->getFuture();
         }
     };
 }
@@ -69,12 +69,12 @@ static auto withProtectedCall()
         catch (const std::exception& e)
         {
             std::cout << e.what() << std::endl;
-            return ananas::MakeReadyFuture(std::optional<std::string>(e.what()));
+            return MakeReadyFuture(std::optional<std::string>(e.what()));
         }
         catch (...)
         {
             std::cout << "unknown exception" << std::endl;
-            return ananas::MakeReadyFuture(std::optional<std::string>("unknown exception"));
+            return MakeReadyFuture(std::optional<std::string>("unknown exception"));
         }
     };
 }
