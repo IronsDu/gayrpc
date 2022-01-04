@@ -24,7 +24,7 @@
 #include <gayrpc/core/GayRpcClient.h>
 #include <gayrpc/core/GayRpcService.h>
 #include <gayrpc/core/GayRpcReply.h>
-#include <ananas/future/Future.h>
+#include <folly/futures/Future.h>
 
 namespace dodo {
 namespace benchmark {
@@ -78,26 +78,26 @@ namespace benchmark {
         }
 
         
-        ananas::Future<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
+        folly::Future<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>> SyncEcho(
             const dodo::benchmark::EchoRequest& request,
             std::chrono::seconds timeout)
         {
-            ananas::Promise<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>> promise;
+            auto promise = std::make_shared<folly::Promise<std::pair<dodo::benchmark::EchoResponse, std::optional<gayrpc::core::RpcError>>>>();
 
             Echo(request, 
                 [promise](const dodo::benchmark::EchoResponse& response,
                     const std::optional<gayrpc::core::RpcError>& error) mutable {
-                    promise.SetValue(std::make_pair(response, error));
+                    promise->setValue(std::make_pair(response, error));
                 },
                 timeout,
                 [promise]() mutable {
                     dodo::benchmark::EchoResponse response;
                     gayrpc::core::RpcError error;
                     error.setTimeout();
-                    promise.SetValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
+                    promise->setValue(std::make_pair(response, std::optional<gayrpc::core::RpcError>(error)));
                 });
 
-            return promise.GetFuture();
+            return promise->getFuture();
         }
 
         
@@ -180,7 +180,7 @@ namespace benchmark {
                 &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
                 service->Echo(request, replyObject, std::move(context));
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
 
@@ -223,7 +223,7 @@ namespace benchmark {
                 throw std::runtime_error("meta type not request, It is:" + std::to_string(meta.type()));
             }
             
-            EchoServerServiceRequestHandler handler;
+            EchoServerServiceRequestHandler handler = nullptr;
             try
             {
                 if (!meta.request_info().strmethod().empty())
@@ -247,32 +247,45 @@ namespace benchmark {
             }
             catch (const std::exception& e)
             {
-                auto tmpMeta = meta;
-                auto tmpOutboundInterceptor = outboundInterceptor;
-                BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
-                reply.error<RpcMeta>(0, e.what(), InterceptorContextType());
-
+                BaseReply::ReplyError(outboundInterceptor, meta.service_id(), meta.request_info().sequence_id(), 0, e.what(), InterceptorContextType{});
                 return;
             }
 
-            auto tmpMeta = meta;
-            handler(std::move(tmpMeta),
+            auto future = handler(std::move(meta),
                     data,
                     service,
                     inboundInterceptor,
                     outboundInterceptor,
-                    std::move(context))
-                    .Then([=](std::optional<std::string> err)
+                    std::move(context));
+
+            if (future.isReady())
+            {
+                if (future.hasValue())
+                {
+                    if (auto err = future.value(); err)
                     {
-                        if (err)
-                        {
-                            auto tmpMeta = meta;
-                            auto tmpOutboundInterceptor = outboundInterceptor;
-                            BaseReply reply(std::move(tmpMeta), std::move(tmpOutboundInterceptor));
-                            // TODO::错误码0可能和业务层的错误码冲突!
-                            reply.error<RpcMeta>(0, err.value(), InterceptorContextType());
-                        }
-                    });
+                        BaseReply::ReplyError(outboundInterceptor, meta.service_id(), meta.request_info().sequence_id(), 0, err.value(), InterceptorContextType{});
+                    }
+                }
+                else if(future.hasException())
+                {
+                    BaseReply::ReplyError(outboundInterceptor, meta.service_id(), meta.request_info().sequence_id(), 0, future.result().exception().get_exception()->what(), InterceptorContextType{});
+                    return;
+                }
+                else
+                {
+                    throw std::runtime_error("future is ready, but not have any value and exception");
+                }
+            }
+            else
+            {
+                std::move(future).thenValue([serviceId = meta.service_id(), seqId = meta.request_info().sequence_id(), outboundInterceptor](std::optional<std::string> err) mutable {
+                    if (err)
+                    {
+                        BaseReply::ReplyError(outboundInterceptor, serviceId, seqId, 0, err.value(), InterceptorContextType{});
+                    }
+                });
+            }
         };
 
         if(!rpcTypeHandleManager->registerTypeHandle(RpcMeta::REQUEST, requestStub, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer)))

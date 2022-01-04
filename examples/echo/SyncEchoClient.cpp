@@ -60,9 +60,10 @@ int main(int argc, char** argv)
         // TODO::同步RPC可以简单的使用 future 实现timeout
         // Warining::同步RPC不能在RPC网络线程中调用(会导致无法发出请求或者Response)
         auto responseFuture = client->SyncEcho(request, std::chrono::seconds(10));
-        auto result = responseFuture.Wait();
-        const auto& response = result.Value().first;
-        const auto& error = result.Value().second;
+        responseFuture.wait();
+        auto result = responseFuture.result();
+        const auto& response = result->first;
+        const auto& error = result->second;
         (void) error;
 
         std::cout << "echo message:" << response.message() << std::endl;
@@ -73,9 +74,10 @@ int main(int argc, char** argv)
         request.set_message("sync login test");
 
         auto responseFuture = client->SyncLogin(request, std::chrono::seconds(10));
-        auto result = responseFuture.Wait();
-        const auto& response = result.Value().first;
-        const auto& error = result.Value().second;
+        responseFuture.wait();
+        auto result = responseFuture.result();
+        const auto& response = result->first;
+        const auto& error = result->second;
         (void) error;
 
         std::cout << "login message:" << response.message() << std::endl;
