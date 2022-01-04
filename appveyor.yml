@@ -8,7 +8,7 @@ environment:
   matrix:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     VS_VERSION: 16 2019
-    VS_PLATFORM: win64
+    VS_PLATFORM: x64
 
 
 before_build:
