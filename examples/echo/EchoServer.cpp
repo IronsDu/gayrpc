@@ -71,7 +71,7 @@ static auto auth(RpcMeta&& meta,
 {
     if (false)
     {
-        return ananas::MakeReadyFuture(std::optional<std::string>("auth failed"));
+        return MakeReadyFuture(std::optional<std::string>("auth failed"));
     }
 
     return next(std::move(meta), message, std::move(context));

@@ -51,6 +51,9 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
+    auto port = std::stoi(argv[1]);
+    std::cout << "listen port:" << port << std::endl;
+
     auto service = TcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
@@ -63,7 +66,7 @@ int main(int argc, char** argv)
             .addServiceCreator([](gayrpc::core::ServiceContext&& context) {
                 return std::make_shared<MyService>(std::move(context));
             })
-            .WithAddr(false, "0.0.0.0", std::stoi(argv[1]))
+            .WithAddr(false, "0.0.0.0", port)
             .asyncRun();
 
     EventLoop mainLoop;

@@ -11,6 +11,15 @@
 
 namespace gayrpc::core {
 
+template<typename T>
+inline auto MakeReadyFuture(T value)
+{
+    folly::Promise<T> promise;
+    auto future = promise.getFuture();
+    promise.setValue(std::move(value));
+    return future;
+}
+
 // 构造用于RPC请求的Meta对象
 inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
                                   ServiceIDType serviceID,
@@ -71,7 +80,7 @@ inline auto parseResponseWrapper(const Hanele& handle,
             response,
             [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
                 handle(response, error);
-                return ananas::MakeReadyFuture(std::optional<std::string>(std::nullopt));
+                return MakeReadyFuture(std::optional<std::string>(std::nullopt));
             },
             std::move(context));
 }

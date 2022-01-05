@@ -1,6 +1,6 @@
 #pragma once
 
-#include <ananas/future/Future.h>
+#include <folly/futures/Future.h>
 #include <gayrpc/core/gayrpc_meta.pb.h>
 
 #include <any>
@@ -10,7 +10,7 @@
 
 namespace gayrpc::core {
 
-using InterceptorReturnType = ananas::Future<std::optional<std::string>>;
+using InterceptorReturnType = folly::Future<std::optional<std::string>>;
 
 using ServiceIDType = decltype(std::declval<RpcMeta>().service_id());
 using ServiceFunctionMsgIDType = uint64_t;

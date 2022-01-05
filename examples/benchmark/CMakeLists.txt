@@ -10,6 +10,7 @@ BenchmarkClient.cpp
 
 if(WIN32)
   target_link_libraries(benchmark_client protobuf::libprotobuf gayrpc ws2_32)
+  target_link_libraries(benchmark_client PRIVATE Folly::folly Folly::folly_deps Folly::follybenchmark Folly::folly_test_util)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_client gayrpc pthread protobuf)
@@ -21,6 +22,7 @@ BenchmarkServer.cpp
 
 if(WIN32)
   target_link_libraries(benchmark_server protobuf::libprotobuf gayrpc ws2_32)
+  target_link_libraries(benchmark_server PRIVATE Folly::folly Folly::folly_deps Folly::follybenchmark Folly::folly_test_util)
 elseif(UNIX)
   find_package(Threads REQUIRED)
   target_link_libraries(benchmark_server gayrpc pthread protobuf)

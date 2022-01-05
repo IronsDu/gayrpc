@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN// This tells Catch to provide a main() - only do this in one cpp file
+#include <gayrpc/core/GayRpcHelper.h>
 #include <gayrpc/core/GayRpcInterceptor.h>
 
 #include <vector>
@@ -133,7 +134,7 @@ TEST_CASE("sync rpc are computed", "[sync_rpc]")
     std::string expectedResponse;
     client
             ->SyncEcho(request, std::chrono::seconds(10))
-            .Then([&](const std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>& result) {
+            .thenValue([&](const std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>>& result) {
                 expectedResponse = result.first.message();
             });
 
@@ -196,7 +197,7 @@ TEST_CASE("err rpc are computed", "[check_err]")
     std::string err;
     client
             ->SyncEcho(request, std::chrono::seconds(10))
-            .Then([&](std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>> result) {
+            .thenValue([&](std::pair<dodo::test::EchoResponse, std::optional<gayrpc::core::RpcError>> result) {
                 err = result.second.value().reason();
             });
 
@@ -206,7 +207,7 @@ TEST_CASE("err rpc are computed", "[check_err]")
                 const google::protobuf::Message& message,
                 gayrpc::core::UnaryHandler&& next,
                 InterceptorContextType&& context) {
-                return ananas::MakeReadyFuture(std::optional<std::string>("some err"));
+                return gayrpc::core::MakeReadyFuture(std::optional<std::string>("some err"));
                 ;
             },
             [&](gayrpc::core::RpcMeta&& meta,

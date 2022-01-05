@@ -8,7 +8,7 @@ environment:
   matrix:
   - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     VS_VERSION: 16 2019
-    VS_PLATFORM: win32
+    VS_PLATFORM: x64
 
 
 before_build:
@@ -16,7 +16,7 @@ before_build:
   - git pull
   - .\bootstrap-vcpkg.bat
   - vcpkg integrate install
-  - SET PATH=C:\Tools\vcpkg\installed\x86-windows\tools\protobuf;%PATH%
+  - SET PATH=C:\Tools\vcpkg\installed\x64-windows\tools\protobuf;%PATH%
   - SET PATH=C:\Tools\vcpkg\installed\x86-windows\lib;%PATH%
   - SET PATH=C:\Tools\vcpkg\installed\x64-windows\lib;%PATH%
   - SET APPVEYOR_CI=1
