@@ -8,7 +8,6 @@ namespace gayrpc::core {
 
 typedef int32_t ErrorCode;
 
-// 封装RPC 远端返回的错误类型,rpc.call 本身的错误则由异常提供
 class RpcError
 {
 public:
@@ -20,6 +19,11 @@ public:
              std::string reason)
         : mErrorCode(errorCode),
           mReason(std::move(reason))
+    {}
+
+    RpcError(const RpcError& other)
+        : mErrorCode(other.mErrorCode),
+          mReason(other.mReason)
     {}
 
     virtual ~RpcError() = default;

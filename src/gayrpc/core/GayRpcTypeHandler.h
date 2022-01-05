@@ -47,7 +47,7 @@ public:
 
     virtual ~RpcTypeHandleManager() = default;
 
-    void handleRpcMsg(RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context)
+    void handleRpcMsg(RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) const
     {
         std::shared_lock<std::shared_mutex> lock(mMutex);
 
@@ -69,7 +69,7 @@ public:
 
 private:
     std::map<RpcMeta::Type, ServiceHandlerMap> mTypeHandlers;
-    std::shared_mutex mMutex;
+    mutable std::shared_mutex mMutex;
 };
 
 }// namespace gayrpc::core

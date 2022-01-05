@@ -24,9 +24,9 @@ UnaryServerInterceptor makeInterceptor(Interceptors... interceptors)
 
     for (auto it = userInterceptors.crbegin(); it != userInterceptors.crend(); it++)
     {
-        auto wrapper = [userInterceptor = *it](UnaryServerInterceptor nextInterceptor) {
-            auto nextInterceptorPtr = std::make_shared<UnaryServerInterceptor>(nextInterceptor);
-            return [=](
+        auto wrapper = [userInterceptor = *it](UnaryServerInterceptor nextInterceptor) mutable {
+            return [nextInterceptorPtr = std::make_shared<UnaryServerInterceptor>(nextInterceptor),
+                    userInterceptor = std::move(userInterceptor)](
                            gayrpc::core::RpcMeta&& meta,
                            const google::protobuf::Message& message,
                            UnaryHandler&& next,
