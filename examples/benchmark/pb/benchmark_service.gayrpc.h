@@ -102,6 +102,11 @@ namespace benchmark {
 
         
 
+        void uninstall()
+        {
+            getTypeHandleManager()->removeTypeHandle(RpcMeta::RESPONSE, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
+        }
+
     public:
         static Ptr Create(const RpcTypeHandleManager::Ptr& rpcHandlerManager,
                           const UnaryServerInterceptor& inboundInterceptor,
@@ -145,9 +150,12 @@ namespace benchmark {
 
         ~EchoServerService() override = default;
 
-        void onClose() override {}
+        void uninstall() final
+        {
+            getServiceContext().getTypeHandleManager()->removeTypeHandle(RpcMeta::REQUEST, static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer));
+        }
 
-        void install() override
+        void install() final
         {
             auto sharedThis = std::static_pointer_cast<EchoServerService>(shared_from_this());
             EchoServerService::Install(sharedThis);

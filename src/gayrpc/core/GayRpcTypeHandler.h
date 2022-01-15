@@ -43,6 +43,16 @@ public:
             return;
         }
         mTypeHandlers[type].erase(serviceID);
+        if (mTypeHandlers[type].empty())
+        {
+            mTypeHandlers.erase(type);
+        }
+    }
+
+    void removeAll()
+    {
+        std::unique_lock<std::shared_mutex> lock(mMutex);
+        mTypeHandlers.clear();
     }
 
     virtual ~RpcTypeHandleManager() = default;

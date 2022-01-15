@@ -59,6 +59,7 @@ static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& sessi
                                       std::move(outBoundInterceptor));
         auto service = serverCreator(std::move(serviceContext));
         closedCallbacks.emplace_back([=]() {
+            service->uninstall();
             service->onClose();
         });
         service->install();
@@ -313,6 +314,10 @@ static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr& session,
     auto client = RpcClientType::Create(rpcHandlerManager,
                                         std::move(inboundInterceptor),
                                         std::move(outBoundInterceptor));
+
+    session->setDisConnectCallback([=](const brynet::net::TcpConnection::Ptr& session) {
+        client->uninstall();
+    });
     client->setNetworkThreadChecker([session]() {
         return session->getEventLoop()->isInLoopThread();
     });
