@@ -49,13 +49,15 @@ public:
     }
     virtual ~BaseService() = default;
 
-    virtual void onClose()
-    {}
-
     const ServiceContext& getServiceContext() const
     {
         return mContext;
     }
+
+    virtual void onClose()
+    {}
+
+    virtual void uninstall() = 0;
 
     virtual void install() = 0;
 

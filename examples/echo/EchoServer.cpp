@@ -48,7 +48,8 @@ public:
 
     void onClose() override
     {
-        std::cout << "closed" << std::endl;
+        mClient->uninstall();
+        mClient = nullptr;
     }
 
 private:

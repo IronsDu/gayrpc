@@ -20,7 +20,6 @@ inline auto MakeReadyFuture(T value)
     return future;
 }
 
-// 构造用于RPC请求的Meta对象
 inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
                                   ServiceIDType serviceID,
                                   ServiceFunctionMsgIDType msgID,
@@ -38,7 +37,6 @@ inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
     return meta;
 }
 
-// 解析Response然后(通过拦截器)调用回调
 template<typename Response, typename Hanele>
 inline auto parseResponseWrapper(const Hanele& handle,
                                  RpcMeta&& meta,
@@ -58,13 +56,11 @@ inline auto parseResponseWrapper(const Hanele& handle,
             }
             break;
         case RpcMeta::JSON:
-        {
             if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response); !s.ok())
             {
                 throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
             }
-        }
-        break;
+            break;
         default:
             throw std::runtime_error(std::string("response by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(Response).name());
     }
@@ -85,7 +81,6 @@ inline auto parseResponseWrapper(const Hanele& handle,
             std::move(context));
 }
 
-// 解析Request然后(通过拦截器)调用服务处理函数
 template<typename RequestType, typename UnaryServerInterceptor>
 inline auto parseRequestWrapper(RequestType& request,
                                 RpcMeta&& meta,
@@ -105,13 +100,11 @@ inline auto parseRequestWrapper(RequestType& request,
             }
             break;
         case RpcMeta::JSON:
-        {
             if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request); !s.ok())
             {
                 throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
             }
-        }
-        break;
+            break;
         default:
             throw std::runtime_error(std::string("request by unsupported encoding:") + std::to_string(meta.encoding()) + ", type of:" + typeid(RequestType).name());
     }

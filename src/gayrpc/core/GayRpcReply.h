@@ -8,7 +8,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <unordered_map>
 
 namespace gayrpc::core {
 
@@ -104,7 +103,7 @@ template<typename T>
 class TemplateReply : public BaseReply
 {
 public:
-    typedef std::shared_ptr<TemplateReply<T>> Ptr;
+    using Ptr = std::shared_ptr<TemplateReply<T>>;
 
     TemplateReply(RpcMeta&& meta,
                   UnaryServerInterceptor&& outboundInterceptor)
