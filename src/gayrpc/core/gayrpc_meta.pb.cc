@@ -5,95 +5,58 @@
 
 #include <algorithm>
 
-#include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
-#include <google/protobuf/stubs/once.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
+#include <google/protobuf/port_def.inc>
+extern PROTOBUF_INTERNAL_EXPORT_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto;
+extern PROTOBUF_INTERNAL_EXPORT_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto ::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto;
 namespace gayrpc {
 namespace core {
 class RpcMeta_RequestDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RpcMeta_Request>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RpcMeta_Request> _instance;
 } _RpcMeta_Request_default_instance_;
 class RpcMeta_ResponseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RpcMeta_Response>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RpcMeta_Response> _instance;
 } _RpcMeta_Response_default_instance_;
 class RpcMeta_MetaDataEntry_DoNotUseDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RpcMeta_MetaDataEntry_DoNotUse>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RpcMeta_MetaDataEntry_DoNotUse> _instance;
 } _RpcMeta_MetaDataEntry_DoNotUse_default_instance_;
 class RpcMetaDefaultTypeInternal {
  public:
-  ::google::protobuf::internal::ExplicitlyConstructed<RpcMeta>
-      _instance;
+  ::PROTOBUF_NAMESPACE_ID::internal::ExplicitlyConstructed<RpcMeta> _instance;
 } _RpcMeta_default_instance_;
 }  // namespace core
 }  // namespace gayrpc
-namespace protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto {
-void InitDefaultsRpcMeta_RequestImpl() {
+static void InitDefaultsscc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
-    void* ptr = &::gayrpc::core::_RpcMeta_Request_default_instance_;
-    new (ptr) ::gayrpc::core::RpcMeta_Request();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    void* ptr = &::gayrpc::core::_RpcMeta_default_instance_;
+    new (ptr) ::gayrpc::core::RpcMeta();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::gayrpc::core::RpcMeta_Request::InitAsDefaultInstance();
+  ::gayrpc::core::RpcMeta::InitAsDefaultInstance();
 }
 
-void InitDefaultsRpcMeta_Request() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpcMeta_RequestImpl);
-}
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<3> scc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 3, 0, InitDefaultsscc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto}, {
+      &scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+      &scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+      &scc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,}};
 
-void InitDefaultsRpcMeta_ResponseImpl() {
+static void InitDefaultsscc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  {
-    void* ptr = &::gayrpc::core::_RpcMeta_Response_default_instance_;
-    new (ptr) ::gayrpc::core::RpcMeta_Response();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
-  }
-  ::gayrpc::core::RpcMeta_Response::InitAsDefaultInstance();
-}
-
-void InitDefaultsRpcMeta_Response() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpcMeta_ResponseImpl);
-}
-
-void InitDefaultsRpcMeta_MetaDataEntry_DoNotUseImpl() {
-  GOOGLE_PROTOBUF_VERIFY_VERSION;
-
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
   {
     void* ptr = &::gayrpc::core::_RpcMeta_MetaDataEntry_DoNotUse_default_instance_;
     new (ptr) ::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse();
@@ -101,157 +64,141 @@ void InitDefaultsRpcMeta_MetaDataEntry_DoNotUseImpl() {
   ::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse::InitAsDefaultInstance();
 }
 
-void InitDefaultsRpcMeta_MetaDataEntry_DoNotUse() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpcMeta_MetaDataEntry_DoNotUseImpl);
-}
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto}, {}};
 
-void InitDefaultsRpcMetaImpl() {
+static void InitDefaultsscc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  ::google::protobuf::internal::InitProtobufDefaultsForceUnique();
-#else
-  ::google::protobuf::internal::InitProtobufDefaults();
-#endif  // GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Request();
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Response();
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_MetaDataEntry_DoNotUse();
   {
-    void* ptr = &::gayrpc::core::_RpcMeta_default_instance_;
-    new (ptr) ::gayrpc::core::RpcMeta();
-    ::google::protobuf::internal::OnShutdownDestroyMessage(ptr);
+    void* ptr = &::gayrpc::core::_RpcMeta_Request_default_instance_;
+    new (ptr) ::gayrpc::core::RpcMeta_Request();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
   }
-  ::gayrpc::core::RpcMeta::InitAsDefaultInstance();
+  ::gayrpc::core::RpcMeta_Request::InitAsDefaultInstance();
 }
 
-void InitDefaultsRpcMeta() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &InitDefaultsRpcMetaImpl);
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto}, {}};
+
+static void InitDefaultsscc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto() {
+  GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+  {
+    void* ptr = &::gayrpc::core::_RpcMeta_Response_default_instance_;
+    new (ptr) ::gayrpc::core::RpcMeta_Response();
+    ::PROTOBUF_NAMESPACE_ID::internal::OnShutdownDestroyMessage(ptr);
+  }
+  ::gayrpc::core::RpcMeta_Response::InitAsDefaultInstance();
 }
 
-::google::protobuf::Metadata file_level_metadata[4];
-const ::google::protobuf::EnumDescriptor* file_level_enum_descriptors[2];
+::PROTOBUF_NAMESPACE_ID::internal::SCCInfo<0> scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto =
+    {{ATOMIC_VAR_INIT(::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase::kUninitialized), 0, 0, InitDefaultsscc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto}, {}};
 
-const ::google::protobuf::uint32 TableStruct::offsets[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static ::PROTOBUF_NAMESPACE_ID::Metadata file_level_metadata_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto[4];
+static const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* file_level_enum_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto[2];
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto = nullptr;
+
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, intmethod_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, strmethod_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, expect_response_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, sequence_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, timeout_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, intmethod_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, strmethod_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, expect_response_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, sequence_id_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Request, timeout_),
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, sequence_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, failed_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, error_code_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, reason_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, timeout_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _has_bits_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, sequence_id_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, failed_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, error_code_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, reason_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_Response, timeout_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _has_bits_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, key_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, value_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, key_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse, value_),
   0,
   1,
   ~0u,  // no _has_bits_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, _internal_metadata_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, _internal_metadata_),
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, type_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, service_id_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, encoding_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, request_info_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, response_info_),
-  GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(::gayrpc::core::RpcMeta, meta_data_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, type_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, service_id_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, encoding_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, request_info_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, response_info_),
+  PROTOBUF_FIELD_OFFSET(::gayrpc::core::RpcMeta, meta_data_),
 };
-static const ::google::protobuf::internal::MigrationSchema schemas[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
+static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::gayrpc::core::RpcMeta_Request)},
   { 10, -1, sizeof(::gayrpc::core::RpcMeta_Response)},
   { 20, 27, sizeof(::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse)},
   { 29, -1, sizeof(::gayrpc::core::RpcMeta)},
 };
 
-static ::google::protobuf::Message const * const file_default_instances[] = {
-  reinterpret_cast<const ::google::protobuf::Message*>(&::gayrpc::core::_RpcMeta_Request_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::gayrpc::core::_RpcMeta_Response_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::gayrpc::core::_RpcMeta_MetaDataEntry_DoNotUse_default_instance_),
-  reinterpret_cast<const ::google::protobuf::Message*>(&::gayrpc::core::_RpcMeta_default_instance_),
+static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::gayrpc::core::_RpcMeta_Request_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::gayrpc::core::_RpcMeta_Response_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::gayrpc::core::_RpcMeta_MetaDataEntry_DoNotUse_default_instance_),
+  reinterpret_cast<const ::PROTOBUF_NAMESPACE_ID::Message*>(&::gayrpc::core::_RpcMeta_default_instance_),
 };
 
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  ::google::protobuf::MessageFactory* factory = NULL;
-  AssignDescriptors(
-      "gayrpc/core/gayrpc_meta.proto", schemas, file_default_instances, TableStruct::offsets, factory,
-      file_level_metadata, file_level_enum_descriptors, NULL);
-}
+const char descriptor_table_protodef_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) =
+  "\n\035gayrpc/core/gayrpc_meta.proto\022\013gayrpc."
+  "core\"\364\004\n\007RpcMeta\022\'\n\004type\030\001 \001(\0162\031.gayrpc."
+  "core.RpcMeta.Type\022\022\n\nservice_id\030\002 \001(\r\0227\n"
+  "\010encoding\030\003 \001(\0162%.gayrpc.core.RpcMeta.Da"
+  "taEncodingType\0222\n\014request_info\030\004 \001(\0132\034.g"
+  "ayrpc.core.RpcMeta.Request\0224\n\rresponse_i"
+  "nfo\030\005 \001(\0132\035.gayrpc.core.RpcMeta.Response"
+  "\0225\n\tmeta_data\030\006 \003(\0132\".gayrpc.core.RpcMet"
+  "a.MetaDataEntry\032n\n\007Request\022\021\n\tintMethod\030"
+  "\001 \001(\004\022\021\n\tstrMethod\030\002 \001(\t\022\027\n\017expect_respo"
+  "nse\030\003 \001(\010\022\023\n\013sequence_id\030\004 \001(\004\022\017\n\007timeou"
+  "t\030\005 \001(\004\032d\n\010Response\022\023\n\013sequence_id\030\001 \001(\004"
+  "\022\016\n\006failed\030\002 \001(\010\022\022\n\nerror_code\030\003 \001(\005\022\016\n\006"
+  "reason\030\004 \001(\t\022\017\n\007timeout\030\005 \001(\010\032/\n\rMetaDat"
+  "aEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"!"
+  "\n\004Type\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001\"(\n\020Dat"
+  "aEncodingType\022\n\n\006BINARY\020\000\022\010\n\004JSON\020\001b\006pro"
+  "to3"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_deps[1] = {
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_sccs[4] = {
+  &scc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+  &scc_info_RpcMeta_MetaDataEntry_DoNotUse_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+  &scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+  &scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_once;
+static bool descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto = {
+  &descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_initialized, descriptor_table_protodef_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto, "gayrpc/core/gayrpc_meta.proto", 683,
+  &descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_once, descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_sccs, descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto_deps, 4, 0,
+  schemas, file_default_instances, TableStruct_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::offsets,
+  file_level_metadata_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto, 4, file_level_enum_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto, file_level_service_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto,
+};
 
-void protobuf_AssignDescriptorsOnce() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-  ::google::protobuf::internal::RegisterAllTypes(file_level_metadata, 4);
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\035gayrpc/core/gayrpc_meta.proto\022\013gayrpc."
-      "core\"\364\004\n\007RpcMeta\022\'\n\004type\030\001 \001(\0162\031.gayrpc."
-      "core.RpcMeta.Type\022\022\n\nservice_id\030\002 \001(\r\0227\n"
-      "\010encoding\030\003 \001(\0162%.gayrpc.core.RpcMeta.Da"
-      "taEncodingType\0222\n\014request_info\030\004 \001(\0132\034.g"
-      "ayrpc.core.RpcMeta.Request\0224\n\rresponse_i"
-      "nfo\030\005 \001(\0132\035.gayrpc.core.RpcMeta.Response"
-      "\0225\n\tmeta_data\030\006 \003(\0132\".gayrpc.core.RpcMet"
-      "a.MetaDataEntry\032n\n\007Request\022\021\n\tintMethod\030"
-      "\001 \001(\004\022\021\n\tstrMethod\030\002 \001(\t\022\027\n\017expect_respo"
-      "nse\030\003 \001(\010\022\023\n\013sequence_id\030\004 \001(\004\022\017\n\007timeou"
-      "t\030\005 \001(\004\032d\n\010Response\022\023\n\013sequence_id\030\001 \001(\004"
-      "\022\016\n\006failed\030\002 \001(\010\022\022\n\nerror_code\030\003 \001(\005\022\016\n\006"
-      "reason\030\004 \001(\t\022\017\n\007timeout\030\005 \001(\010\032/\n\rMetaDat"
-      "aEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"!"
-      "\n\004Type\022\013\n\007REQUEST\020\000\022\014\n\010RESPONSE\020\001\"(\n\020Dat"
-      "aEncodingType\022\n\n\006BINARY\020\000\022\010\n\004JSON\020\001b\006pro"
-      "to3"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 683);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "gayrpc/core/gayrpc_meta.proto", &protobuf_RegisterTypes);
-}
-
-void AddDescriptors() {
-  static GOOGLE_PROTOBUF_DECLARE_ONCE(once);
-  ::google::protobuf::GoogleOnceInit(&once, &AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto), true);
 namespace gayrpc {
 namespace core {
-const ::google::protobuf::EnumDescriptor* RpcMeta_Type_descriptor() {
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_enum_descriptors[0];
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RpcMeta_Type_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto);
+  return file_level_enum_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto[0];
 }
 bool RpcMeta_Type_IsValid(int value) {
   switch (value) {
@@ -263,16 +210,16 @@ bool RpcMeta_Type_IsValid(int value) {
   }
 }
 
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const RpcMeta_Type RpcMeta::REQUEST;
-const RpcMeta_Type RpcMeta::RESPONSE;
-const RpcMeta_Type RpcMeta::Type_MIN;
-const RpcMeta_Type RpcMeta::Type_MAX;
-const int RpcMeta::Type_ARRAYSIZE;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
-const ::google::protobuf::EnumDescriptor* RpcMeta_DataEncodingType_descriptor() {
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_enum_descriptors[1];
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+constexpr RpcMeta_Type RpcMeta::REQUEST;
+constexpr RpcMeta_Type RpcMeta::RESPONSE;
+constexpr RpcMeta_Type RpcMeta::Type_MIN;
+constexpr RpcMeta_Type RpcMeta::Type_MAX;
+constexpr int RpcMeta::Type_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* RpcMeta_DataEncodingType_descriptor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&descriptor_table_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto);
+  return file_level_enum_descriptors_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto[1];
 }
 bool RpcMeta_DataEncodingType_IsValid(int value) {
   switch (value) {
@@ -284,42 +231,34 @@ bool RpcMeta_DataEncodingType_IsValid(int value) {
   }
 }
 
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const RpcMeta_DataEncodingType RpcMeta::BINARY;
-const RpcMeta_DataEncodingType RpcMeta::JSON;
-const RpcMeta_DataEncodingType RpcMeta::DataEncodingType_MIN;
-const RpcMeta_DataEncodingType RpcMeta::DataEncodingType_MAX;
-const int RpcMeta::DataEncodingType_ARRAYSIZE;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+#if (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
+constexpr RpcMeta_DataEncodingType RpcMeta::BINARY;
+constexpr RpcMeta_DataEncodingType RpcMeta::JSON;
+constexpr RpcMeta_DataEncodingType RpcMeta::DataEncodingType_MIN;
+constexpr RpcMeta_DataEncodingType RpcMeta::DataEncodingType_MAX;
+constexpr int RpcMeta::DataEncodingType_ARRAYSIZE;
+#endif  // (__cplusplus < 201703) && (!defined(_MSC_VER) || _MSC_VER >= 1900)
 
 // ===================================================================
 
 void RpcMeta_Request::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RpcMeta_Request::kIntMethodFieldNumber;
-const int RpcMeta_Request::kStrMethodFieldNumber;
-const int RpcMeta_Request::kExpectResponseFieldNumber;
-const int RpcMeta_Request::kSequenceIdFieldNumber;
-const int RpcMeta_Request::kTimeoutFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RpcMeta_Request::_Internal {
+ public:
+};
 
 RpcMeta_Request::RpcMeta_Request()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Request();
-  }
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:gayrpc.core.RpcMeta.Request)
 }
 RpcMeta_Request::RpcMeta_Request(const RpcMeta_Request& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  strmethod_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.strmethod().size() > 0) {
-    strmethod_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strmethod_);
+  strmethod_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_strmethod().empty()) {
+    strmethod_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.strmethod_);
   }
   ::memcpy(&intmethod_, &from.intmethod_,
     static_cast<size_t>(reinterpret_cast<char*>(&expect_response_) -
@@ -328,11 +267,11 @@ RpcMeta_Request::RpcMeta_Request(const RpcMeta_Request& from)
 }
 
 void RpcMeta_Request::SharedCtor() {
-  strmethod_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
+  strmethod_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&intmethod_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&expect_response_) -
       reinterpret_cast<char*>(&intmethod_)) + sizeof(expect_response_));
-  _cached_size_ = 0;
 }
 
 RpcMeta_Request::~RpcMeta_Request() {
@@ -341,231 +280,136 @@ RpcMeta_Request::~RpcMeta_Request() {
 }
 
 void RpcMeta_Request::SharedDtor() {
-  strmethod_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strmethod_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void RpcMeta_Request::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RpcMeta_Request::descriptor() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RpcMeta_Request& RpcMeta_Request::default_instance() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Request();
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RpcMeta_Request_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
   return *internal_default_instance();
 }
 
-RpcMeta_Request* RpcMeta_Request::New(::google::protobuf::Arena* arena) const {
-  RpcMeta_Request* n = new RpcMeta_Request;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void RpcMeta_Request::Clear() {
 // @@protoc_insertion_point(message_clear_start:gayrpc.core.RpcMeta.Request)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  strmethod_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  strmethod_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&intmethod_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&expect_response_) -
       reinterpret_cast<char*>(&intmethod_)) + sizeof(expect_response_));
   _internal_metadata_.Clear();
 }
 
-bool RpcMeta_Request::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:gayrpc.core.RpcMeta.Request)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RpcMeta_Request::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // uint64 intMethod = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &intmethod_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          intmethod_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string strMethod = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(18u /* 18 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_strmethod()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->strmethod().data(), static_cast<int>(this->strmethod().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "gayrpc.core.RpcMeta.Request.strMethod"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 18)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParserUTF8(_internal_mutable_strmethod(), ptr, ctx, "gayrpc.core.RpcMeta.Request.strMethod");
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool expect_response = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &expect_response_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          expect_response_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // uint64 sequence_id = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(32u /* 32 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &sequence_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 32)) {
+          sequence_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // uint64 timeout = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &timeout_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          timeout_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:gayrpc.core.RpcMeta.Request)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:gayrpc.core.RpcMeta.Request)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RpcMeta_Request::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:gayrpc.core.RpcMeta.Request)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // uint64 intMethod = 1;
-  if (this->intmethod() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->intmethod(), output);
-  }
-
-  // string strMethod = 2;
-  if (this->strmethod().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->strmethod().data(), static_cast<int>(this->strmethod().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "gayrpc.core.RpcMeta.Request.strMethod");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      2, this->strmethod(), output);
-  }
-
-  // bool expect_response = 3;
-  if (this->expect_response() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(3, this->expect_response(), output);
-  }
-
-  // uint64 sequence_id = 4;
-  if (this->sequence_id() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(4, this->sequence_id(), output);
-  }
-
-  // uint64 timeout = 5;
-  if (this->timeout() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(5, this->timeout(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:gayrpc.core.RpcMeta.Request)
-}
-
-::google::protobuf::uint8* RpcMeta_Request::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RpcMeta_Request::InternalSerializeWithCachedSizesToArray(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:gayrpc.core.RpcMeta.Request)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // uint64 intMethod = 1;
   if (this->intmethod() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->intmethod(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_intmethod(), target);
   }
 
   // string strMethod = 2;
   if (this->strmethod().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->strmethod().data(), static_cast<int>(this->strmethod().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_strmethod().data(), static_cast<int>(this->_internal_strmethod().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "gayrpc.core.RpcMeta.Request.strMethod");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        2, this->strmethod(), target);
+    target = stream->WriteStringMaybeAliased(
+        2, this->_internal_strmethod(), target);
   }
 
   // bool expect_response = 3;
   if (this->expect_response() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(3, this->expect_response(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(3, this->_internal_expect_response(), target);
   }
 
   // uint64 sequence_id = 4;
   if (this->sequence_id() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(4, this->sequence_id(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(4, this->_internal_sequence_id(), target);
   }
 
   // uint64 timeout = 5;
   if (this->timeout() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(5, this->timeout(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(5, this->_internal_timeout(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:gayrpc.core.RpcMeta.Request)
   return target;
@@ -575,37 +419,36 @@ size_t RpcMeta_Request::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:gayrpc.core.RpcMeta.Request)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string strMethod = 2;
   if (this->strmethod().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->strmethod());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_strmethod());
   }
 
   // uint64 intMethod = 1;
   if (this->intmethod() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->intmethod());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+        this->_internal_intmethod());
   }
 
   // uint64 sequence_id = 4;
   if (this->sequence_id() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->sequence_id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+        this->_internal_sequence_id());
   }
 
   // uint64 timeout = 5;
   if (this->timeout() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->timeout());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+        this->_internal_timeout());
   }
 
   // bool expect_response = 3;
@@ -613,22 +456,24 @@ size_t RpcMeta_Request::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
   return total_size;
 }
 
-void RpcMeta_Request::MergeFrom(const ::google::protobuf::Message& from) {
+void RpcMeta_Request::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:gayrpc.core.RpcMeta.Request)
   GOOGLE_DCHECK_NE(&from, this);
   const RpcMeta_Request* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RpcMeta_Request>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RpcMeta_Request>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:gayrpc.core.RpcMeta.Request)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:gayrpc.core.RpcMeta.Request)
     MergeFrom(*source);
@@ -639,28 +484,28 @@ void RpcMeta_Request::MergeFrom(const RpcMeta_Request& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:gayrpc.core.RpcMeta.Request)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.strmethod().size() > 0) {
 
-    strmethod_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.strmethod_);
+    strmethod_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.strmethod_);
   }
   if (from.intmethod() != 0) {
-    set_intmethod(from.intmethod());
+    _internal_set_intmethod(from._internal_intmethod());
   }
   if (from.sequence_id() != 0) {
-    set_sequence_id(from.sequence_id());
+    _internal_set_sequence_id(from._internal_sequence_id());
   }
   if (from.timeout() != 0) {
-    set_timeout(from.timeout());
+    _internal_set_timeout(from._internal_timeout());
   }
   if (from.expect_response() != 0) {
-    set_expect_response(from.expect_response());
+    _internal_set_expect_response(from._internal_expect_response());
   }
 }
 
-void RpcMeta_Request::CopyFrom(const ::google::protobuf::Message& from) {
+void RpcMeta_Request::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:gayrpc.core.RpcMeta.Request)
   if (&from == this) return;
   Clear();
@@ -678,24 +523,19 @@ bool RpcMeta_Request::IsInitialized() const {
   return true;
 }
 
-void RpcMeta_Request::Swap(RpcMeta_Request* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RpcMeta_Request::InternalSwap(RpcMeta_Request* other) {
   using std::swap;
-  strmethod_.Swap(&other->strmethod_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  strmethod_.Swap(&other->strmethod_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(intmethod_, other->intmethod_);
   swap(sequence_id_, other->sequence_id_);
   swap(timeout_, other->timeout_);
   swap(expect_response_, other->expect_response_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata RpcMeta_Request::GetMetadata() const {
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RpcMeta_Request::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
@@ -703,30 +543,22 @@ void RpcMeta_Request::InternalSwap(RpcMeta_Request* other) {
 
 void RpcMeta_Response::InitAsDefaultInstance() {
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RpcMeta_Response::kSequenceIdFieldNumber;
-const int RpcMeta_Response::kFailedFieldNumber;
-const int RpcMeta_Response::kErrorCodeFieldNumber;
-const int RpcMeta_Response::kReasonFieldNumber;
-const int RpcMeta_Response::kTimeoutFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RpcMeta_Response::_Internal {
+ public:
+};
 
 RpcMeta_Response::RpcMeta_Response()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Response();
-  }
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:gayrpc.core.RpcMeta.Response)
 }
 RpcMeta_Response::RpcMeta_Response(const RpcMeta_Response& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  reason_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
-  if (from.reason().size() > 0) {
-    reason_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.reason_);
+  reason_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
+  if (!from._internal_reason().empty()) {
+    reason_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.reason_);
   }
   ::memcpy(&sequence_id_, &from.sequence_id_,
     static_cast<size_t>(reinterpret_cast<char*>(&timeout_) -
@@ -735,11 +567,11 @@ RpcMeta_Response::RpcMeta_Response(const RpcMeta_Response& from)
 }
 
 void RpcMeta_Response::SharedCtor() {
-  reason_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
+  reason_.UnsafeSetDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&sequence_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&timeout_) -
       reinterpret_cast<char*>(&sequence_id_)) + sizeof(timeout_));
-  _cached_size_ = 0;
 }
 
 RpcMeta_Response::~RpcMeta_Response() {
@@ -748,231 +580,136 @@ RpcMeta_Response::~RpcMeta_Response() {
 }
 
 void RpcMeta_Response::SharedDtor() {
-  reason_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  reason_.DestroyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
 }
 
 void RpcMeta_Response::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RpcMeta_Response::descriptor() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RpcMeta_Response& RpcMeta_Response::default_instance() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta_Response();
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RpcMeta_Response_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
   return *internal_default_instance();
 }
 
-RpcMeta_Response* RpcMeta_Response::New(::google::protobuf::Arena* arena) const {
-  RpcMeta_Response* n = new RpcMeta_Response;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void RpcMeta_Response::Clear() {
 // @@protoc_insertion_point(message_clear_start:gayrpc.core.RpcMeta.Response)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
-  reason_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  reason_.ClearToEmptyNoArena(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited());
   ::memset(&sequence_id_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&timeout_) -
       reinterpret_cast<char*>(&sequence_id_)) + sizeof(timeout_));
   _internal_metadata_.Clear();
 }
 
-bool RpcMeta_Response::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:gayrpc.core.RpcMeta.Response)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RpcMeta_Response::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // uint64 sequence_id = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
-                 input, &sequence_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          sequence_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool failed = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &failed_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          failed_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // int32 error_code = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
-                 input, &error_code_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          error_code_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // string reason = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
-                input, this->mutable_reason()));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            this->reason().data(), static_cast<int>(this->reason().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "gayrpc.core.RpcMeta.Response.reason"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParserUTF8(_internal_mutable_reason(), ptr, ctx, "gayrpc.core.RpcMeta.Response.reason");
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // bool timeout = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(40u /* 40 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
-                 input, &timeout_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 40)) {
+          timeout_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:gayrpc.core.RpcMeta.Response)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:gayrpc.core.RpcMeta.Response)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RpcMeta_Response::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:gayrpc.core.RpcMeta.Response)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // uint64 sequence_id = 1;
-  if (this->sequence_id() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt64(1, this->sequence_id(), output);
-  }
-
-  // bool failed = 2;
-  if (this->failed() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->failed(), output);
-  }
-
-  // int32 error_code = 3;
-  if (this->error_code() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(3, this->error_code(), output);
-  }
-
-  // string reason = 4;
-  if (this->reason().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->reason().data(), static_cast<int>(this->reason().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-      "gayrpc.core.RpcMeta.Response.reason");
-    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
-      4, this->reason(), output);
-  }
-
-  // bool timeout = 5;
-  if (this->timeout() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteBool(5, this->timeout(), output);
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:gayrpc.core.RpcMeta.Response)
-}
-
-::google::protobuf::uint8* RpcMeta_Response::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RpcMeta_Response::InternalSerializeWithCachedSizesToArray(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:gayrpc.core.RpcMeta.Response)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // uint64 sequence_id = 1;
   if (this->sequence_id() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(1, this->sequence_id(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt64ToArray(1, this->_internal_sequence_id(), target);
   }
 
   // bool failed = 2;
   if (this->failed() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(2, this->failed(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(2, this->_internal_failed(), target);
   }
 
   // int32 error_code = 3;
   if (this->error_code() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(3, this->error_code(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(3, this->_internal_error_code(), target);
   }
 
   // string reason = 4;
   if (this->reason().size() > 0) {
-    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-      this->reason().data(), static_cast<int>(this->reason().length()),
-      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
+      this->_internal_reason().data(), static_cast<int>(this->_internal_reason().length()),
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
       "gayrpc.core.RpcMeta.Response.reason");
-    target =
-      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        4, this->reason(), target);
+    target = stream->WriteStringMaybeAliased(
+        4, this->_internal_reason(), target);
   }
 
   // bool timeout = 5;
   if (this->timeout() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteBoolToArray(5, this->timeout(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteBoolToArray(5, this->_internal_timeout(), target);
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:gayrpc.core.RpcMeta.Response)
   return target;
@@ -982,30 +719,29 @@ size_t RpcMeta_Response::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:gayrpc.core.RpcMeta.Response)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // string reason = 4;
   if (this->reason().size() > 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::StringSize(
-        this->reason());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
+        this->_internal_reason());
   }
 
   // uint64 sequence_id = 1;
   if (this->sequence_id() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt64Size(
-        this->sequence_id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt64Size(
+        this->_internal_sequence_id());
   }
 
   // int32 error_code = 3;
   if (this->error_code() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::Int32Size(
-        this->error_code());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->_internal_error_code());
   }
 
   // bool failed = 2;
@@ -1018,22 +754,24 @@ size_t RpcMeta_Response::ByteSizeLong() const {
     total_size += 1 + 1;
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
   return total_size;
 }
 
-void RpcMeta_Response::MergeFrom(const ::google::protobuf::Message& from) {
+void RpcMeta_Response::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:gayrpc.core.RpcMeta.Response)
   GOOGLE_DCHECK_NE(&from, this);
   const RpcMeta_Response* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RpcMeta_Response>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RpcMeta_Response>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:gayrpc.core.RpcMeta.Response)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:gayrpc.core.RpcMeta.Response)
     MergeFrom(*source);
@@ -1044,28 +782,28 @@ void RpcMeta_Response::MergeFrom(const RpcMeta_Response& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:gayrpc.core.RpcMeta.Response)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   if (from.reason().size() > 0) {
 
-    reason_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.reason_);
+    reason_.AssignWithDefault(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), from.reason_);
   }
   if (from.sequence_id() != 0) {
-    set_sequence_id(from.sequence_id());
+    _internal_set_sequence_id(from._internal_sequence_id());
   }
   if (from.error_code() != 0) {
-    set_error_code(from.error_code());
+    _internal_set_error_code(from._internal_error_code());
   }
   if (from.failed() != 0) {
-    set_failed(from.failed());
+    _internal_set_failed(from._internal_failed());
   }
   if (from.timeout() != 0) {
-    set_timeout(from.timeout());
+    _internal_set_timeout(from._internal_timeout());
   }
 }
 
-void RpcMeta_Response::CopyFrom(const ::google::protobuf::Message& from) {
+void RpcMeta_Response::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:gayrpc.core.RpcMeta.Response)
   if (&from == this) return;
   Clear();
@@ -1083,41 +821,36 @@ bool RpcMeta_Response::IsInitialized() const {
   return true;
 }
 
-void RpcMeta_Response::Swap(RpcMeta_Response* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RpcMeta_Response::InternalSwap(RpcMeta_Response* other) {
   using std::swap;
-  reason_.Swap(&other->reason_);
+  _internal_metadata_.Swap(&other->_internal_metadata_);
+  reason_.Swap(&other->reason_, &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+    GetArenaNoVirtual());
   swap(sequence_id_, other->sequence_id_);
   swap(error_code_, other->error_code_);
   swap(failed_, other->failed_);
   swap(timeout_, other->timeout_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata RpcMeta_Response::GetMetadata() const {
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RpcMeta_Response::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // ===================================================================
 
 RpcMeta_MetaDataEntry_DoNotUse::RpcMeta_MetaDataEntry_DoNotUse() {}
-RpcMeta_MetaDataEntry_DoNotUse::RpcMeta_MetaDataEntry_DoNotUse(::google::protobuf::Arena* arena) : SuperType(arena) {}
+RpcMeta_MetaDataEntry_DoNotUse::RpcMeta_MetaDataEntry_DoNotUse(::PROTOBUF_NAMESPACE_ID::Arena* arena)
+    : SuperType(arena) {}
 void RpcMeta_MetaDataEntry_DoNotUse::MergeFrom(const RpcMeta_MetaDataEntry_DoNotUse& other) {
   MergeFromInternal(other);
 }
-::google::protobuf::Metadata RpcMeta_MetaDataEntry_DoNotUse::GetMetadata() const {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[2];
+::PROTOBUF_NAMESPACE_ID::Metadata RpcMeta_MetaDataEntry_DoNotUse::GetMetadata() const {
+  return GetMetadataStatic();
 }
 void RpcMeta_MetaDataEntry_DoNotUse::MergeFrom(
-    const ::google::protobuf::Message& other) {
-  ::google::protobuf::Message::MergeFrom(other);
+    const ::PROTOBUF_NAMESPACE_ID::Message& other) {
+  ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom(other);
 }
 
 
@@ -1129,38 +862,39 @@ void RpcMeta::InitAsDefaultInstance() {
   ::gayrpc::core::_RpcMeta_default_instance_._instance.get_mutable()->response_info_ = const_cast< ::gayrpc::core::RpcMeta_Response*>(
       ::gayrpc::core::RpcMeta_Response::internal_default_instance());
 }
-#if !defined(_MSC_VER) || _MSC_VER >= 1900
-const int RpcMeta::kTypeFieldNumber;
-const int RpcMeta::kServiceIdFieldNumber;
-const int RpcMeta::kEncodingFieldNumber;
-const int RpcMeta::kRequestInfoFieldNumber;
-const int RpcMeta::kResponseInfoFieldNumber;
-const int RpcMeta::kMetaDataFieldNumber;
-#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+class RpcMeta::_Internal {
+ public:
+  static const ::gayrpc::core::RpcMeta_Request& request_info(const RpcMeta* msg);
+  static const ::gayrpc::core::RpcMeta_Response& response_info(const RpcMeta* msg);
+};
 
+const ::gayrpc::core::RpcMeta_Request&
+RpcMeta::_Internal::request_info(const RpcMeta* msg) {
+  return *msg->request_info_;
+}
+const ::gayrpc::core::RpcMeta_Response&
+RpcMeta::_Internal::response_info(const RpcMeta* msg) {
+  return *msg->response_info_;
+}
 RpcMeta::RpcMeta()
-  : ::google::protobuf::Message(), _internal_metadata_(NULL) {
-  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
-    ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta();
-  }
+  : ::PROTOBUF_NAMESPACE_ID::Message(), _internal_metadata_(nullptr) {
   SharedCtor();
   // @@protoc_insertion_point(constructor:gayrpc.core.RpcMeta)
 }
 RpcMeta::RpcMeta(const RpcMeta& from)
-  : ::google::protobuf::Message(),
-      _internal_metadata_(NULL),
-      _cached_size_(0) {
+  : ::PROTOBUF_NAMESPACE_ID::Message(),
+      _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
   meta_data_.MergeFrom(from.meta_data_);
-  if (from.has_request_info()) {
+  if (from._internal_has_request_info()) {
     request_info_ = new ::gayrpc::core::RpcMeta_Request(*from.request_info_);
   } else {
-    request_info_ = NULL;
+    request_info_ = nullptr;
   }
-  if (from.has_response_info()) {
+  if (from._internal_has_response_info()) {
     response_info_ = new ::gayrpc::core::RpcMeta_Response(*from.response_info_);
   } else {
-    response_info_ = NULL;
+    response_info_ = nullptr;
   }
   ::memcpy(&type_, &from.type_,
     static_cast<size_t>(reinterpret_cast<char*>(&encoding_) -
@@ -1169,10 +903,10 @@ RpcMeta::RpcMeta(const RpcMeta& from)
 }
 
 void RpcMeta::SharedCtor() {
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&scc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
   ::memset(&request_info_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&encoding_) -
       reinterpret_cast<char*>(&request_info_)) + sizeof(encoding_));
-  _cached_size_ = 0;
 }
 
 RpcMeta::~RpcMeta() {
@@ -1186,367 +920,201 @@ void RpcMeta::SharedDtor() {
 }
 
 void RpcMeta::SetCachedSize(int size) const {
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  _cached_size_.Set(size);
 }
-const ::google::protobuf::Descriptor* RpcMeta::descriptor() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages].descriptor;
-}
-
 const RpcMeta& RpcMeta::default_instance() {
-  ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::InitDefaultsRpcMeta();
+  ::PROTOBUF_NAMESPACE_ID::internal::InitSCC(&::scc_info_RpcMeta_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto.base);
   return *internal_default_instance();
 }
 
-RpcMeta* RpcMeta::New(::google::protobuf::Arena* arena) const {
-  RpcMeta* n = new RpcMeta;
-  if (arena != NULL) {
-    arena->Own(n);
-  }
-  return n;
-}
 
 void RpcMeta::Clear() {
 // @@protoc_insertion_point(message_clear_start:gayrpc.core.RpcMeta)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
   meta_data_.Clear();
-  if (GetArenaNoVirtual() == NULL && request_info_ != NULL) {
+  if (GetArenaNoVirtual() == nullptr && request_info_ != nullptr) {
     delete request_info_;
   }
-  request_info_ = NULL;
-  if (GetArenaNoVirtual() == NULL && response_info_ != NULL) {
+  request_info_ = nullptr;
+  if (GetArenaNoVirtual() == nullptr && response_info_ != nullptr) {
     delete response_info_;
   }
-  response_info_ = NULL;
+  response_info_ = nullptr;
   ::memset(&type_, 0, static_cast<size_t>(
       reinterpret_cast<char*>(&encoding_) -
       reinterpret_cast<char*>(&type_)) + sizeof(encoding_));
   _internal_metadata_.Clear();
 }
 
-bool RpcMeta::MergePartialFromCodedStream(
-    ::google::protobuf::io::CodedInputStream* input) {
-#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
-  ::google::protobuf::uint32 tag;
-  // @@protoc_insertion_point(parse_start:gayrpc.core.RpcMeta)
-  for (;;) {
-    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
-    tag = p.first;
-    if (!p.second) goto handle_unusual;
-    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+const char* RpcMeta::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    ::PROTOBUF_NAMESPACE_ID::uint32 tag;
+    ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
+    CHK_(ptr);
+    switch (tag >> 3) {
       // .gayrpc.core.RpcMeta.Type type = 1;
-      case 1: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(8u /* 8 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_type(static_cast< ::gayrpc::core::RpcMeta_Type >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_type(static_cast<::gayrpc::core::RpcMeta_Type>(val));
+        } else goto handle_unusual;
+        continue;
       // uint32 service_id = 2;
-      case 2: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(16u /* 16 & 0xFF */)) {
-
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
-                 input, &service_id_)));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 16)) {
+          service_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
-      case 3: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(24u /* 24 & 0xFF */)) {
-          int value;
-          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   int, ::google::protobuf::internal::WireFormatLite::TYPE_ENUM>(
-                 input, &value)));
-          set_encoding(static_cast< ::gayrpc::core::RpcMeta_DataEncodingType >(value));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 24)) {
+          ::PROTOBUF_NAMESPACE_ID::uint64 val = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+          _internal_set_encoding(static_cast<::gayrpc::core::RpcMeta_DataEncodingType>(val));
+        } else goto handle_unusual;
+        continue;
       // .gayrpc.core.RpcMeta.Request request_info = 4;
-      case 4: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(34u /* 34 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_request_info()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
+          ptr = ctx->ParseMessage(_internal_mutable_request_info(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // .gayrpc.core.RpcMeta.Response response_info = 5;
-      case 5: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(42u /* 42 & 0xFF */)) {
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessage(
-               input, mutable_response_info()));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 5:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 42)) {
+          ptr = ctx->ParseMessage(_internal_mutable_response_info(), ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       // map<string, string> meta_data = 6;
-      case 6: {
-        if (static_cast< ::google::protobuf::uint8>(tag) ==
-            static_cast< ::google::protobuf::uint8>(50u /* 50 & 0xFF */)) {
-          RpcMeta_MetaDataEntry_DoNotUse::Parser< ::google::protobuf::internal::MapField<
-              RpcMeta_MetaDataEntry_DoNotUse,
-              ::std::string, ::std::string,
-              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
-              ::google::protobuf::internal::WireFormatLite::TYPE_STRING,
-              0 >,
-            ::google::protobuf::Map< ::std::string, ::std::string > > parser(&meta_data_);
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-              input, &parser));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            parser.key().data(), static_cast<int>(parser.key().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "gayrpc.core.RpcMeta.MetaDataEntry.key"));
-          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-            parser.value().data(), static_cast<int>(parser.value().length()),
-            ::google::protobuf::internal::WireFormatLite::PARSE,
-            "gayrpc.core.RpcMeta.MetaDataEntry.value"));
-        } else {
-          goto handle_unusual;
-        }
-        break;
-      }
-
+      case 6:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 50)) {
+          ptr -= 1;
+          do {
+            ptr += 1;
+            ptr = ctx->ParseMessage(&meta_data_, ptr);
+            CHK_(ptr);
+            if (!ctx->DataAvailable(ptr)) break;
+          } while (::PROTOBUF_NAMESPACE_ID::internal::ExpectTag<50>(ptr));
+        } else goto handle_unusual;
+        continue;
       default: {
       handle_unusual:
-        if (tag == 0) {
+        if ((tag & 7) == 4 || tag == 0) {
+          ctx->SetLastTag(tag);
           goto success;
         }
-        DO_(::google::protobuf::internal::WireFormat::SkipField(
-              input, tag, _internal_metadata_.mutable_unknown_fields()));
-        break;
+        ptr = UnknownFieldParse(tag, &_internal_metadata_, ptr, ctx);
+        CHK_(ptr != nullptr);
+        continue;
       }
-    }
-  }
+    }  // switch
+  }  // while
 success:
-  // @@protoc_insertion_point(parse_success:gayrpc.core.RpcMeta)
-  return true;
+  return ptr;
 failure:
-  // @@protoc_insertion_point(parse_failure:gayrpc.core.RpcMeta)
-  return false;
-#undef DO_
+  ptr = nullptr;
+  goto success;
+#undef CHK_
 }
 
-void RpcMeta::SerializeWithCachedSizes(
-    ::google::protobuf::io::CodedOutputStream* output) const {
-  // @@protoc_insertion_point(serialize_start:gayrpc.core.RpcMeta)
-  ::google::protobuf::uint32 cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  // .gayrpc.core.RpcMeta.Type type = 1;
-  if (this->type() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      1, this->type(), output);
-  }
-
-  // uint32 service_id = 2;
-  if (this->service_id() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->service_id(), output);
-  }
-
-  // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
-  if (this->encoding() != 0) {
-    ::google::protobuf::internal::WireFormatLite::WriteEnum(
-      3, this->encoding(), output);
-  }
-
-  // .gayrpc.core.RpcMeta.Request request_info = 4;
-  if (this->has_request_info()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, *this->request_info_, output);
-  }
-
-  // .gayrpc.core.RpcMeta.Response response_info = 5;
-  if (this->has_response_info()) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      5, *this->response_info_, output);
-  }
-
-  // map<string, string> meta_data = 6;
-  if (!this->meta_data().empty()) {
-    typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
-        ConstPtr;
-    typedef ConstPtr SortItem;
-    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
-    struct Utf8Check {
-      static void Check(ConstPtr p) {
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          p->first.data(), static_cast<int>(p->first.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "gayrpc.core.RpcMeta.MetaDataEntry.key");
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
-          p->second.data(), static_cast<int>(p->second.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
-          "gayrpc.core.RpcMeta.MetaDataEntry.value");
-      }
-    };
-
-    if (output->IsSerializationDeterministic() &&
-        this->meta_data().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
-          new SortItem[this->meta_data().size()]);
-      typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
-      size_type n = 0;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->meta_data().begin();
-          it != this->meta_data().end(); ++it, ++n) {
-        items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
-      }
-      ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<RpcMeta_MetaDataEntry_DoNotUse> entry;
-      for (size_type i = 0; i < n; i++) {
-        entry.reset(meta_data_.NewEntryWrapper(
-            items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
-        ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            6, *entry, output);
-        Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
-      }
-    } else {
-      ::google::protobuf::scoped_ptr<RpcMeta_MetaDataEntry_DoNotUse> entry;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->meta_data().begin();
-          it != this->meta_data().end(); ++it) {
-        entry.reset(meta_data_.NewEntryWrapper(
-            it->first, it->second));
-        ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-            6, *entry, output);
-        Utf8Check::Check(&*it);
-      }
-    }
-  }
-
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), output);
-  }
-  // @@protoc_insertion_point(serialize_end:gayrpc.core.RpcMeta)
-}
-
-::google::protobuf::uint8* RpcMeta::InternalSerializeWithCachedSizesToArray(
-    bool deterministic, ::google::protobuf::uint8* target) const {
-  (void)deterministic; // Unused
+::PROTOBUF_NAMESPACE_ID::uint8* RpcMeta::InternalSerializeWithCachedSizesToArray(
+    ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:gayrpc.core.RpcMeta)
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   // .gayrpc.core.RpcMeta.Type type = 1;
   if (this->type() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      1, this->type(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      1, this->_internal_type(), target);
   }
 
   // uint32 service_id = 2;
   if (this->service_id() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->service_id(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteUInt32ToArray(2, this->_internal_service_id(), target);
   }
 
   // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
   if (this->encoding() != 0) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteEnumToArray(
-      3, this->encoding(), target);
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
+      3, this->_internal_encoding(), target);
   }
 
   // .gayrpc.core.RpcMeta.Request request_info = 4;
   if (this->has_request_info()) {
-    target = ::google::protobuf::internal::WireFormatLite::
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        4, *this->request_info_, deterministic, target);
+        4, _Internal::request_info(this), target, stream);
   }
 
   // .gayrpc.core.RpcMeta.Response response_info = 5;
   if (this->has_response_info()) {
-    target = ::google::protobuf::internal::WireFormatLite::
+    stream->EnsureSpace(&target);
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
       InternalWriteMessageToArray(
-        5, *this->response_info_, deterministic, target);
+        5, _Internal::response_info(this), target, stream);
   }
 
   // map<string, string> meta_data = 6;
-  if (!this->meta_data().empty()) {
-    typedef ::google::protobuf::Map< ::std::string, ::std::string >::const_pointer
+  if (!this->_internal_meta_data().empty()) {
+    typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_pointer
         ConstPtr;
     typedef ConstPtr SortItem;
-    typedef ::google::protobuf::internal::CompareByDerefFirst<SortItem> Less;
+    typedef ::PROTOBUF_NAMESPACE_ID::internal::CompareByDerefFirst<SortItem> Less;
     struct Utf8Check {
       static void Check(ConstPtr p) {
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
           p->first.data(), static_cast<int>(p->first.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
           "gayrpc.core.RpcMeta.MetaDataEntry.key");
-        ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::VerifyUtf8String(
           p->second.data(), static_cast<int>(p->second.length()),
-          ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+          ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::SERIALIZE,
           "gayrpc.core.RpcMeta.MetaDataEntry.value");
       }
     };
 
-    if (deterministic &&
-        this->meta_data().size() > 1) {
-      ::google::protobuf::scoped_array<SortItem> items(
-          new SortItem[this->meta_data().size()]);
-      typedef ::google::protobuf::Map< ::std::string, ::std::string >::size_type size_type;
+    if (stream->IsSerializationDeterministic() &&
+        this->_internal_meta_data().size() > 1) {
+      ::std::unique_ptr<SortItem[]> items(
+          new SortItem[this->_internal_meta_data().size()]);
+      typedef ::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::size_type size_type;
       size_type n = 0;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->meta_data().begin();
-          it != this->meta_data().end(); ++it, ++n) {
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+          it = this->_internal_meta_data().begin();
+          it != this->_internal_meta_data().end(); ++it, ++n) {
         items[static_cast<ptrdiff_t>(n)] = SortItem(&*it);
       }
       ::std::sort(&items[0], &items[static_cast<ptrdiff_t>(n)], Less());
-      ::google::protobuf::scoped_ptr<RpcMeta_MetaDataEntry_DoNotUse> entry;
       for (size_type i = 0; i < n; i++) {
-        entry.reset(meta_data_.NewEntryWrapper(
-            items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second));
-        target = ::google::protobuf::internal::WireFormatLite::
-                   InternalWriteMessageNoVirtualToArray(
-                       6, *entry, deterministic, target);
-;
-        Utf8Check::Check(items[static_cast<ptrdiff_t>(i)]);
+        target = RpcMeta_MetaDataEntry_DoNotUse::Funcs::InternalSerialize(6, items[static_cast<ptrdiff_t>(i)]->first, items[static_cast<ptrdiff_t>(i)]->second, target, stream);
+        Utf8Check::Check(&(*items[static_cast<ptrdiff_t>(i)]));
       }
     } else {
-      ::google::protobuf::scoped_ptr<RpcMeta_MetaDataEntry_DoNotUse> entry;
-      for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-          it = this->meta_data().begin();
-          it != this->meta_data().end(); ++it) {
-        entry.reset(meta_data_.NewEntryWrapper(
-            it->first, it->second));
-        target = ::google::protobuf::internal::WireFormatLite::
-                   InternalWriteMessageNoVirtualToArray(
-                       6, *entry, deterministic, target);
-;
-        Utf8Check::Check(&*it);
+      for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+          it = this->_internal_meta_data().begin();
+          it != this->_internal_meta_data().end(); ++it) {
+        target = RpcMeta_MetaDataEntry_DoNotUse::Funcs::InternalSerialize(6, it->first, it->second, target, stream);
+        Utf8Check::Check(&(*it));
       }
     }
   }
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()), target);
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields(), target, stream);
   }
   // @@protoc_insertion_point(serialize_to_array_end:gayrpc.core.RpcMeta)
   return target;
@@ -1556,74 +1124,70 @@ size_t RpcMeta::ByteSizeLong() const {
 // @@protoc_insertion_point(message_byte_size_start:gayrpc.core.RpcMeta)
   size_t total_size = 0;
 
-  if ((_internal_metadata_.have_unknown_fields() &&  ::google::protobuf::internal::GetProto3PreserveUnknownsDefault())) {
-    total_size +=
-      ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
-        (::google::protobuf::internal::GetProto3PreserveUnknownsDefault()   ? _internal_metadata_.unknown_fields()   : _internal_metadata_.default_instance()));
-  }
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
   // map<string, string> meta_data = 6;
   total_size += 1 *
-      ::google::protobuf::internal::FromIntSize(this->meta_data_size());
-  {
-    ::google::protobuf::scoped_ptr<RpcMeta_MetaDataEntry_DoNotUse> entry;
-    for (::google::protobuf::Map< ::std::string, ::std::string >::const_iterator
-        it = this->meta_data().begin();
-        it != this->meta_data().end(); ++it) {
-      entry.reset(meta_data_.NewEntryWrapper(it->first, it->second));
-      total_size += ::google::protobuf::internal::WireFormatLite::
-          MessageSizeNoVirtual(*entry);
-    }
+      ::PROTOBUF_NAMESPACE_ID::internal::FromIntSize(this->_internal_meta_data_size());
+  for (::PROTOBUF_NAMESPACE_ID::Map< std::string, std::string >::const_iterator
+      it = this->_internal_meta_data().begin();
+      it != this->_internal_meta_data().end(); ++it) {
+    total_size += RpcMeta_MetaDataEntry_DoNotUse::Funcs::ByteSizeLong(it->first, it->second);
   }
 
   // .gayrpc.core.RpcMeta.Request request_info = 4;
   if (this->has_request_info()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->request_info_);
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *request_info_);
   }
 
   // .gayrpc.core.RpcMeta.Response response_info = 5;
   if (this->has_response_info()) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::MessageSize(
-        *this->response_info_);
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+        *response_info_);
   }
 
   // .gayrpc.core.RpcMeta.Type type = 1;
   if (this->type() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->type());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_type());
   }
 
   // uint32 service_id = 2;
   if (this->service_id() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::UInt32Size(
-        this->service_id());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::UInt32Size(
+        this->_internal_service_id());
   }
 
   // .gayrpc.core.RpcMeta.DataEncodingType encoding = 3;
   if (this->encoding() != 0) {
     total_size += 1 +
-      ::google::protobuf::internal::WireFormatLite::EnumSize(this->encoding());
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_encoding());
   }
 
-  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
-  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
-  _cached_size_ = cached_size;
-  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    return ::PROTOBUF_NAMESPACE_ID::internal::ComputeUnknownFieldsSize(
+        _internal_metadata_, total_size, &_cached_size_);
+  }
+  int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
+  SetCachedSize(cached_size);
   return total_size;
 }
 
-void RpcMeta::MergeFrom(const ::google::protobuf::Message& from) {
+void RpcMeta::MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_merge_from_start:gayrpc.core.RpcMeta)
   GOOGLE_DCHECK_NE(&from, this);
   const RpcMeta* source =
-      ::google::protobuf::internal::DynamicCastToGenerated<const RpcMeta>(
+      ::PROTOBUF_NAMESPACE_ID::DynamicCastToGenerated<RpcMeta>(
           &from);
-  if (source == NULL) {
+  if (source == nullptr) {
   // @@protoc_insertion_point(generalized_merge_from_cast_fail:gayrpc.core.RpcMeta)
-    ::google::protobuf::internal::ReflectionOps::Merge(from, this);
+    ::PROTOBUF_NAMESPACE_ID::internal::ReflectionOps::Merge(from, this);
   } else {
   // @@protoc_insertion_point(generalized_merge_from_cast_success:gayrpc.core.RpcMeta)
     MergeFrom(*source);
@@ -1634,28 +1198,28 @@ void RpcMeta::MergeFrom(const RpcMeta& from) {
 // @@protoc_insertion_point(class_specific_merge_from_start:gayrpc.core.RpcMeta)
   GOOGLE_DCHECK_NE(&from, this);
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  ::google::protobuf::uint32 cached_has_bits = 0;
+  ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
   meta_data_.MergeFrom(from.meta_data_);
   if (from.has_request_info()) {
-    mutable_request_info()->::gayrpc::core::RpcMeta_Request::MergeFrom(from.request_info());
+    _internal_mutable_request_info()->::gayrpc::core::RpcMeta_Request::MergeFrom(from._internal_request_info());
   }
   if (from.has_response_info()) {
-    mutable_response_info()->::gayrpc::core::RpcMeta_Response::MergeFrom(from.response_info());
+    _internal_mutable_response_info()->::gayrpc::core::RpcMeta_Response::MergeFrom(from._internal_response_info());
   }
   if (from.type() != 0) {
-    set_type(from.type());
+    _internal_set_type(from._internal_type());
   }
   if (from.service_id() != 0) {
-    set_service_id(from.service_id());
+    _internal_set_service_id(from._internal_service_id());
   }
   if (from.encoding() != 0) {
-    set_encoding(from.encoding());
+    _internal_set_encoding(from._internal_encoding());
   }
 }
 
-void RpcMeta::CopyFrom(const ::google::protobuf::Message& from) {
+void RpcMeta::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
 // @@protoc_insertion_point(generalized_copy_from_start:gayrpc.core.RpcMeta)
   if (&from == this) return;
   Clear();
@@ -1673,30 +1237,39 @@ bool RpcMeta::IsInitialized() const {
   return true;
 }
 
-void RpcMeta::Swap(RpcMeta* other) {
-  if (other == this) return;
-  InternalSwap(other);
-}
 void RpcMeta::InternalSwap(RpcMeta* other) {
   using std::swap;
+  _internal_metadata_.Swap(&other->_internal_metadata_);
   meta_data_.Swap(&other->meta_data_);
   swap(request_info_, other->request_info_);
   swap(response_info_, other->response_info_);
   swap(type_, other->type_);
   swap(service_id_, other->service_id_);
   swap(encoding_, other->encoding_);
-  _internal_metadata_.Swap(&other->_internal_metadata_);
-  swap(_cached_size_, other->_cached_size_);
 }
 
-::google::protobuf::Metadata RpcMeta::GetMetadata() const {
-  protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::protobuf_AssignDescriptorsOnce();
-  return ::protobuf_gayrpc_2fcore_2fgayrpc_5fmeta_2eproto::file_level_metadata[kIndexInFileMessages];
+::PROTOBUF_NAMESPACE_ID::Metadata RpcMeta::GetMetadata() const {
+  return GetMetadataStatic();
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
 }  // namespace core
 }  // namespace gayrpc
+PROTOBUF_NAMESPACE_OPEN
+template<> PROTOBUF_NOINLINE ::gayrpc::core::RpcMeta_Request* Arena::CreateMaybeMessage< ::gayrpc::core::RpcMeta_Request >(Arena* arena) {
+  return Arena::CreateInternal< ::gayrpc::core::RpcMeta_Request >(arena);
+}
+template<> PROTOBUF_NOINLINE ::gayrpc::core::RpcMeta_Response* Arena::CreateMaybeMessage< ::gayrpc::core::RpcMeta_Response >(Arena* arena) {
+  return Arena::CreateInternal< ::gayrpc::core::RpcMeta_Response >(arena);
+}
+template<> PROTOBUF_NOINLINE ::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse* Arena::CreateMaybeMessage< ::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse >(Arena* arena) {
+  return Arena::CreateInternal< ::gayrpc::core::RpcMeta_MetaDataEntry_DoNotUse >(arena);
+}
+template<> PROTOBUF_NOINLINE ::gayrpc::core::RpcMeta* Arena::CreateMaybeMessage< ::gayrpc::core::RpcMeta >(Arena* arena) {
+  return Arena::CreateInternal< ::gayrpc::core::RpcMeta >(arena);
+}
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
