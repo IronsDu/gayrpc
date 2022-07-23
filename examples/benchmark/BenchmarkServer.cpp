@@ -39,7 +39,7 @@ static auto counter(RpcMeta&& meta,
                     UnaryHandler&& next,
                     InterceptorContextType&& context)
 {
-    count++;
+    ++count;
     return next(std::move(meta), message, std::move(context));
 }
 
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     auto port = std::stoi(argv[1]);
     std::cout << "listen port:" << port << std::endl;
 
-    auto service = TcpService::Create();
+    auto service = IOThreadTcpService::Create();
     service->startWorkerThread(std::thread::hardware_concurrency());
 
     auto serviceBuild = ServiceBuilder();

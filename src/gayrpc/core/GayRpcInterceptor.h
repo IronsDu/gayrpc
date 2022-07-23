@@ -12,7 +12,7 @@ namespace gayrpc::core {
 template<typename... Interceptors>
 UnaryServerInterceptor makeInterceptor(Interceptors... interceptors)
 {
-    std::vector<UnaryServerInterceptor> userInterceptors{interceptors...};
+    const std::vector<UnaryServerInterceptor> userInterceptors{interceptors...};
 
     UnaryServerInterceptor combinationInterceptor =
             [](gayrpc::core::RpcMeta&& meta,
@@ -22,7 +22,7 @@ UnaryServerInterceptor makeInterceptor(Interceptors... interceptors)
                 return next(std::move(meta), message, std::move(context));
             };
 
-    for (auto it = userInterceptors.crbegin(); it != userInterceptors.crend(); it++)
+    for (auto it = userInterceptors.crbegin(); it != userInterceptors.crend(); ++it)
     {
         auto wrapper = [userInterceptor = *it](UnaryServerInterceptor nextInterceptor) mutable {
             return [nextInterceptorPtr = std::make_shared<UnaryServerInterceptor>(nextInterceptor),

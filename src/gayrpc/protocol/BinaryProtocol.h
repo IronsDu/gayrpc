@@ -56,7 +56,7 @@ public:
             AutoMallocPacket<4096> mPacket;
         };
 
-        auto session = weakSession.lock();
+        const auto session = weakSession.lock();
         if (session == nullptr)
         {
             return;
@@ -84,9 +84,9 @@ public:
                     return;
                 }
 
-                InterceptorContextType context;
                 try
                 {
+                    InterceptorContextType context;
                     rpcHandlerManager->handleRpcMsg(std::move(meta),
                                                     msg.data_view,
                                                     std::move(context));
@@ -148,7 +148,7 @@ private:
                                         const std::string& meta,
                                         const std::string& data)
     {
-        auto bodyLen = sizeof(ProtobufPacket::head.meta_size) + sizeof(ProtobufPacket::head.data_size) + meta.size() + data.size();
+        const auto bodyLen = sizeof(ProtobufPacket::head.meta_size) + sizeof(ProtobufPacket::head.data_size) + meta.size() + data.size();
 
         bpw.writeUINT64(bodyLen);
         bpw.writeUINT32(static_cast<OpCodeType>(OpCode::OpCodeProtobuf));

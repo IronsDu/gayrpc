@@ -21,7 +21,7 @@
 		},
 		{
 			"name": "brynet",
-			"version": "1.11.1#1"
+			"version": "1.12.1"
 		}
 	],
 	"builtin-baseline": "96ec7fb25da25e0463446e552d59715a47c95e73"

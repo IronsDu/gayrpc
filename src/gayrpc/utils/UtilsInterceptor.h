@@ -36,7 +36,7 @@ static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
             std::shared_ptr<google::protobuf::Message> msg(message.New());
             msg->CopyFrom(message);
 
-            auto promise = std::make_shared<folly::Promise<std::optional<std::string>>>();
+            const auto promise = std::make_shared<folly::Promise<std::optional<std::string>>>();
             eventLoop->runAsyncFunctor([=,
                                         msg = std::move(msg),
                                         meta = std::move(meta),
@@ -100,9 +100,9 @@ static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::Ptr& handleMa
     timeoutMeta.mutable_response_info()->set_timeout(true);
     timeoutMeta.mutable_response_info()->set_sequence_id(seq_id);
 
-    InterceptorContextType context;
     try
     {
+        InterceptorContextType context;
         handleManager->handleRpcMsg(std::move(timeoutMeta),
                                     "",
                                     std::move(context));

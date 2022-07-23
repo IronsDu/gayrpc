@@ -196,7 +196,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    auto server = TcpService::Create();
+    auto server = IOThreadTcpService::Create();
     server->startWorkerThread(std::thread::hardware_concurrency());
 
     auto connector = AsyncConnector::Create();
