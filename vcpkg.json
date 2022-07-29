@@ -8,7 +8,7 @@
 		},
 		{
 			"name": "protobuf",
-			"version>=": "3.15.8"
+			"version>=": "3.10.0"
 		},
 		{
 			"name": "folly"
@@ -17,12 +17,12 @@
 	"overrides": [
 		{
 			"name": "protobuf",
-			"version": "3.5.1"
+			"version": "3.10.0"
 		},
 		{
 			"name": "brynet",
-			"version": "1.11.1#1"
+			"version": "1.12.1"
 		}
-    ],
-	"builtin-baseline": "2b1f2ca96a0e4483f50ba605c4c6cc0243633c8d"
+	],
+	"builtin-baseline": "96ec7fb25da25e0463446e552d59715a47c95e73"
 }

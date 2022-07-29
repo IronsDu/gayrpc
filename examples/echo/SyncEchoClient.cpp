@@ -38,7 +38,7 @@ int main(int argc, char** argv)
         exit(-1);
     }
 
-    auto service = TcpService::Create();
+    auto service = IOThreadTcpService::Create();
     service->startWorkerThread(1);
 
     auto connector = AsyncConnector::Create();

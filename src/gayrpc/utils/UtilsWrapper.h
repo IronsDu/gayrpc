@@ -13,6 +13,7 @@
 #include <brynet/net/http/HttpService.hpp>
 #include <brynet/net/wrapper/ConnectionBuilder.hpp>
 #include <brynet/net/wrapper/ServiceBuilder.hpp>
+#include <brynet/net/TcpService.hpp>
 #include <exception>
 #include <functional>
 #include <future>
@@ -34,7 +35,7 @@ static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& sessi
                                     const std::vector<UnaryServerInterceptor>& userInBoundInterceptor,
                                     std::vector<UnaryServerInterceptor> userOutBoundInterceptor)
 {
-    auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
+    const auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
     std::vector<std::function<void(void)>> closedCallbacks;
 
     session->setDataCallback([=](brynet::base::BasePacketReader& reader) {
@@ -57,7 +58,7 @@ static void OnBinaryConnectionEnter(const brynet::net::TcpConnection::Ptr& sessi
         ServiceContext serviceContext(rpcHandlerManager,
                                       std::move(inboundInterceptor),
                                       std::move(outBoundInterceptor));
-        auto service = serverCreator(std::move(serviceContext));
+        const auto service = serverCreator(std::move(serviceContext));
         closedCallbacks.emplace_back([=]() {
             service->uninstall();
             service->onClose();
@@ -78,7 +79,7 @@ static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& htt
                                   const std::vector<UnaryServerInterceptor>& userInBoundInterceptor,
                                   std::vector<UnaryServerInterceptor> userOutBoundInterceptor)
 {
-    auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
+    const auto rpcHandlerManager = std::make_shared<RpcTypeHandleManager>();
 
     handlers.setHttpCallback([=](const brynet::net::http::HTTPParser& httpParser,
                                  const brynet::net::http::HttpSession::Ptr& session) {
@@ -99,7 +100,7 @@ static void OnHTTPConnectionEnter(const brynet::net::http::HttpSession::Ptr& htt
         UnaryServerInterceptor outBoundInterceptor = makeInterceptor(userOutBoundInterceptor);
 
         ServiceContext serviceContext(rpcHandlerManager, std::move(inboundInterceptor), std::move(outBoundInterceptor));
-        auto service = serverCreator(std::move(serviceContext));
+        const auto service = serverCreator(std::move(serviceContext));
         service->install();
     }
 }
@@ -112,7 +113,7 @@ public:
     {
     }
 
-    void addInterceptor(const UnaryServerInterceptor& interceptor)
+    void addInterceptor(const UnaryServerInterceptor& interceptor) const
     {
         mInterceptors->push_back(interceptor);
     }
@@ -139,7 +140,7 @@ public:
         mType = type;
     }
 
-    auto getType() const
+    [[nodiscard]] auto getType() const
     {
         return mType;
     }
@@ -155,7 +156,7 @@ public:
         : mConfig(config)
     {}
 
-    void setType(TransportType type)
+    void setType(TransportType type) const
     {
         mConfig->setType(type);
     }
@@ -177,7 +178,7 @@ public:
     {}
     virtual ~ServiceBuilder() = default;
 
-    ServiceBuilder& WithService(TcpService::Ptr service)
+    ServiceBuilder& WithService(brynet::net::ITcpService::Ptr service)
     {
         mBuilder.WithService(std::move(service));
         return *this;
@@ -234,7 +235,7 @@ public:
 
     ServiceBuilder& configureTransportType(const BuildTransportTypeSet& builder)
     {
-        BuildTransportType buildTransportType(&mTransportTypeConfig);
+        const BuildTransportType buildTransportType(&mTransportTypeConfig);
         builder(buildTransportType);
         return *this;
     }
@@ -327,7 +328,7 @@ static void OnBinaryRpcClient(const brynet::net::TcpConnection::Ptr& session,
 class ClientBuilder
 {
 public:
-    ClientBuilder& WithService(TcpService::Ptr service)
+    ClientBuilder& WithService(brynet::net::ITcpService::Ptr service)
     {
         mBuilder.WithService(std::move(service));
         return *this;
