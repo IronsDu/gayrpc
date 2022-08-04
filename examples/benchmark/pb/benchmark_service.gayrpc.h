@@ -56,23 +56,23 @@ namespace benchmark {
 
     public:
         void Echo(const dodo::benchmark::EchoRequest& request,
-            const EchoHandle& handle = nullptr)
+            EchoHandle handle = nullptr)
         {
             call<dodo::benchmark::EchoResponse>(request, 
                 static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle);
+                std::move(handle));
         }
         
         void Echo(const dodo::benchmark::EchoRequest& request,
-            const EchoHandle& handle,
+            EchoHandle handle,
             std::chrono::seconds timeout, 
-            BaseClient::TimeoutCallback&& timeoutCallback)
+            BaseClient::TimeoutCallback timeoutCallback)
         {
             call<dodo::benchmark::EchoResponse>(request, 
                 static_cast<uint32_t>(benchmark_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle,
+                std::move(handle),
                 timeout,
                 std::move(timeoutCallback));
         }
@@ -183,11 +183,10 @@ namespace benchmark {
             InterceptorContextType&& context)
         {
             dodo::benchmark::EchoRequest request;
-            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
-                outboundInterceptor = outboundInterceptor,
-                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, 
+                [service, outboundInterceptor = outboundInterceptor](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
-                service->Echo(request, replyObject, std::move(context));
+                service->Echo(static_cast<const dodo::benchmark::EchoRequest&>(message), replyObject, std::move(context));
                 return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }

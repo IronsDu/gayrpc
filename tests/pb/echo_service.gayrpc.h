@@ -58,44 +58,44 @@ namespace test {
 
     public:
         void Echo(const dodo::test::EchoRequest& request,
-            const EchoHandle& handle = nullptr)
+            EchoHandle handle = nullptr)
         {
             call<dodo::test::EchoResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle);
+                std::move(handle));
         }
         void Login(const dodo::test::LoginRequest& request,
-            const LoginHandle& handle = nullptr)
+            LoginHandle handle = nullptr)
         {
             call<dodo::test::LoginResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Login), 
-                handle);
+                std::move(handle));
         }
         
         void Echo(const dodo::test::EchoRequest& request,
-            const EchoHandle& handle,
+            EchoHandle handle,
             std::chrono::seconds timeout, 
-            BaseClient::TimeoutCallback&& timeoutCallback)
+            BaseClient::TimeoutCallback timeoutCallback)
         {
             call<dodo::test::EchoResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Echo), 
-                handle,
+                std::move(handle),
                 timeout,
                 std::move(timeoutCallback));
         }
 
         void Login(const dodo::test::LoginRequest& request,
-            const LoginHandle& handle,
+            LoginHandle handle,
             std::chrono::seconds timeout, 
-            BaseClient::TimeoutCallback&& timeoutCallback)
+            BaseClient::TimeoutCallback timeoutCallback)
         {
             call<dodo::test::LoginResponse>(request, 
                 static_cast<uint32_t>(echo_service_ServiceID::EchoServer), 
                 static_cast<uint64_t>(EchoServerMsgID::Login), 
-                handle,
+                std::move(handle),
                 timeout,
                 std::move(timeoutCallback));
         }
@@ -232,11 +232,10 @@ namespace test {
             InterceptorContextType&& context)
         {
             dodo::test::EchoRequest request;
-            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
-                outboundInterceptor = outboundInterceptor,
-                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, 
+                [service, outboundInterceptor = outboundInterceptor](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<EchoReply>(std::move(meta), std::move(outboundInterceptor));
-                service->Echo(request, replyObject, std::move(context));
+                service->Echo(static_cast<const dodo::test::EchoRequest&>(message), replyObject, std::move(context));
                 return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }
@@ -249,11 +248,10 @@ namespace test {
             InterceptorContextType&& context)
         {
             dodo::test::LoginRequest request;
-            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, [service,
-                outboundInterceptor = outboundInterceptor,
-                &request](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
+            return parseRequestWrapper(request, std::move(meta), data, inboundInterceptor, 
+                [service, outboundInterceptor = outboundInterceptor](RpcMeta&& meta, const google::protobuf::Message& message, InterceptorContextType&& context) mutable {
                 auto replyObject = std::make_shared<LoginReply>(std::move(meta), std::move(outboundInterceptor));
-                service->Login(request, replyObject, std::move(context));
+                service->Login(static_cast<const dodo::test::LoginRequest&>(message), replyObject, std::move(context));
                 return gayrpc::core::MakeReadyFuture(std::optional<std::string>(std::nullopt));
             }, std::move(context));
         }

@@ -38,7 +38,7 @@ inline RpcMeta makeRequestRpcMeta(uint64_t sequenceID,
 }
 
 template<typename Response, typename Hanele>
-inline auto parseResponseWrapper(const Hanele& handle,
+inline auto parseResponseWrapper(Hanele handle,
                                  RpcMeta&& meta,
                                  const std::string_view& data,
                                  const UnaryServerInterceptor& inboundInterceptor,
@@ -74,8 +74,8 @@ inline auto parseResponseWrapper(const Hanele& handle,
     return inboundInterceptor(
             std::move(meta),
             response,
-            [=](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
-                handle(response, error);
+            [handle = std::move(handle), error = std::move(error)](RpcMeta&&, const google::protobuf::Message& msg, InterceptorContextType&& context) {
+                handle(static_cast<const Response&>(msg), error);
                 return MakeReadyFuture(std::optional<std::string>(std::nullopt));
             },
             std::move(context));
