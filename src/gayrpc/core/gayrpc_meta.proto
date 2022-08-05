@@ -35,7 +35,7 @@ message RpcMeta {
         int32   error_code = 3;
         // (当failed为true)错误原因
         string  reason = 4;
-        // 是否超时(超时仅仅由调用段端自己模拟一个Response,其timeout为true)
+        // 是否超时(超时仅仅由调用端自己模拟一个Response,其timeout为true)
         bool    timeout = 5;
     };
     

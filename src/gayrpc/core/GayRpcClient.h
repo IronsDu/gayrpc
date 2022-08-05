@@ -123,7 +123,7 @@ protected:
     void call(const Request& request,
               ServiceIDType serviceID,
               ServiceFunctionMsgIDType msgID,
-              const Handle& handle,
+              Handle handle,
               std::chrono::seconds timeout,
               TimeoutCallback&& timeoutCallback)
     {
@@ -138,7 +138,7 @@ protected:
 
         {
             WaitResponseTimer waitTimer(sequenceID, timeout);
-            auto callback = [handle](RpcMeta&& meta,
+            auto callback = [handle = std::move(handle)](RpcMeta&& meta,
                                      const std::string_view& data,
                                      const UnaryServerInterceptor& inboundInterceptor,
                                      InterceptorContextType&& context) {
@@ -171,7 +171,7 @@ protected:
     void call(const Request& request,
               ServiceIDType serviceID,
               ServiceFunctionMsgIDType msgID,
-              const Handle& handle = nullptr)
+              Handle handle = nullptr)
     {
         const auto sequenceID = mSequenceID++;
         const auto expectResponse = (handle != nullptr);
@@ -188,7 +188,7 @@ protected:
             std::lock_guard<std::mutex> lck(mStubMapGuard);
             assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
 
-            mStubHandleMap[sequenceID] = [handle](RpcMeta&& meta,
+            mStubHandleMap[sequenceID] = [handle = std::move(handle)](RpcMeta&& meta,
                                                   const std::string_view& data,
                                                   const UnaryServerInterceptor& inboundInterceptor,
                                                   InterceptorContextType&& context) {
