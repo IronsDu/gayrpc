@@ -25,8 +25,6 @@ jobs:
             vcpkgCommitId: 'a0454d6e18b335cf12da34d925538897d598219b'
           - os: ubuntu-latest
             vcpkgCommitId: 'a0454d6e18b335cf12da34d925538897d598219b'
-          - os: macos-latest
-            vcpkgCommitId: 'a0454d6e18b335cf12da34d925538897d598219b'
 
     steps:
       - uses: actions/checkout@v2
