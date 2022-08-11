@@ -2,12 +2,10 @@
 # gayrpc
 跨平台全双工双向(异步)RPC系统,也即通信两端都可以同时作为RPC服务方和客户端.
 
-[![SonarCloud](https://sonarcloud.io/api/project_badges/measure?project=gayrpc&metric=alert_status)](https://sonarcloud.io/dashboard/index/gayrpc)
 [![Platform](https://img.shields.io/badge/Platform-Linux,%20Windows,%20MacOS-green.svg?style=flat-square)](https://github.com/IronsDu/gayrpc)
 
 ## Build Status
-Windows : [![Build status](https://ci.appveyor.com/api/projects/status/acq1dvwfmv7iwpsn/branch/master?svg=true)](https://ci.appveyor.com/project/IronsDu/gayrpc/branch/master) 
-Linux:[![Build Status](https://travis-ci.com/IronsDu/gayrpc.svg?branch=master)](https://travis-ci.com/IronsDu/gayrpc)
+[![hosted-ninja-vcpkg-autocache](https://github.com/IronsDu/gayrpc/actions/workflows/build_and_test.yml/badge.svg)](https://github.com/IronsDu/gayrpc/actions/workflows/build_and_test.yml)
 
 ## 动机
 目前的RPC系统大多用于互联网行业后端系统，但他们之间更像一个单向图(不存在两个服务彼此依赖/互相调用)，但游戏等行业中则两节点之间可能相互调用。
