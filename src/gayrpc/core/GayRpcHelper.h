@@ -56,7 +56,7 @@ inline auto parseResponseWrapper(Hanele handle,
             }
             break;
         case RpcMeta::JSON:
-            if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response); !s.ok())
+            if (const auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &response); !s.ok())
             {
                 throw std::runtime_error(std::string("parse json response failed:") + s.error_message().as_string() + ", type of:" + typeid(Response).name());
             }
@@ -100,7 +100,7 @@ inline auto parseRequestWrapper(RequestType& request,
             }
             break;
         case RpcMeta::JSON:
-            if (auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request); !s.ok())
+            if (const auto s = JsonStringToMessage(google::protobuf::StringPiece(data.data(), data.size()), &request); !s.ok())
             {
                 throw std::runtime_error(std::string("parse json request failed:") + s.error_message().as_string() + ", type of:" + typeid(RequestType).name());
             }

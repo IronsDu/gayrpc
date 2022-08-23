@@ -63,7 +63,12 @@ public:
             return;
         }
 
-        ReplyError(mOutboundInterceptor, mRequestMeta.service_id(), mRequestMeta.request_info().sequence_id(), errorCode, reason, std::move(context));
+        ReplyError(mOutboundInterceptor,
+                   mRequestMeta.service_id(),
+                   mRequestMeta.request_info().sequence_id(),
+                   errorCode,
+                   reason,
+                   std::move(context));
     }
 
     static void ReplyError(const UnaryServerInterceptor& outboundInterceptor,

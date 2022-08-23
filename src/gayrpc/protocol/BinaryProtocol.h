@@ -4,10 +4,10 @@
 
 #include <brynet/base/Packet.hpp>
 #include <brynet/net/EventLoop.hpp>
+#include <brynet/net/SendableMsg.hpp>
 #include <brynet/net/TcpConnection.hpp>
 #include <string>
 #include <string_view>
-#include <brynet/net/SendableMsg.hpp>
 
 // 实现协议解析和序列化
 
@@ -86,10 +86,9 @@ public:
 
                 try
                 {
-                    InterceptorContextType context;
                     rpcHandlerManager->handleRpcMsg(std::move(meta),
                                                     msg.data_view,
-                                                    std::move(context));
+                                                    InterceptorContextType{});
                 }
                 catch (const std::exception& e)
                 {
