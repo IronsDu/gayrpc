@@ -101,7 +101,7 @@ public:
                 mWaitResponseTimerQueue.pop();
             }
         }
-        for (auto& callback : callbacks)
+        for (const auto& callback : callbacks)
         {
             callback();
         }
@@ -139,9 +139,9 @@ protected:
         {
             WaitResponseTimer waitTimer(sequenceID, timeout);
             auto callback = [handle = std::move(handle)](RpcMeta&& meta,
-                                     const std::string_view& data,
-                                     const UnaryServerInterceptor& inboundInterceptor,
-                                     InterceptorContextType&& context) {
+                                                         const std::string_view& data,
+                                                         const UnaryServerInterceptor& inboundInterceptor,
+                                                         InterceptorContextType&& context) {
                 return parseResponseWrapper<Response>(handle,
                                                       std::move(meta),
                                                       data,
@@ -189,9 +189,9 @@ protected:
             assert(mStubHandleMap.find(sequenceID) == mStubHandleMap.end());
 
             mStubHandleMap[sequenceID] = [handle = std::move(handle)](RpcMeta&& meta,
-                                                  const std::string_view& data,
-                                                  const UnaryServerInterceptor& inboundInterceptor,
-                                                  InterceptorContextType&& context) {
+                                                                      const std::string_view& data,
+                                                                      const UnaryServerInterceptor& inboundInterceptor,
+                                                                      InterceptorContextType&& context) {
                 return parseResponseWrapper<Response>(handle,
                                                       std::move(meta),
                                                       data,
@@ -239,20 +239,16 @@ private:
                 std::lock_guard<std::mutex> lck(mStubMapGuard);
 
                 mStubHandleMap.erase(sequenceID);
-
-                const auto it = mTimeoutHandleMap.find(sequenceID);
-                if (it == mTimeoutHandleMap.end())
+                if (const auto it = mTimeoutHandleMap.find(sequenceID); it != mTimeoutHandleMap.end())
                 {
-                    return;
+                    timeoutHandler = std::move((*it).second);
+                    mTimeoutHandleMap.erase(it);
                 }
-                timeoutHandler = std::move((*it).second);
-                mTimeoutHandleMap.erase(it);
             }
             if (timeoutHandler)
             {
                 timeoutHandler();
             }
-
             return;
         }
 

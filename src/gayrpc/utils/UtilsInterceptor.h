@@ -44,7 +44,7 @@ static auto withEventLoop(brynet::net::EventLoop::Ptr eventLoop)
                                         next = std::move(next)]() mutable {
                 next(std::move(meta),
                      *msg,
-                        std::move(context))
+                     std::move(context))
                         .thenValue([=](std::optional<std::string> err) mutable {
                             promise->setValue(err);
                         });
@@ -102,10 +102,9 @@ static void causeTimeout(const gayrpc::core::RpcTypeHandleManager::Ptr& handleMa
 
     try
     {
-        InterceptorContextType context;
         handleManager->handleRpcMsg(std::move(timeoutMeta),
                                     "",
-                                    std::move(context));
+                                    InterceptorContextType{});
     }
     catch (const std::runtime_error& e)
     {

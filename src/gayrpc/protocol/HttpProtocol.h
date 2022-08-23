@@ -27,8 +27,7 @@ public:
         meta.mutable_request_info()->set_expect_response(true);
         meta.set_encoding(RpcMeta::JSON);
 
-        InterceptorContextType context;
-        rpcHandlerManager->handleRpcMsg(std::move(meta), httpParser.getBody(), std::move(context));
+        rpcHandlerManager->handleRpcMsg(std::move(meta), httpParser.getBody(), InterceptorContextType{});
     }
 
     static void send(const gayrpc::core::RpcMeta& meta,
@@ -41,7 +40,7 @@ public:
         brynet::net::http::HttpResponse httpResponse;
         httpResponse.setStatus(brynet::net::http::HttpResponse::HTTP_RESPONSE_STATUS::OK);
         httpResponse.setContentType("application/json");
-        httpResponse.setBody(jsonMsg);
+        httpResponse.setBody(std::move(jsonMsg));
 
         httpSession->send(httpResponse.getResult(), nullptr);
     }
