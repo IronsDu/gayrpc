@@ -25,7 +25,7 @@
 		},
 		{
 			"name": "folly",
-			"version-string": "2022.08.15.00"
+			"version-string": "2022.07.11.00"
 		}
 	],
 	"builtin-baseline": "88b1071e39f13b632644d9d953738d345a4ac055"
