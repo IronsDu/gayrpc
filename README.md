@@ -9,31 +9,36 @@
 
 ## 动机
 目前的RPC系统大多用于互联网行业后端系统，但他们之间更像一个单向图(不存在两个服务彼此依赖/互相调用)，但游戏等行业中则两节点之间可能相互调用。
-因此我们需要一个全双工RPC，在一个"链接"的两端均可开启服务和客户端，当然这里的"链接"是一个虚拟概念，它不一定基于TCP，也即"链接"的两端可以只存在逻辑链接而没有网络直连。
+因此我们需要一个全双工RPC，在一个"链接"的两端均可开启服务和客户端，当然这里的"链接"是一个虚拟概念，它不一定基于TCP，也即"链接"的两端可以只存在逻辑链接而并没有网络直连。
 
 ## 设计准则
 1. RPC支持拦截器，能够对Request或Response做一些处理(比如监控、认证、加解密、分布式跟踪)
 2. RPC核心不依赖网络和网络传输协议，即：我们可以开发任何网络应用和逻辑来开启RPC两端，将"收到"的消息丢给RPC核心，并通过某个出站拦截器来实现/决定把Request或Response以何种方式传递给谁。
-3. 此RPC是基于异步回调的，我认为这是目前C++里比较安全和靠谱的方式，除了回调地狱让人恶心……
+3. 此RPC是基于异步回调的，我认为这是目前C++里比较安全和靠谱的方式，虽然没有同步那么舒服……但gayrpc通过使用folly的Promise模式已经足够简便了
 4. RPC系统核心（以及接口）是线程安全的，可以在任意线程调用RPC；且可以在任意线程使用XXXReply::PTR对象返回Response。
 5. RPC是并行的，也即：客户端可以随意发送Request而不必等待之前的完成。 且允许先收到后发出的Request的Response。
 6. RPC系统会为每一个"链接"生成一个XXXService对象，这样可以让不同的"链接"绑定/持有各自的业务对象(有状态）（而不是像grpc等系统那样，一个服务只存在一个service对象，这类RPC调用类似短链接：收到请求返回数据即可）
 7. 支持HTTP API(同理2,此功能通过具体通信协议和拦截器进行支持,RPC核心本身与此无关).
 
 ## 依赖
-Windows下可使用 [vcpkg](https://github.com/Microsoft/vcpkg) 进行安装以下依赖库.
+gayrpc依赖以下库：
 
 * [protobuf](https://github.com/google/protobuf)
 * [brynet](https://github.com/IronsDu/brynet)
+* [folly](https://github.com/facebook/folly)
 
-请注意,当使用Windows时,务必使用`vcpkg install brynet --head`安装brynet.</br>
-且务必根据自身系统中的protoc版本对gayrpc_meta.proto和gayrpc_option.proto预先生成代码，请在 src目录里执行: 
+注意,请务必根据你的构建系统中的protoc版本对gayrpc_meta.proto和gayrpc_option.proto预先生成代码，这需要你在 src目录里执行: 
 ```sh
  protoc --cpp_out=. ./gayrpc/core/gayrpc_meta.proto ./gayrpc/core/gayrpc_option.proto
 ```
 
+## 测试体验
+Windows下可以安装[vcpkg](https://github.com/microsoft/vcpkg)，然后直接使用Visual Studio 2019/2022打开本代码仓库目录，并在VS 的CMake设置里勾选“从不使用CMake预设”（位置在"选项"-"CMake"-"CMake配置文件"），即不使用仓库目录中的CMakePresets文件！然后再进行生成CMake工程。
+
+Linux下则请按照[vcpkg](https://github.com/microsoft/vcpkg)文档进行构建。
+
 ## 代码生成工具
-地址：`https://github.com/IronsDu/protoc-gen-gayrpc`，由[liuhan](https://github.com/liuhan907)编写完成。</br>
+gayrpc使用protobuf定义服务，并需要使用代码生成工具根据protobuf服务文件生成对应的代码。生成工具的地址是：`https://github.com/IronsDu/protoc-gen-gayrpc`，它由[liuhan](https://github.com/liuhan907)编写完成。</br>
 首先将插件程序放到系统 PATH路径下(比如Linux下的/usr/bin)，然后执行代码生成，比如（在具体的服务目录里，比如`gayrpc/examples/echo/pb`）:
 ```sh
  protoc  -I. -I../../../src --cpp_out=. echo_service.proto

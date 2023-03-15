@@ -22,6 +22,8 @@ public:
     using ServiceHandlerMap = std::unordered_map<ServiceIDType, ServiceHandler>;
 
 public:
+    virtual ~RpcTypeHandleManager() = default;
+
     bool registerTypeHandle(RpcMeta::Type type, ServiceHandler&& handle, ServiceIDType serviceID)
     {
         std::unique_lock<std::shared_mutex> lock(mMutex);
@@ -53,8 +55,6 @@ public:
         std::unique_lock<std::shared_mutex> lock(mMutex);
         mTypeHandlers.clear();
     }
-
-    virtual ~RpcTypeHandleManager() = default;
 
     void handleRpcMsg(RpcMeta&& meta, const std::string_view& data, InterceptorContextType&& context) const
     {
